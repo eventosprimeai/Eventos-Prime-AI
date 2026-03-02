@@ -1,28 +1,73 @@
 "use client";
 
 import { useState } from "react";
+import { createBrowserClient } from "@supabase/ssr";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [mode, setMode] = useState<"login" | "register">("login");
+    const [success, setSuccess] = useState("");
+
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError("");
+        setSuccess("");
 
-        // TODO: Connect to Supabase Auth
         try {
-            // Placeholder — will use Supabase client
-            console.log("Login attempt:", { email });
-            setError("Supabase aún no está conectado. Configura las variables de entorno.");
-        } catch (err) {
-            setError("Error al iniciar sesión");
+            if (mode === "login") {
+                const { error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+                if (error) throw error;
+                window.location.href = "/";
+            } else {
+                const { error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: { role: "DIRECTOR" },
+                    },
+                });
+                if (error) throw error;
+                setSuccess("Cuenta creada. Revisa tu correo para confirmar o inicia sesión.");
+                setMode("login");
+            }
+        } catch (err: any) {
+            const msg = err?.message || "Error desconocido";
+            if (msg.includes("Invalid login")) {
+                setError("Correo o contraseña incorrectos");
+            } else if (msg.includes("already registered")) {
+                setError("Este correo ya está registrado. Inicia sesión.");
+                setMode("login");
+            } else {
+                setError(msg);
+            }
         } finally {
             setLoading(false);
         }
+    };
+
+    const inputStyle = {
+        width: "100%",
+        padding: "var(--space-3) var(--space-4)",
+        background: "var(--color-bg-input)",
+        border: "1px solid var(--color-border)",
+        borderRadius: "var(--radius-lg)",
+        color: "var(--color-text-primary)",
+        fontSize: "var(--text-base)",
+        fontFamily: "var(--font-sans)",
+        outline: "none",
+        transition: "var(--transition-fast)",
     };
 
     return (
@@ -34,11 +79,7 @@ export default function LoginPage() {
             background: "var(--color-bg-primary)",
             padding: "var(--space-4)",
         }}>
-            <div style={{
-                width: "100%",
-                maxWidth: 420,
-                animation: "fade-in 0.4s ease-out",
-            }}>
+            <div style={{ width: "100%", maxWidth: 420 }}>
                 {/* Logo */}
                 <div style={{ textAlign: "center", marginBottom: "var(--space-8)" }}>
                     <h1 style={{
@@ -50,20 +91,15 @@ export default function LoginPage() {
                         <span className="text-gold">Eventos</span>Prime
                     </h1>
                     <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)" }}>
-                        Acceso al Panel de Control
+                        {mode === "login" ? "Acceso al Panel de Control" : "Crear cuenta de Director"}
                     </p>
                 </div>
 
                 {/* Login Card */}
                 <div className="glass-card" style={{ padding: "var(--space-8)" }}>
                     <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-                        {/* Email */}
                         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
-                            <label style={{
-                                fontSize: "var(--text-sm)",
-                                fontWeight: 500,
-                                color: "var(--color-text-secondary)",
-                            }}>
+                            <label style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--color-text-secondary)" }}>
                                 Correo electrónico
                             </label>
                             <input
@@ -72,28 +108,12 @@ export default function LoginPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="tu@eventosprimeai.com"
                                 required
-                                style={{
-                                    width: "100%",
-                                    padding: "var(--space-3) var(--space-4)",
-                                    background: "var(--color-bg-input)",
-                                    border: "1px solid var(--color-border)",
-                                    borderRadius: "var(--radius-lg)",
-                                    color: "var(--color-text-primary)",
-                                    fontSize: "var(--text-base)",
-                                    fontFamily: "var(--font-sans)",
-                                    outline: "none",
-                                    transition: "var(--transition-fast)",
-                                }}
+                                style={inputStyle}
                             />
                         </div>
 
-                        {/* Password */}
                         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
-                            <label style={{
-                                fontSize: "var(--text-sm)",
-                                fontWeight: 500,
-                                color: "var(--color-text-secondary)",
-                            }}>
+                            <label style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--color-text-secondary)" }}>
                                 Contraseña
                             </label>
                             <input
@@ -102,22 +122,11 @@ export default function LoginPage() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
                                 required
-                                style={{
-                                    width: "100%",
-                                    padding: "var(--space-3) var(--space-4)",
-                                    background: "var(--color-bg-input)",
-                                    border: "1px solid var(--color-border)",
-                                    borderRadius: "var(--radius-lg)",
-                                    color: "var(--color-text-primary)",
-                                    fontSize: "var(--text-base)",
-                                    fontFamily: "var(--font-sans)",
-                                    outline: "none",
-                                    transition: "var(--transition-fast)",
-                                }}
+                                minLength={6}
+                                style={inputStyle}
                             />
                         </div>
 
-                        {/* Error */}
                         {error && (
                             <p style={{
                                 color: "var(--color-error)",
@@ -131,7 +140,19 @@ export default function LoginPage() {
                             </p>
                         )}
 
-                        {/* Submit */}
+                        {success && (
+                            <p style={{
+                                color: "var(--color-success)",
+                                fontSize: "var(--text-sm)",
+                                background: "rgba(34, 197, 94, 0.1)",
+                                padding: "var(--space-2) var(--space-3)",
+                                borderRadius: "var(--radius-md)",
+                                border: "1px solid rgba(34, 197, 94, 0.2)",
+                            }}>
+                                {success}
+                            </p>
+                        )}
+
                         <button
                             type="submit"
                             disabled={loading}
@@ -150,12 +171,29 @@ export default function LoginPage() {
                                 transition: "var(--transition-fast)",
                             }}
                         >
-                            {loading ? "Ingresando..." : "Ingresar"}
+                            {loading ? "Procesando..." : mode === "login" ? "Ingresar" : "Crear Cuenta"}
                         </button>
                     </form>
+
+                    {/* Toggle login/register */}
+                    <div style={{ textAlign: "center", marginTop: "var(--space-4)" }}>
+                        <button
+                            onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); setSuccess(""); }}
+                            style={{
+                                background: "none",
+                                border: "none",
+                                color: "var(--color-text-muted)",
+                                fontSize: "var(--text-sm)",
+                                cursor: "pointer",
+                                fontFamily: "var(--font-sans)",
+                                textDecoration: "underline",
+                            }}
+                        >
+                            {mode === "login" ? "¿No tienes cuenta? Crear una" : "¿Ya tienes cuenta? Iniciar sesión"}
+                        </button>
+                    </div>
                 </div>
 
-                {/* Footer */}
                 <p style={{
                     textAlign: "center",
                     color: "var(--color-text-muted)",

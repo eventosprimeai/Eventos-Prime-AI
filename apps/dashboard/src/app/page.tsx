@@ -1,196 +1,205 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { createBrowserClient } from "@supabase/ssr";
+
+interface Event {
+    id: string;
+    name: string;
+    status: string;
+    startDate: string;
+    endDate: string;
+    _count: { tasks: number; sponsorDeals: number; tickets: number };
+}
+
+interface Stats {
+    events: number;
+    tasks: number;
+    pending: number;
+    sponsors: number;
+}
+
 export default function DashboardPage() {
-    // Mock data — will be replaced with Supabase queries
-    const stats = [
-        { label: "Eventos Activos", value: "1", icon: "🎪", change: "Prime Festival" },
-        { label: "Tareas Pendientes", value: "0", icon: "✅", change: "Sin tareas aún" },
-        { label: "Sponsors Pipeline", value: "0", icon: "🏢", change: "Por iniciar captación" },
-        { label: "Presupuesto", value: "$0", icon: "💰", change: "Por definir" },
-    ];
+    const [events, setEvents] = useState<Event[]>([]);
+    const [stats, setStats] = useState<Stats>({ events: 0, tasks: 0, pending: 0, sponsors: 0 });
+    const [loading, setLoading] = useState(true);
+    const [userName, setUserName] = useState("Director");
 
-    const mockEvent = {
-        name: "Prime Festival 2026",
-        status: "PLANIFICADO",
-        ragStatus: "AMBER" as const,
-        daysUntil: 90,
-        tasksCompleted: 0,
-        tasksTotal: 0,
-        sponsorsConfirmed: 0,
-        sponsorsTarget: 10,
-        budget: 0,
-        spent: 0,
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    useEffect(() => {
+        async function load() {
+            // Get user info
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user?.user_metadata?.name) setUserName(user.user_metadata.name);
+            else if (user?.email) setUserName(user.email.split("@")[0]);
+
+            // Fetch events
+            try {
+                const res = await fetch("/api/events");
+                if (res.ok) {
+                    const data = await res.json();
+                    setEvents(data);
+                    setStats({
+                        events: data.length,
+                        tasks: data.reduce((sum: number, e: Event) => sum + e._count.tasks, 0),
+                        pending: 0,
+                        sponsors: data.reduce((sum: number, e: Event) => sum + e._count.sponsorDeals, 0),
+                    });
+                }
+            } catch { }
+
+            // Fetch pending tasks count
+            try {
+                const res = await fetch("/api/tasks?status=PENDIENTE");
+                if (res.ok) {
+                    const data = await res.json();
+                    setStats(prev => ({ ...prev, pending: data.length }));
+                }
+            } catch { }
+
+            setLoading(false);
+        }
+        load();
+    }, []);
+
+    const getGreeting = () => {
+        const h = new Date().getHours();
+        if (h < 12) return "Buenos días";
+        if (h < 18) return "Buenas tardes";
+        return "Buenas noches";
     };
 
-    const ragColors = {
-        RED: { bg: "rgba(239, 68, 68, 0.1)", border: "rgba(239, 68, 68, 0.3)", color: "var(--color-rag-red)", label: "RIESGO" },
-        AMBER: { bg: "rgba(245, 158, 11, 0.1)", border: "rgba(245, 158, 11, 0.3)", color: "var(--color-rag-amber)", label: "ATENCIÓN" },
-        GREEN: { bg: "rgba(34, 197, 94, 0.1)", border: "rgba(34, 197, 94, 0.3)", color: "var(--color-rag-green)", label: "EN CURSO" },
+    const statusLabel: Record<string, { text: string; color: string }> = {
+        BORRADOR: { text: "Borrador", color: "var(--color-text-muted)" },
+        PLANIFICADO: { text: "Planificado", color: "var(--color-info)" },
+        PRE_PRODUCCION: { text: "Pre-producción", color: "var(--color-gold-400)" },
+        EN_VIVO: { text: "🔴 En vivo", color: "var(--color-rag-red)" },
+        POST_PRODUCCION: { text: "Post-producción", color: "var(--color-prime-400)" },
+        CERRADO: { text: "Cerrado", color: "var(--color-success)" },
+        CANCELADO: { text: "Cancelado", color: "var(--color-error)" },
     };
 
-    const rag = ragColors[mockEvent.ragStatus];
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        window.location.href = "/login";
+    };
+
+    if (loading) {
+        return (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+                <div style={{ textAlign: "center" }}>
+                    <div style={{ width: 40, height: 40, border: "3px solid var(--color-border)", borderTop: "3px solid var(--color-gold-400)", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto var(--space-4)" }} />
+                    <p style={{ color: "var(--color-text-muted)" }}>Cargando dashboard...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="animate-fade-in">
             {/* Header */}
-            <div style={{ marginBottom: "var(--space-8)" }}>
-                <h1 style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "var(--text-3xl)",
-                    fontWeight: 800,
-                    marginBottom: "var(--space-2)",
-                }}>
-                    Buenos días, <span className="text-gold">Director</span>
-                </h1>
-                <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-base)" }}>
-                    Panel de control — Eventos Prime AI
-                </p>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="stats-grid">
-                {stats.map((stat) => (
-                    <div key={stat.label} className="stat-card">
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                            <div>
-                                <div className="stat-label">{stat.label}</div>
-                                <div className="stat-value">{stat.value}</div>
-                                <div className="stat-change" style={{ color: "var(--color-text-muted)" }}>{stat.change}</div>
-                            </div>
-                            <span style={{ fontSize: "var(--text-2xl)" }}>{stat.icon}</span>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Event Section */}
-            <div style={{ marginBottom: "var(--space-6)" }}>
-                <h2 style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "var(--text-xl)",
-                    fontWeight: 700,
-                    marginBottom: "var(--space-4)",
-                }}>
-                    Eventos Activos
-                </h2>
-
-                <div className="event-grid">
-                    {/* Prime Festival Card */}
-                    <div className="event-card" style={{ borderColor: rag.border }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--space-4)" }}>
-                            <div>
-                                <h3 style={{
-                                    fontFamily: "var(--font-display)",
-                                    fontSize: "var(--text-xl)",
-                                    fontWeight: 700,
-                                }}>
-                                    {mockEvent.name}
-                                </h3>
-                                <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)", marginTop: "var(--space-1)" }}>
-                                    {mockEvent.daysUntil} días restantes
-                                </p>
-                            </div>
-
-                            {/* RAG Badge */}
-                            <span style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "var(--space-1)",
-                                padding: "var(--space-1) var(--space-3)",
-                                borderRadius: "var(--radius-full)",
-                                fontSize: "var(--text-xs)",
-                                fontWeight: 700,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.05em",
-                                background: rag.bg,
-                                color: rag.color,
-                                border: `1px solid ${rag.border}`,
-                            }}>
-                                <span style={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: "50%",
-                                    background: rag.color,
-                                    animation: "pulse-dot 2s ease-in-out infinite",
-                                }} />
-                                {rag.label}
-                            </span>
-                        </div>
-
-                        {/* Progress Bars */}
-                        <div style={{ display: "grid", gap: "var(--space-3)" }}>
-                            {/* Tasks Progress */}
-                            <div>
-                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--text-sm)", marginBottom: "var(--space-1)" }}>
-                                    <span style={{ color: "var(--color-text-secondary)" }}>Tareas</span>
-                                    <span style={{ color: "var(--color-text-muted)" }}>{mockEvent.tasksCompleted}/{mockEvent.tasksTotal}</span>
-                                </div>
-                                <div style={{
-                                    height: 6,
-                                    background: "var(--color-bg-secondary)",
-                                    borderRadius: "var(--radius-full)",
-                                    overflow: "hidden",
-                                }}>
-                                    <div style={{
-                                        height: "100%",
-                                        width: mockEvent.tasksTotal > 0 ? `${(mockEvent.tasksCompleted / mockEvent.tasksTotal) * 100}%` : "0%",
-                                        background: "var(--gradient-gold)",
-                                        borderRadius: "var(--radius-full)",
-                                        transition: "width 0.5s ease",
-                                    }} />
-                                </div>
-                            </div>
-
-                            {/* Sponsors Progress */}
-                            <div>
-                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--text-sm)", marginBottom: "var(--space-1)" }}>
-                                    <span style={{ color: "var(--color-text-secondary)" }}>Sponsors</span>
-                                    <span style={{ color: "var(--color-text-muted)" }}>{mockEvent.sponsorsConfirmed}/{mockEvent.sponsorsTarget}</span>
-                                </div>
-                                <div style={{
-                                    height: 6,
-                                    background: "var(--color-bg-secondary)",
-                                    borderRadius: "var(--radius-full)",
-                                    overflow: "hidden",
-                                }}>
-                                    <div style={{
-                                        height: "100%",
-                                        width: `${(mockEvent.sponsorsConfirmed / mockEvent.sponsorsTarget) * 100}%`,
-                                        background: "var(--gradient-prime)",
-                                        borderRadius: "var(--radius-full)",
-                                        transition: "width 0.5s ease",
-                                    }} />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Recent Tasks (empty state) */}
-            <div>
-                <h2 style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "var(--text-xl)",
-                    fontWeight: 700,
-                    marginBottom: "var(--space-4)",
-                }}>
-                    Tareas Recientes
-                </h2>
-                <div style={{
-                    padding: "var(--space-12)",
-                    textAlign: "center",
-                    background: "var(--color-bg-card)",
-                    border: "1px dashed var(--color-border)",
-                    borderRadius: "var(--radius-xl)",
-                }}>
-                    <p style={{ fontSize: "var(--text-4xl)", marginBottom: "var(--space-3)" }}>📋</p>
-                    <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-base)" }}>
-                        No hay tareas creadas aún
-                    </p>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-8)" }}>
+                <div>
+                    <h1 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-3xl)", fontWeight: 800 }}>
+                        {getGreeting()}, <span className="text-gold">{userName}</span>
+                    </h1>
                     <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)", marginTop: "var(--space-1)" }}>
-                        Crea tu primer evento para comenzar a asignar tareas
+                        Panel de control — Eventos Prime AI
                     </p>
                 </div>
+                <button onClick={handleLogout} style={{
+                    padding: "var(--space-2) var(--space-4)",
+                    background: "var(--color-bg-card)",
+                    border: "1px solid var(--color-border)",
+                    borderRadius: "var(--radius-lg)",
+                    color: "var(--color-text-secondary)",
+                    fontSize: "var(--text-sm)",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-sans)",
+                }}>
+                    Cerrar sesión
+                </button>
             </div>
+
+            {/* Stats */}
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <div className="stat-label">Eventos Activos</div>
+                    <div className="stat-value">{stats.events}</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-label">Tareas Pendientes</div>
+                    <div className="stat-value" style={{ color: stats.pending > 0 ? "var(--color-rag-amber)" : "var(--color-success)" }}>
+                        {stats.pending}
+                    </div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-label">Tareas Totales</div>
+                    <div className="stat-value">{stats.tasks}</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-label">Sponsors Pipeline</div>
+                    <div className="stat-value">{stats.sponsors}</div>
+                </div>
+            </div>
+
+            {/* Events */}
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-4)" }}>
+                Próximos Eventos
+            </h2>
+
+            {events.length === 0 ? (
+                <div className="event-card" style={{ textAlign: "center", padding: "var(--space-12)" }}>
+                    <p style={{ fontSize: "var(--text-4xl)", marginBottom: "var(--space-3)" }}>🎪</p>
+                    <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-lg)" }}>
+                        No hay eventos creados aún
+                    </p>
+                    <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)", marginTop: "var(--space-2)" }}>
+                        Ve a <a href="/eventos" style={{ color: "var(--color-gold-400)" }}>Eventos</a> para crear el primero
+                    </p>
+                </div>
+            ) : (
+                <div className="event-grid">
+                    {events.map((event) => {
+                        const status = statusLabel[event.status] || { text: event.status, color: "var(--color-text-muted)" };
+                        const start = new Date(event.startDate);
+                        const daysUntil = Math.ceil((start.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+                        return (
+                            <div key={event.id} className="event-card">
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "var(--space-3)" }}>
+                                    <h3 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-lg)", fontWeight: 700 }}>
+                                        {event.name}
+                                    </h3>
+                                    <span style={{
+                                        fontSize: "var(--text-xs)",
+                                        padding: "var(--space-1) var(--space-2)",
+                                        borderRadius: "var(--radius-full)",
+                                        background: `${status.color}20`,
+                                        color: status.color,
+                                        fontWeight: 600,
+                                    }}>
+                                        {status.text}
+                                    </span>
+                                </div>
+                                <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)", marginBottom: "var(--space-3)" }}>
+                                    {start.toLocaleDateString("es-EC", { day: "numeric", month: "long", year: "numeric" })}
+                                    {daysUntil > 0 ? ` — en ${daysUntil} días` : daysUntil === 0 ? " — ¡Hoy!" : ` — hace ${Math.abs(daysUntil)} días`}
+                                </p>
+                                <div style={{ display: "flex", gap: "var(--space-4)", fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
+                                    <span>📋 {event._count.tasks} tareas</span>
+                                    <span>🏢 {event._count.sponsorDeals} sponsors</span>
+                                    <span>🎟️ {event._count.tickets} tickets</span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }

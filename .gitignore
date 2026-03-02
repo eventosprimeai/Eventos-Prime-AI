@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+.turbo/
+
+# Environment
+.env
+.env.local
+.env.production.local
+.env.development.local
+.env.test.local
+
+# Credentials (NEVER commit)
+credentials/
+*.json.key
+gcp-service-account.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Prisma
+packages/db/prisma/*.db
+packages/db/prisma/*.db-journal
+
+# Testing
+coverage/
+
+# Misc
+*.log
+npm-debug.log*

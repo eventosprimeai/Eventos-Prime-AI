@@ -1,0 +1,27 @@
+{
+  "name": "eventosprime-ai",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "db:generate": "turbo run db:generate --filter=@eventos-prime/db",
+    "db:push": "turbo run db:push --filter=@eventos-prime/db",
+    "db:studio": "turbo run db:studio --filter=@eventos-prime/db",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.4.0",
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.0"
+  },
+  "packageManager": "npm@11.9.0",
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

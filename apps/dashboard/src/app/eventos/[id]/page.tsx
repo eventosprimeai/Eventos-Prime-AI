@@ -2,36 +2,53 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import {
+    BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
+    Tooltip, ResponsiveContainer, Legend,
+} from "recharts";
 
+/* ─── Types ───────────────────────────────────────── */
 interface EventDetail {
-    id: string;
-    name: string;
-    description: string | null;
-    status: string;
-    startDate: string;
-    endDate: string;
-    location: string | null;
-    venue: string | null;
-    capacity: number;
-    budget: string;
-    createdAt: string;
-    tasks: { id: string; title: string; status: string; priority: string; assignee: { name: string } | null }[];
-    sponsorDeals: { id: string; stage: string; sponsor: { companyName: string; industry: string | null } }[];
+    id: string; name: string; description: string | null; status: string;
+    startDate: string; endDate: string; location: string | null; venue: string | null;
+    capacity: number; budget: string; createdAt: string;
+    tasks: { id: string; title: string; status: string; priority: string; dueDate: string | null; assignee: { name: string } | null }[];
+    sponsorDeals: { id: string; stage: string; dealValue: string | null; sponsor: { companyName: string; industry: string | null } }[];
     _count: { tasks: number; sponsorDeals: number; tickets: number; checklists: number; incidents: number };
 }
 
+type ActiveTab = "tareas" | "sponsors" | "tickets" | "checklists" | "incidencias" | null;
+
 const statusConfig: Record<string, { label: string; color: string }> = {
-    BORRADOR: { label: "Borrador", color: "#71717a" },
-    PLANIFICADO: { label: "Planificado", color: "#38bdf8" },
-    PRE_PRODUCCION: { label: "Pre-producción", color: "#facc15" },
-    EN_VIVO: { label: "🔴 En vivo", color: "#ef4444" },
-    POST_PRODUCCION: { label: "Post-producción", color: "#7dd3fc" },
-    CERRADO: { label: "Cerrado", color: "#22c55e" },
+    BORRADOR: { label: "Borrador", color: "#71717a" }, PLANIFICADO: { label: "Planificado", color: "#38bdf8" },
+    PRE_PRODUCCION: { label: "Pre-producción", color: "#facc15" }, EN_VIVO: { label: "🔴 En vivo", color: "#ef4444" },
+    POST_PRODUCCION: { label: "Post-producción", color: "#7dd3fc" }, CERRADO: { label: "Cerrado", color: "#22c55e" },
     CANCELADO: { label: "Cancelado", color: "#ef4444" },
 };
-
 const allStatuses = ["BORRADOR", "PLANIFICADO", "PRE_PRODUCCION", "EN_VIVO", "POST_PRODUCCION", "CERRADO", "CANCELADO"];
+const CHART_COLORS = ["#facc15", "#38bdf8", "#22c55e", "#f59e0b", "#ef4444", "#a855f7", "#ec4899", "#14b8a6"];
 
+const taskStatusLabels: Record<string, string> = {
+    PENDIENTE: "Pendiente", EN_PROGRESO: "En Progreso", REVISION: "Revisión", COMPLETADA: "Completada", CANCELADA: "Cancelada",
+};
+const taskPriorityLabels: Record<string, string> = {
+    BAJA: "Baja", MEDIA: "Media", ALTA: "Alta", URGENTE: "Urgente",
+};
+
+/* ─── Tooltip personalizado ──────────────────────── */
+function CustomTooltip({ active, payload, label }: any) {
+    if (!active || !payload?.length) return null;
+    return (
+        <div style={{ background: "#16161e", border: "1px solid #2a2a36", borderRadius: 8, padding: "8px 12px" }}>
+            <p style={{ color: "#f5f5f7", fontWeight: 600, fontSize: 13 }}>{label}</p>
+            {payload.map((p: any, i: number) => (
+                <p key={i} style={{ color: p.color || p.fill, fontSize: 12 }}>{p.name}: {p.value}</p>
+            ))}
+        </div>
+    );
+}
+
+/* ─── Main Page ──────────────────────────────────── */
 export default function EventDetailPage() {
     const { id } = useParams();
     const router = useRouter();
@@ -41,14 +58,13 @@ export default function EventDetailPage() {
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [activeTab, setActiveTab] = useState<ActiveTab>(null);
     const [form, setForm] = useState({
         name: "", description: "", startDate: "", endDate: "",
         location: "", venue: "", capacity: "", budget: "", status: "",
     });
 
-    useEffect(() => {
-        fetchEvent();
-    }, [id]);
+    useEffect(() => { fetchEvent(); }, [id]);
 
     const fetchEvent = async () => {
         try {
@@ -57,19 +73,12 @@ export default function EventDetailPage() {
                 const data = await res.json();
                 setEvent(data);
                 setForm({
-                    name: data.name,
-                    description: data.description || "",
-                    startDate: data.startDate.split("T")[0],
-                    endDate: data.endDate.split("T")[0],
-                    location: data.location || "",
-                    venue: data.venue || "",
-                    capacity: String(data.capacity),
-                    budget: String(data.budget),
-                    status: data.status,
+                    name: data.name, description: data.description || "",
+                    startDate: data.startDate.split("T")[0], endDate: data.endDate.split("T")[0],
+                    location: data.location || "", venue: data.venue || "",
+                    capacity: String(data.capacity), budget: String(data.budget), status: data.status,
                 });
-            } else {
-                router.push("/eventos");
-            }
+            } else { router.push("/eventos"); }
         } catch { router.push("/eventos"); }
         finally { setLoading(false); }
     };
@@ -79,21 +88,11 @@ export default function EventDetailPage() {
         setSaving(true);
         try {
             const res = await fetch(`/api/events/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    ...form,
-                    capacity: parseInt(form.capacity) || 0,
-                    budget: parseFloat(form.budget) || 0,
-                }),
+                method: "PATCH", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...form, capacity: parseInt(form.capacity) || 0, budget: parseFloat(form.budget) || 0 }),
             });
-            if (res.ok) {
-                setEditing(false);
-                fetchEvent();
-            } else {
-                const data = await res.json();
-                alert("Error: " + data.error);
-            }
+            if (res.ok) { setEditing(false); fetchEvent(); }
+            else { const d = await res.json(); alert("Error: " + d.error); }
         } catch { alert("Error de conexión"); }
         finally { setSaving(false); }
     };
@@ -103,77 +102,110 @@ export default function EventDetailPage() {
         setDeleting(true);
         try {
             const res = await fetch(`/api/events/${id}`, { method: "DELETE" });
-            if (res.ok) {
-                router.push("/eventos");
-            } else {
-                const data = await res.json();
-                alert(data.error);
-                setConfirmDelete(false);
-            }
+            if (res.ok) { router.push("/eventos"); }
+            else { const d = await res.json(); alert(d.error); setConfirmDelete(false); }
         } catch { alert("Error de conexión"); }
         finally { setDeleting(false); }
     };
 
-    const inputStyle = {
-        width: "100%",
-        padding: "var(--space-2) var(--space-3)",
-        background: "var(--color-bg-input)",
-        border: "1px solid var(--color-border)",
-        borderRadius: "var(--radius-lg)",
-        color: "var(--color-text-primary)",
-        fontSize: "var(--text-sm)",
-        fontFamily: "var(--font-sans)",
+    const toggleTab = (tab: ActiveTab) => setActiveTab(activeTab === tab ? null : tab);
+
+    /* ─── Chart data builders ─────────────────────── */
+    const buildTasksByStatus = () => {
+        if (!event) return [];
+        const counts: Record<string, number> = {};
+        event.tasks.forEach(t => { counts[t.status] = (counts[t.status] || 0) + 1; });
+        return Object.entries(counts).map(([k, v]) => ({ name: taskStatusLabels[k] || k, value: v }));
     };
 
-    if (loading) {
-        return (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-                <div style={{ width: 40, height: 40, border: "3px solid var(--color-border)", borderTop: "3px solid var(--color-gold-400)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-            </div>
-        );
-    }
+    const buildTasksByPriority = () => {
+        if (!event) return [];
+        const counts: Record<string, number> = {};
+        event.tasks.forEach(t => { counts[t.priority] = (counts[t.priority] || 0) + 1; });
+        return Object.entries(counts).map(([k, v]) => ({ name: taskPriorityLabels[k] || k, value: v }));
+    };
 
+    const buildTasksByAssignee = () => {
+        if (!event) return [];
+        const counts: Record<string, number> = {};
+        event.tasks.forEach(t => {
+            const name = t.assignee?.name || "Sin asignar";
+            counts[name] = (counts[name] || 0) + 1;
+        });
+        return Object.entries(counts).map(([k, v]) => ({ name: k, tareas: v })).sort((a, b) => b.tareas - a.tareas);
+    };
+
+    const buildSponsorInvestment = () => {
+        if (!event) return { data: [], total: 0 };
+        const data = event.sponsorDeals
+            .filter(d => d.dealValue)
+            .map(d => ({ name: d.sponsor.companyName, value: parseFloat(d.dealValue!), industry: d.sponsor.industry || "N/A" }))
+            .sort((a, b) => b.value - a.value);
+        const total = data.reduce((s, d) => s + d.value, 0);
+        return { data: data.map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 })), total };
+    };
+
+    const buildSponsorsByStage = () => {
+        if (!event) return [];
+        const counts: Record<string, number> = {};
+        event.sponsorDeals.forEach(d => { counts[d.stage] = (counts[d.stage] || 0) + 1; });
+        return Object.entries(counts).map(([k, v]) => ({ name: k, value: v }));
+    };
+
+    const inputStyle = {
+        width: "100%", padding: "var(--space-2) var(--space-3)",
+        background: "var(--color-bg-input)", border: "1px solid var(--color-border)",
+        borderRadius: "var(--radius-lg)", color: "var(--color-text-primary)",
+        fontSize: "var(--text-sm)", fontFamily: "var(--font-sans)",
+    };
+
+    if (loading) return (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+            <div style={{ width: 40, height: 40, border: "3px solid var(--color-border)", borderTop: "3px solid var(--color-gold-400)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+        </div>
+    );
     if (!event) return null;
 
     const status = statusConfig[event.status] || { label: event.status, color: "#71717a" };
     const start = new Date(event.startDate);
-    const end = new Date(event.endDate);
     const daysUntil = Math.ceil((start.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+    const tabConfig: { key: ActiveTab; label: string; icon: string; count: number }[] = [
+        { key: "tareas", label: "Tareas", icon: "📋", count: event._count.tasks },
+        { key: "sponsors", label: "Sponsors", icon: "🏢", count: event._count.sponsorDeals },
+        { key: "tickets", label: "Tickets", icon: "🎟️", count: event._count.tickets },
+        { key: "checklists", label: "Checklists", icon: "✅", count: event._count.checklists },
+        { key: "incidencias", label: "Incidencias", icon: "⚠️", count: event._count.incidents },
+    ];
 
     return (
         <div className="animate-fade-in">
-            {/* Back + Actions */}
+            {/* ── Back + Actions ── */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-6)" }}>
                 <button onClick={() => router.push("/eventos")} style={{
                     display: "flex", alignItems: "center", gap: "var(--space-2)",
                     background: "none", border: "none", color: "var(--color-text-muted)", fontSize: "var(--text-sm)", cursor: "pointer", fontFamily: "var(--font-sans)",
-                }}>
-                    ← Volver a Eventos
-                </button>
+                }}>← Volver a Eventos</button>
                 <div style={{ display: "flex", gap: "var(--space-3)" }}>
                     {!editing ? (
                         <>
                             <button onClick={() => setEditing(true)} style={{
-                                padding: "var(--space-2) var(--space-4)",
-                                background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)",
+                                padding: "var(--space-2) var(--space-4)", background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)",
                                 color: "var(--color-text-secondary)", fontSize: "var(--text-sm)", cursor: "pointer", fontFamily: "var(--font-sans)",
                             }}>✏️ Editar</button>
                             <button onClick={() => setConfirmDelete(true)} style={{
-                                padding: "var(--space-2) var(--space-4)",
-                                background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "var(--radius-lg)",
+                                padding: "var(--space-2) var(--space-4)", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "var(--radius-lg)",
                                 color: "var(--color-error)", fontSize: "var(--text-sm)", cursor: "pointer", fontFamily: "var(--font-sans)",
                             }}>🗑️ Eliminar</button>
                         </>
                     ) : (
                         <>
                             <button onClick={() => { setEditing(false); fetchEvent(); }} style={{
-                                padding: "var(--space-2) var(--space-4)",
-                                background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)",
+                                padding: "var(--space-2) var(--space-4)", background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)",
                                 color: "var(--color-text-secondary)", fontSize: "var(--text-sm)", cursor: "pointer", fontFamily: "var(--font-sans)",
                             }}>Cancelar</button>
                             <button onClick={handleSave} disabled={saving} style={{
-                                padding: "var(--space-2) var(--space-5)",
-                                background: "var(--gradient-gold)", border: "none", borderRadius: "var(--radius-lg)",
+                                padding: "var(--space-2) var(--space-5)", background: "var(--gradient-gold)", border: "none", borderRadius: "var(--radius-lg)",
                                 color: "var(--color-bg-primary)", fontSize: "var(--text-sm)", fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", fontFamily: "var(--font-sans)", opacity: saving ? 0.7 : 1,
                             }}>{saving ? "Guardando..." : "💾 Guardar Cambios"}</button>
                         </>
@@ -181,192 +213,385 @@ export default function EventDetailPage() {
                 </div>
             </div>
 
-            {/* Delete Confirmation */}
+            {/* ── Delete Confirm ── */}
             {confirmDelete && (
-                <div className="glass-card" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)", borderColor: "rgba(239, 68, 68, 0.3)" }}>
-                    <h3 style={{ color: "var(--color-error)", fontFamily: "var(--font-display)", fontWeight: 700, marginBottom: "var(--space-2)" }}>
-                        ⚠️ ¿Eliminar este evento?
-                    </h3>
+                <div className="glass-card" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)", borderColor: "rgba(239,68,68,0.3)" }}>
+                    <h3 style={{ color: "var(--color-error)", fontFamily: "var(--font-display)", fontWeight: 700, marginBottom: "var(--space-2)" }}>⚠️ ¿Eliminar este evento?</h3>
                     <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-sm)", marginBottom: "var(--space-4)" }}>
                         Esta acción no se puede deshacer. Se eliminará <strong>{event.name}</strong> permanentemente.
                     </p>
                     <div style={{ display: "flex", gap: "var(--space-3)" }}>
-                        <button onClick={() => setConfirmDelete(false)} style={{
-                            padding: "var(--space-2) var(--space-4)", background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)",
-                            color: "var(--color-text-secondary)", fontSize: "var(--text-sm)", cursor: "pointer", fontFamily: "var(--font-sans)",
-                        }}>No, cancelar</button>
-                        <button onClick={handleDelete} disabled={deleting} style={{
-                            padding: "var(--space-2) var(--space-5)", background: "var(--color-error)", border: "none", borderRadius: "var(--radius-lg)",
-                            color: "#fff", fontSize: "var(--text-sm)", fontWeight: 700, cursor: deleting ? "not-allowed" : "pointer", fontFamily: "var(--font-sans)",
-                        }}>{deleting ? "Eliminando..." : "Sí, eliminar evento"}</button>
+                        <button onClick={() => setConfirmDelete(false)} style={{ padding: "var(--space-2) var(--space-4)", background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", color: "var(--color-text-secondary)", fontSize: "var(--text-sm)", cursor: "pointer", fontFamily: "var(--font-sans)" }}>No, cancelar</button>
+                        <button onClick={handleDelete} disabled={deleting} style={{ padding: "var(--space-2) var(--space-5)", background: "var(--color-error)", border: "none", borderRadius: "var(--radius-lg)", color: "#fff", fontSize: "var(--text-sm)", fontWeight: 700, cursor: deleting ? "not-allowed" : "pointer", fontFamily: "var(--font-sans)" }}>{deleting ? "Eliminando..." : "Sí, eliminar evento"}</button>
                     </div>
                 </div>
             )}
 
-            {/* Event Header */}
+            {/* ── Event Header Card ── */}
             <div className="glass-card" style={{ padding: "var(--space-8)", marginBottom: "var(--space-6)" }}>
                 {editing ? (
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
                         <div style={{ gridColumn: "1 / -1" }}>
                             <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Nombre *</label>
-                            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} style={inputStyle} />
+                            <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} style={inputStyle} />
                         </div>
                         <div style={{ gridColumn: "1 / -1" }}>
                             <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Descripción</label>
-                            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} style={{ ...inputStyle, resize: "vertical" }} />
+                            <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={4} style={{ ...inputStyle, resize: "vertical" }} />
                         </div>
                         <div>
                             <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Estado</label>
-                            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} style={{ ...inputStyle, cursor: "pointer" }}>
+                            <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} style={{ ...inputStyle, cursor: "pointer" }}>
                                 {allStatuses.map(s => <option key={s} value={s}>{statusConfig[s]?.label || s}</option>)}
                             </select>
                         </div>
                         <div>
                             <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Ciudad</label>
-                            <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} style={inputStyle} />
+                            <input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} style={inputStyle} />
                         </div>
                         <div>
                             <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Venue</label>
-                            <input value={form.venue} onChange={(e) => setForm({ ...form, venue: e.target.value })} style={inputStyle} />
+                            <input value={form.venue} onChange={e => setForm({ ...form, venue: e.target.value })} style={inputStyle} />
                         </div>
                         <div>
                             <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Capacidad</label>
-                            <input type="number" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} style={inputStyle} />
+                            <input type="number" value={form.capacity} onChange={e => setForm({ ...form, capacity: e.target.value })} style={inputStyle} />
                         </div>
                         <div>
                             <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Fecha inicio</label>
-                            <input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} style={inputStyle} />
+                            <input type="date" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} style={inputStyle} />
                         </div>
                         <div>
                             <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Fecha fin</label>
-                            <input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} style={inputStyle} />
+                            <input type="date" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} style={inputStyle} />
                         </div>
                         <div>
                             <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Presupuesto (USD)</label>
-                            <input type="number" step="0.01" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} style={inputStyle} />
+                            <input type="number" step="0.01" value={form.budget} onChange={e => setForm({ ...form, budget: e.target.value })} style={inputStyle} />
                         </div>
                     </div>
                 ) : (
                     <>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "var(--space-4)" }}>
-                            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-3xl)", fontWeight: 800 }}>
-                                {event.name}
-                            </h1>
-                            <span style={{
-                                fontSize: "var(--text-sm)", padding: "var(--space-1) var(--space-3)", borderRadius: "var(--radius-full)",
-                                background: `${status.color}20`, color: status.color, fontWeight: 600,
-                            }}>{status.label}</span>
+                            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-3xl)", fontWeight: 800 }}>{event.name}</h1>
+                            <span style={{ fontSize: "var(--text-sm)", padding: "var(--space-1) var(--space-3)", borderRadius: "var(--radius-full)", background: `${status.color}20`, color: status.color, fontWeight: 600 }}>{status.label}</span>
                         </div>
-
+                        {/* Description with paragraphs */}
                         {event.description && (
-                            <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-base)", lineHeight: 1.7, marginBottom: "var(--space-6)" }}>
-                                {event.description}
-                            </p>
+                            <div style={{ marginBottom: "var(--space-6)" }}>
+                                {event.description.split("\n").filter(p => p.trim()).map((paragraph, i) => (
+                                    <p key={i} style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-base)", lineHeight: 1.8, marginBottom: "var(--space-3)" }}>
+                                        {paragraph}
+                                    </p>
+                                ))}
+                            </div>
                         )}
-
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "var(--space-4)" }}>
                             <div>
                                 <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600, marginBottom: "var(--space-1)" }}>Fecha</div>
-                                <div style={{ fontSize: "var(--text-sm)", color: "var(--color-text-primary)" }}>
+                                <div style={{ fontSize: "var(--text-sm)" }}>
                                     📅 {start.toLocaleDateString("es-EC", { day: "numeric", month: "long", year: "numeric" })}
                                     {daysUntil > 0 && <span style={{ color: "var(--color-gold-400)", display: "block", fontSize: "var(--text-xs)" }}>En {daysUntil} días</span>}
                                 </div>
                             </div>
                             <div>
                                 <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600, marginBottom: "var(--space-1)" }}>Ubicación</div>
-                                <div style={{ fontSize: "var(--text-sm)", color: "var(--color-text-primary)" }}>
-                                    📍 {event.location || "Sin definir"}{event.venue && ` — ${event.venue}`}
-                                </div>
+                                <div style={{ fontSize: "var(--text-sm)" }}>📍 {event.location || "Sin definir"}{event.venue && ` — ${event.venue}`}</div>
                             </div>
                             <div>
                                 <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600, marginBottom: "var(--space-1)" }}>Capacidad</div>
-                                <div style={{ fontSize: "var(--text-sm)", color: "var(--color-text-primary)" }}>
-                                    👥 {event.capacity > 0 ? event.capacity.toLocaleString() + " personas" : "Sin definir"}
-                                </div>
+                                <div style={{ fontSize: "var(--text-sm)" }}>👥 {event.capacity > 0 ? event.capacity.toLocaleString() + " personas" : "Sin definir"}</div>
                             </div>
                             <div>
                                 <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600, marginBottom: "var(--space-1)" }}>Presupuesto</div>
-                                <div style={{ fontSize: "var(--text-sm)", color: "var(--color-gold-400)", fontWeight: 600 }}>
-                                    💰 ${parseFloat(event.budget).toLocaleString()} USD
-                                </div>
+                                <div style={{ fontSize: "var(--text-sm)", color: "var(--color-gold-400)", fontWeight: 600 }}>💰 ${parseFloat(event.budget).toLocaleString()} USD</div>
                             </div>
                         </div>
                     </>
                 )}
             </div>
 
-            {/* Stats */}
-            <div className="stats-grid" style={{ gridTemplateColumns: "repeat(5, 1fr)" }}>
-                <div className="stat-card" style={{ padding: "var(--space-3)", textAlign: "center" }}>
-                    <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>Tareas</div>
-                    <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-2xl)", fontWeight: 700 }}>{event._count.tasks}</div>
-                </div>
-                <div className="stat-card" style={{ padding: "var(--space-3)", textAlign: "center" }}>
-                    <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>Sponsors</div>
-                    <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-2xl)", fontWeight: 700 }}>{event._count.sponsorDeals}</div>
-                </div>
-                <div className="stat-card" style={{ padding: "var(--space-3)", textAlign: "center" }}>
-                    <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>Tickets</div>
-                    <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-2xl)", fontWeight: 700 }}>{event._count.tickets}</div>
-                </div>
-                <div className="stat-card" style={{ padding: "var(--space-3)", textAlign: "center" }}>
-                    <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>Checklists</div>
-                    <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-2xl)", fontWeight: 700 }}>{event._count.checklists}</div>
-                </div>
-                <div className="stat-card" style={{ padding: "var(--space-3)", textAlign: "center" }}>
-                    <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>Incidencias</div>
-                    <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-2xl)", fontWeight: 700 }}>{event._count.incidents}</div>
-                </div>
+            {/* ── Interactive Stats Cards ── */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "var(--space-3)", marginBottom: "var(--space-6)" }}>
+                {tabConfig.map((tab) => {
+                    const isActive = activeTab === tab.key;
+                    return (
+                        <button key={tab.key} onClick={() => toggleTab(tab.key)} style={{
+                            background: isActive ? "rgba(234,179,8,0.12)" : "var(--color-bg-card)",
+                            border: isActive ? "1px solid var(--color-border-gold)" : "1px solid var(--color-border)",
+                            borderRadius: "var(--radius-xl)", padding: "var(--space-4)", textAlign: "center",
+                            cursor: "pointer", transition: "var(--transition-fast)", fontFamily: "var(--font-sans)",
+                            color: "inherit",
+                        }}>
+                            <div style={{ fontSize: "var(--text-lg)", marginBottom: "var(--space-1)" }}>{tab.icon}</div>
+                            <div style={{ fontSize: "var(--text-xs)", color: isActive ? "var(--color-gold-400)" : "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>{tab.label}</div>
+                            <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-2xl)", fontWeight: 700, color: isActive ? "var(--color-gold-400)" : "var(--color-text-primary)", marginTop: "var(--space-1)" }}>{tab.count}</div>
+                        </button>
+                    );
+                })}
             </div>
 
-            {/* Recent Tasks */}
-            {event.tasks.length > 0 && (
-                <div style={{ marginTop: "var(--space-6)" }}>
-                    <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-4)" }}>
-                        Últimas Tareas
+            {/* ══════════════════════════════════════════════ */}
+            {/*  DYNAMIC SECTIONS — Expand below stats cards  */}
+            {/* ══════════════════════════════════════════════ */}
+
+            {/* ── TAREAS Section ── */}
+            {activeTab === "tareas" && (
+                <div className="glass-card animate-fade-in" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)" }}>
+                    <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-6)" }}>
+                        📋 Análisis de Tareas — {event.name}
                     </h2>
-                    <div className="task-list">
-                        {event.tasks.map((task) => (
-                            <div key={task.id} className="task-item">
-                                <div style={{ flex: 1 }}>
-                                    <span style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>{task.title}</span>
-                                    {task.assignee && <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginLeft: "var(--space-2)" }}>👤 {task.assignee.name}</span>}
-                                </div>
-                                <span style={{
-                                    fontSize: "var(--text-xs)", padding: "var(--space-1) var(--space-2)", borderRadius: "var(--radius-full)",
-                                    background: "var(--color-bg-elevated)", color: "var(--color-text-muted)", fontWeight: 600,
-                                }}>{task.status.replace("_", " ")}</span>
+                    {event.tasks.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: "var(--space-8)", color: "var(--color-text-muted)" }}>
+                            <p style={{ fontSize: "var(--text-lg)" }}>No hay tareas asignadas a este evento</p>
+                            <p style={{ fontSize: "var(--text-sm)", marginTop: "var(--space-2)" }}>Ve a <a href="/tareas" style={{ color: "var(--color-gold-400)" }}>Tareas</a> para crear la primera</p>
+                        </div>
+                    ) : (
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-6)" }}>
+                            {/* Tareas por estado — Pie */}
+                            <div>
+                                <h3 style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginBottom: "var(--space-3)" }}>Por Estado</h3>
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <PieChart>
+                                        <Pie data={buildTasksByStatus()} cx="50%" cy="50%" innerRadius={50} outerRadius={90} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                                            {buildTasksByStatus().map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                                        </Pie>
+                                        <Tooltip content={<CustomTooltip />} />
+                                    </PieChart>
+                                </ResponsiveContainer>
                             </div>
-                        ))}
+                            {/* Tareas por prioridad — Pie */}
+                            <div>
+                                <h3 style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginBottom: "var(--space-3)" }}>Por Prioridad</h3>
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <PieChart>
+                                        <Pie data={buildTasksByPriority()} cx="50%" cy="50%" innerRadius={50} outerRadius={90} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                                            {buildTasksByPriority().map((_, i) => <Cell key={i} fill={["#22c55e", "#facc15", "#f59e0b", "#ef4444"][i]} />)}
+                                        </Pie>
+                                        <Tooltip content={<CustomTooltip />} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                            {/* Tareas por responsable — Bar */}
+                            <div style={{ gridColumn: "1 / -1" }}>
+                                <h3 style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginBottom: "var(--space-3)" }}>Tareas por Responsable</h3>
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <BarChart data={buildTasksByAssignee()} layout="vertical" margin={{ left: 80 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#2a2a36" />
+                                        <XAxis type="number" tick={{ fill: "#71717a", fontSize: 12 }} />
+                                        <YAxis dataKey="name" type="category" tick={{ fill: "#a1a1aa", fontSize: 12 }} width={80} />
+                                        <Tooltip content={<CustomTooltip />} />
+                                        <Bar dataKey="tareas" fill="#facc15" radius={[0, 4, 4, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                            {/* Task list */}
+                            <div style={{ gridColumn: "1 / -1" }}>
+                                <h3 style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginBottom: "var(--space-3)" }}>Listado de Tareas</h3>
+                                <div className="task-list">
+                                    {event.tasks.map(t => (
+                                        <div key={t.id} className={`task-item ${t.status === "COMPLETADA" ? "on-track" : t.dueDate && new Date(t.dueDate) < new Date() ? "overdue" : ""}`}>
+                                            <div style={{ flex: 1 }}>
+                                                <span style={{ fontWeight: 600, fontSize: "var(--text-sm)", textDecoration: t.status === "COMPLETADA" ? "line-through" : "none" }}>{t.title}</span>
+                                                {t.assignee && <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginLeft: "var(--space-2)" }}>👤 {t.assignee.name}</span>}
+                                            </div>
+                                            <span style={{ fontSize: "var(--text-xs)", padding: "2px 8px", borderRadius: "var(--radius-full)", background: "var(--color-bg-elevated)", color: "var(--color-text-muted)" }}>{taskStatusLabels[t.status] || t.status}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ── SPONSORS Section ── */}
+            {activeTab === "sponsors" && (() => {
+                const { data: investData, total } = buildSponsorInvestment();
+                const stageData = buildSponsorsByStage();
+                return (
+                    <div className="glass-card animate-fade-in" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)" }}>
+                        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-6)" }}>
+                            🏢 Sponsors — {event.name}
+                        </h2>
+                        {event.sponsorDeals.length === 0 ? (
+                            <div style={{ textAlign: "center", padding: "var(--space-8)", color: "var(--color-text-muted)" }}>
+                                <p style={{ fontSize: "var(--text-lg)" }}>No hay sponsors asociados</p>
+                                <p style={{ fontSize: "var(--text-sm)", marginTop: "var(--space-2)" }}>Ve a <a href="/sponsors" style={{ color: "var(--color-gold-400)" }}>Sponsors</a> para agregar empresas</p>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Total investment banner */}
+                                <div style={{ textAlign: "center", padding: "var(--space-4)", background: "rgba(234,179,8,0.08)", borderRadius: "var(--radius-xl)", marginBottom: "var(--space-6)", border: "1px solid var(--color-border-gold)" }}>
+                                    <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Inversión Total de Sponsors</div>
+                                    <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800, color: "var(--color-gold-400)" }}>${total.toLocaleString()} USD</div>
+                                    <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>{event.sponsorDeals.length} empresa{event.sponsorDeals.length !== 1 ? "s" : ""} en el pipeline</div>
+                                </div>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-6)" }}>
+                                    {/* Inversión por sponsor — Pie */}
+                                    <div>
+                                        <h3 style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginBottom: "var(--space-3)" }}>Participación de Inversión</h3>
+                                        {investData.length > 0 ? (
+                                            <ResponsiveContainer width="100%" height={280}>
+                                                <PieChart>
+                                                    <Pie data={investData} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, percent }) => `${name}: ${percent}%`}>
+                                                        {investData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                                                    </Pie>
+                                                    <Tooltip content={<CustomTooltip />} />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                        ) : (
+                                            <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)", textAlign: "center", padding: "var(--space-8)" }}>Agrega valores a los deals para ver el gráfico</p>
+                                        )}
+                                    </div>
+                                    {/* Sponsors por etapa — Bar */}
+                                    <div>
+                                        <h3 style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginBottom: "var(--space-3)" }}>Sponsors por Etapa del Pipeline</h3>
+                                        <ResponsiveContainer width="100%" height={280}>
+                                            <BarChart data={stageData}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a36" />
+                                                <XAxis dataKey="name" tick={{ fill: "#71717a", fontSize: 11 }} />
+                                                <YAxis tick={{ fill: "#71717a", fontSize: 12 }} />
+                                                <Tooltip content={<CustomTooltip />} />
+                                                <Bar dataKey="value" fill="#38bdf8" radius={[4, 4, 0, 0]} name="Sponsors" />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                                {/* Sponsor list with investment */}
+                                <div style={{ marginTop: "var(--space-4)" }}>
+                                    <h3 style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginBottom: "var(--space-3)" }}>Detalle de Inversión</h3>
+                                    <div className="task-list">
+                                        {event.sponsorDeals.map(d => (
+                                            <div key={d.id} className="task-item">
+                                                <div style={{ flex: 1 }}>
+                                                    <span style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>🏢 {d.sponsor.companyName}</span>
+                                                    {d.sponsor.industry && <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginLeft: "var(--space-2)" }}>{d.sponsor.industry}</span>}
+                                                </div>
+                                                <span style={{ fontSize: "var(--text-sm)", color: "var(--color-gold-400)", fontWeight: 600, marginRight: "var(--space-3)" }}>
+                                                    {d.dealValue ? `$${parseFloat(d.dealValue).toLocaleString()}` : "—"}
+                                                </span>
+                                                <span style={{ fontSize: "var(--text-xs)", padding: "2px 8px", borderRadius: "var(--radius-full)", background: "var(--color-bg-elevated)", color: "var(--color-text-muted)" }}>{d.stage}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                );
+            })()}
+
+            {/* ── TICKETS Section ── */}
+            {activeTab === "tickets" && (
+                <div className="glass-card animate-fade-in" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)" }}>
+                    <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-6)" }}>
+                        🎟️ Tickets — {event.name}
+                    </h2>
+                    <div style={{ textAlign: "center", padding: "var(--space-8)" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "var(--space-4)", marginBottom: "var(--space-6)" }}>
+                            {[
+                                { label: "General", icon: "🎫", count: 0, color: "#38bdf8" },
+                                { label: "VIP", icon: "⭐", count: 0, color: "#facc15" },
+                                { label: "Socios", icon: "🤝", count: 0, color: "#22c55e" },
+                                { label: "Auspiciantes", icon: "🏢", count: 0, color: "#a855f7" },
+                            ].map(t => (
+                                <div key={t.label} style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-4)" }}>
+                                    <div style={{ fontSize: "var(--text-2xl)" }}>{t.icon}</div>
+                                    <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600, marginTop: "var(--space-1)" }}>{t.label}</div>
+                                    <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-3xl)", fontWeight: 700, color: t.color }}>{t.count}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+                            <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-4)" }}>
+                                <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Total Vendidos</div>
+                                <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800, color: "var(--color-gold-400)" }}>{event._count.tickets}</div>
+                            </div>
+                            <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-4)" }}>
+                                <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Check-ins Verificados</div>
+                                <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800, color: "var(--color-success)" }}>0</div>
+                            </div>
+                        </div>
+                        {event._count.tickets === 0 && (
+                            <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)", marginTop: "var(--space-4)" }}>
+                                Los datos de tickets se irán cargando conforme se vendan en la tienda
+                            </p>
+                        )}
                     </div>
                 </div>
             )}
 
-            {/* Sponsors */}
-            {event.sponsorDeals.length > 0 && (
-                <div style={{ marginTop: "var(--space-6)" }}>
-                    <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-4)" }}>
-                        Sponsors Asociados
+            {/* ── CHECKLISTS Section ── */}
+            {activeTab === "checklists" && (
+                <div className="glass-card animate-fade-in" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)" }}>
+                    <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-6)" }}>
+                        ✅ Checklists — {event.name}
                     </h2>
-                    <div className="task-list">
-                        {event.sponsorDeals.map((deal) => (
-                            <div key={deal.id} className="task-item">
-                                <div style={{ flex: 1 }}>
-                                    <span style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>🏢 {deal.sponsor.companyName}</span>
-                                    {deal.sponsor.industry && <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginLeft: "var(--space-2)" }}>{deal.sponsor.industry}</span>}
-                                </div>
-                                <span style={{
-                                    fontSize: "var(--text-xs)", padding: "var(--space-1) var(--space-2)", borderRadius: "var(--radius-full)",
-                                    background: "var(--color-bg-elevated)", color: "var(--color-text-muted)", fontWeight: 600,
-                                }}>{deal.stage}</span>
-                            </div>
-                        ))}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--space-4)", textAlign: "center" }}>
+                        <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-5)" }}>
+                            <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Total Checklists</div>
+                            <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800 }}>{event._count.checklists}</div>
+                        </div>
+                        <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-5)" }}>
+                            <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Items Completados</div>
+                            <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800, color: "var(--color-success)" }}>0</div>
+                        </div>
+                        <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-5)" }}>
+                            <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Progreso Global</div>
+                            <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800, color: "var(--color-gold-400)" }}>0%</div>
+                        </div>
                     </div>
+                    {/* Progress bar */}
+                    <div style={{ marginTop: "var(--space-4)", background: "var(--color-bg-card)", borderRadius: "var(--radius-full)", height: 12, overflow: "hidden" }}>
+                        <div style={{ width: "0%", height: "100%", background: "var(--gradient-gold)", borderRadius: "var(--radius-full)", transition: "width 0.5s" }} />
+                    </div>
+                    {event._count.checklists === 0 && (
+                        <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)", textAlign: "center", marginTop: "var(--space-4)" }}>
+                            Ve a <a href="/checklists" style={{ color: "var(--color-gold-400)" }}>Checklists</a> para crear plantillas de verificación
+                        </p>
+                    )}
                 </div>
             )}
 
-            {/* Metadata */}
-            <div style={{ marginTop: "var(--space-8)", padding: "var(--space-4)", borderTop: "1px solid var(--color-border)" }}>
+            {/* ── INCIDENCIAS Section ── */}
+            {activeTab === "incidencias" && (
+                <div className="glass-card animate-fade-in" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)" }}>
+                    <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-6)" }}>
+                        ⚠️ Incidencias — {event.name}
+                    </h2>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--space-4)", textAlign: "center" }}>
+                        <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-5)" }}>
+                            <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Total</div>
+                            <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800 }}>{event._count.incidents}</div>
+                        </div>
+                        <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-5)" }}>
+                            <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Resueltas</div>
+                            <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800, color: "var(--color-success)" }}>0</div>
+                        </div>
+                        <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-5)" }}>
+                            <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Pendientes</div>
+                            <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800, color: "var(--color-error)" }}>0</div>
+                        </div>
+                    </div>
+                    {event._count.incidents === 0 ? (
+                        <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)", textAlign: "center", marginTop: "var(--space-4)" }}>
+                            ✅ No hay incidencias reportadas — ¡excelente!
+                        </p>
+                    ) : (
+                        <div style={{ marginTop: "var(--space-4)", textAlign: "center" }}>
+                            <a href={`/incidencias?evento=${event.id}`} style={{
+                                display: "inline-flex", alignItems: "center", gap: "var(--space-2)",
+                                padding: "var(--space-2) var(--space-4)", background: "var(--color-bg-card)", border: "1px solid var(--color-border)",
+                                borderRadius: "var(--radius-lg)", color: "var(--color-gold-400)", fontSize: "var(--text-sm)", textDecoration: "none", fontWeight: 600,
+                            }}>Ver detalle de incidencias →</a>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ── Metadata ── */}
+            <div style={{ padding: "var(--space-4)", borderTop: "1px solid var(--color-border)" }}>
                 <p style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
                     ID: {event.id} — Creado: {new Date(event.createdAt).toLocaleDateString("es-EC", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                 </p>

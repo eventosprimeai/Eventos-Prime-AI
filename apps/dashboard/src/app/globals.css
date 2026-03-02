@@ -217,8 +217,6 @@ body {
 /* ─── Layout ─────────────────────────────────────── */
 
 .dashboard-layout {
-  display: grid;
-  grid-template-columns: 260px 1fr;
   min-height: 100vh;
 }
 
@@ -283,13 +281,14 @@ body {
   margin-left: 260px;
   padding: var(--space-8);
   min-height: 100vh;
+  width: calc(100% - 260px);
 }
 
 /* ─── Stats Grid ─────────────────────────────────── */
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--space-4);
   margin-bottom: var(--space-8);
 }

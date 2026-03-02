@@ -46,6 +46,7 @@ export default function EventosPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (saving) return; // prevent double-submit
         setSaving(true);
 
         try {
@@ -60,11 +61,15 @@ export default function EventosPage() {
             });
 
             if (res.ok) {
-                setForm({ name: "", description: "", startDate: "", endDate: "", location: "", venue: "", capacity: "", budget: "" });
-                setShowForm(false);
-                fetchEvents();
+                // Redirect to dashboard with success
+                window.location.href = "/";
+            } else {
+                const data = await res.json();
+                alert("Error al crear: " + (data.error || "Error desconocido"));
+                setSaving(false);
             }
-        } catch { } finally {
+        } catch {
+            alert("Error de conexión. Intenta de nuevo.");
             setSaving(false);
         }
     };

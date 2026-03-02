@@ -228,7 +228,7 @@ export default function EventosPage() {
                         const daysUntil = Math.ceil((start.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 
                         return (
-                            <div key={event.id} className="event-card">
+                            <div key={event.id} className="event-card" onClick={() => window.location.href = `/eventos/${event.id}`}>
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "var(--space-3)" }}>
                                     <h3 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-lg)", fontWeight: 700 }}>
                                         {event.name}

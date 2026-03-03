@@ -74,8 +74,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         let taskCompleted = false;
         const lowerText = text.toLowerCase();
 
-        // 3. Check for completion hotword
-        if (lowerText.includes("felicidades") && lowerText.includes("tarea completada")) {
+        // 3. Dynamic Status Updates and Completion Hotword
+        const isCompletionMessage = lowerText.includes("felicidades") && lowerText.includes("tarea completada");
+
+        if (isCompletionMessage) {
             await prisma.task.update({
                 where: { id: taskId },
                 data: { status: "COMPLETADA", completedAt: new Date() }
@@ -92,6 +94,21 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
             });
             taskCompleted = true;
             return NextResponse.json({ success: true, message, taskCompleted });
+        } else {
+            // Not a completion message. Update status dynamically:
+            if (task.status === "COMPLETADA") {
+                // If someone writes after it was completed -> Re-open to EN_PROGRESO
+                await prisma.task.update({
+                    where: { id: taskId },
+                    data: { status: "EN_PROGRESO", completedAt: null }
+                });
+            } else if (task.status === "PENDIENTE" && user.id === task.assignee?.id) {
+                // If the assignee replies natively, mark it as in progress
+                await prisma.task.update({
+                    where: { id: taskId },
+                    data: { status: "EN_PROGRESO" }
+                });
+            }
         }
 
         // 4. Trigger Webhook / AI Response if the Assignee is Antigravity
@@ -157,6 +174,15 @@ Actúa como un programador senior brillante. Muy breve, máximo 3 párrafos cort
                         authorId: task.assignee.id // Antigravity's own ID
                     }
                 });
+
+                // Update task status because AI (Assignee) started working
+                if (task.status === "PENDIENTE") {
+                    await prisma.task.update({
+                        where: { id: taskId },
+                        data: { status: "EN_PROGRESO" }
+                    });
+                }
+
             } catch (aiError) {
                 console.error("AI Webhook Failed to generate content:", aiError);
             }

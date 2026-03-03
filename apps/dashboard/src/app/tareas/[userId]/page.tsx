@@ -64,6 +64,9 @@ export default function UserTareasPage() {
     const [sendingMsg, setSendingMsg] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
+    const [showCamera, setShowCamera] = useState(false);
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+
     useEffect(() => {
         fetchData();
     }, [filterStatus]);
@@ -87,25 +90,30 @@ export default function UserTareasPage() {
         loadMessages(task.id);
     };
 
-    const handleSendMessage = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!selectedTask || !newMessage.trim()) return;
+    const handleSendMessage = async (e?: React.FormEvent, overrideText?: string) => {
+        if (e) e.preventDefault();
+        const textToSend = overrideText || newMessage.trim();
+        if (!selectedTask || !textToSend) return;
         setSendingMsg(true);
         try {
             const res = await fetch(`/api/tasks/${selectedTask.id}/messages`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: newMessage })
+                body: JSON.stringify({ text: textToSend })
             });
 
             const data = await res.json();
 
             if (res.ok) {
-                setNewMessage("");
+                if (!overrideText) setNewMessage("");
                 loadMessages(selectedTask.id);
+                // Dynamically update view based on chat interaction
                 if (data.taskCompleted) {
-                    fetchData();
                     setSelectedTask(prev => prev ? { ...prev, status: "COMPLETADA" } : null);
+                    setTasks(prev => prev.map(t => t.id === selectedTask.id ? { ...t, status: "COMPLETADA" } : t));
+                } else if (selectedTask.status === "COMPLETADA") {
+                    setSelectedTask(prev => prev ? { ...prev, status: "EN_PROGRESO" } : null);
+                    setTasks(prev => prev.map(t => t.id === selectedTask.id ? { ...t, status: "EN_PROGRESO" } : t));
                 }
             } else {
                 alert(`Error al enviar mensaje: ${data.error || "Falla del sistema local"}`);
@@ -115,6 +123,62 @@ export default function UserTareasPage() {
         } finally {
             setSendingMsg(false);
         }
+    };
+
+    const handleCompleteTaskClick = () => {
+        if (!selectedTask) return;
+        if (selectedTask.evidenceRequired) {
+            startCamera();
+        } else {
+            handleSendMessage(undefined, "Felicidades tarea completada");
+        }
+    };
+
+    const startCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            setShowCamera(true);
+            setTimeout(() => {
+                if (videoRef.current) videoRef.current.srcObject = stream;
+            }, 100);
+        } catch (e) {
+            alert("No se pudo acceder a la cámara.");
+            setShowCamera(false);
+        }
+    };
+
+    const stopCamera = () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+            const stream = videoRef.current.srcObject as MediaStream;
+            stream.getTracks().forEach(track => track.stop());
+        }
+        setShowCamera(false);
+    };
+
+    const capturePhoto = () => {
+        if (!videoRef.current) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
+        const base64Image = canvas.toDataURL('image/jpeg', 0.6);
+        stopCamera();
+        handleSendMessage(undefined, `![Evidencia Fotográfica](${base64Image})\n\nFelicidades tarea completada`);
+    };
+
+    const renderMessageText = (text: string) => {
+        const imgRegex = /!\[.*?\]\((data:image\/.*?;base64,.*?)\)/;
+        const match = text.match(imgRegex);
+        if (match) {
+            const cleanText = text.replace(imgRegex, '').trim();
+            return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <img src={match[1]} alt="Evidencia" style={{ width: "100%", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }} />
+                    {cleanText && <span>{cleanText}</span>}
+                </div>
+            );
+        }
+        return <span>{text}</span>;
     };
 
     const fetchData = async () => {
@@ -420,7 +484,7 @@ export default function UserTareasPage() {
                                                         {msg.author.name} {msg.author.role === "STAFF" ? "🤖 (IA)" : ""}
                                                     </div>
                                                     <div style={{ fontSize: "var(--text-sm)", color: "var(--color-text-primary)", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
-                                                        {msg.text}
+                                                        {renderMessageText(msg.text)}
                                                     </div>
                                                 </div>
                                             </div>
@@ -432,7 +496,27 @@ export default function UserTareasPage() {
 
                             {/* Chat Input */}
                             <div style={{ padding: "var(--space-4)", borderTop: "1px solid var(--color-border)", background: "var(--color-bg-card)", flexShrink: 0 }}>
-                                <form onSubmit={handleSendMessage} style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+                                {showCamera ? (
+                                    <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#000", display: "flex", flexDirection: "column" }}>
+                                        <video ref={videoRef} autoPlay playsInline style={{ flex: 1, width: "100%", objectFit: "cover" }} />
+                                        <div style={{ padding: "var(--space-4)", display: "flex", justifyContent: "space-between", background: "#111" }}>
+                                            <button onClick={stopCamera} style={{ background: "transparent", color: "#fff", border: "1px solid #333", padding: "12px 24px", borderRadius: "24px" }}>Cancelar</button>
+                                            <button onClick={capturePhoto} style={{ background: "var(--color-success)", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "24px", fontWeight: "bold" }}>📸 Tomar Foto y Completar</button>
+                                        </div>
+                                    </div>
+                                ) : null}
+
+                                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+                                    <button onClick={handleCompleteTaskClick} disabled={sendingMsg || selectedTask.status === "COMPLETADA"} style={{
+                                        background: selectedTask.status === "COMPLETADA" ? "var(--color-bg-elevated)" : "var(--color-success)20",
+                                        color: selectedTask.status === "COMPLETADA" ? "var(--color-text-muted)" : "var(--color-success)",
+                                        border: `1px solid ${selectedTask.status === "COMPLETADA" ? "var(--color-border)" : "var(--color-success)"}`,
+                                        padding: "4px 12px", borderRadius: "16px", fontSize: "0.8rem", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: 4
+                                    }}>
+                                        ✅ {selectedTask.status === "COMPLETADA" ? "Tarea Completada" : (selectedTask.evidenceRequired ? "Completar con evidencia 📸" : "Completar Tarea")}
+                                    </button>
+                                </div>
+                                <form onSubmit={(e) => handleSendMessage(e)} style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
                                     <button type="button" onClick={() => {
                                         const windowAny = window as any;
                                         const SpeechRecognition = windowAny.SpeechRecognition || windowAny.webkitSpeechRecognition;

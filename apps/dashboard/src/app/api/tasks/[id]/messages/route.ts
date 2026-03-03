@@ -95,7 +95,18 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         }
 
         // 4. Trigger Webhook / AI Response if the Assignee is Antigravity
-        if (task.assignee?.name?.toLowerCase().includes("antigravity") && aiClient && task.assignee.id !== user.id) {
+        if (task.assignee?.name?.toLowerCase().includes("antigravity") && task.assignee.id !== user.id) {
+
+            let currentAiClient = aiClient;
+            if (!currentAiClient && process.env.GEMINI_API_KEY) {
+                currentAiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+                aiClient = currentAiClient; // cache it
+            }
+
+            if (!currentAiClient) {
+                console.error("GEMINI_API_KEY no encontrada o error de AI client.");
+                return NextResponse.json({ success: true, message, taskCompleted });
+            }
 
             // SECURITY CHECK: Only Gabriel (Director) or authorized users can give commands to Antigravity
             const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
@@ -130,7 +141,7 @@ Actúa como un programador senior brillante. Muy breve, máximo 3 párrafos cort
                 const chatHistoryText = history.map((msg: any) => `${msg.author.name}: ${msg.text}`).join('\n');
                 const prompt = `${systemPrompt}\n\nHistorial del Chat de la Tarea:\n${chatHistoryText}\n\nAntigravity:`;
 
-                const response = await aiClient.models.generateContent({
+                const response = await currentAiClient.models.generateContent({
                     model: 'gemini-2.5-flash',
                     contents: prompt,
                 });

@@ -388,9 +388,14 @@ export default function UserTareasPage() {
 
                         {/* Description */}
                         {selectedTask.description && (
-                            <div style={{ padding: "var(--space-4)", borderBottom: "1px solid var(--color-border)", background: "var(--color-bg-card)", fontSize: "var(--text-sm)", color: "var(--color-text-secondary)" }}>
-                                {selectedTask.description}
-                            </div>
+                            <details style={{ borderBottom: "1px solid var(--color-border)", background: "var(--color-bg-card)", fontSize: "var(--text-sm)", color: "var(--color-text-secondary)", flexShrink: 0 }}>
+                                <summary style={{ padding: "var(--space-3) var(--space-4)", cursor: "pointer", fontWeight: 600, color: "var(--color-text-primary)", outline: "none" }}>
+                                    📝 Mostrar descripción de la tarea
+                                </summary>
+                                <div style={{ padding: "0 var(--space-4) var(--space-4)", whiteSpace: "pre-wrap", opacity: 0.9 }}>
+                                    {selectedTask.description}
+                                </div>
+                            </details>
                         )}
 
                         {/* Chat Messages */}

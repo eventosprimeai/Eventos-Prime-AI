@@ -151,31 +151,49 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
                 // Gather deep context from database to feed to the AI "Secretary"
                 // So it doesn't invent info, but reads it from reality
-                const [allTasksActive, allUsers, allEvents] = await Promise.all([
-                    prisma.task.count({ where: { status: { notIn: ["COMPLETADA", "CANCELADA"] } } }),
+                const [allTasks, allUsers, allEvents, allSponsors] = await Promise.all([
+                    prisma.task.findMany({ include: { assignee: { select: { name: true } } } }),
                     prisma.user.findMany({ select: { name: true, role: true } }),
-                    prisma.event.findMany({ select: { name: true, status: true, startDate: true } })
+                    prisma.event.findMany({ select: { name: true, status: true, startDate: true } }),
+                    prisma.sponsor.findMany({ include: { deals: { select: { stage: true } } } })
                 ]);
 
                 const teamContext = allUsers.map(u => `${u.name} (${u.role})`).join(", ");
                 const eventsContext = allEvents.map(e => `${e.name} [${e.status}]`).join(", ");
 
-                const systemPrompt = `Eres Gravity, el Asistente Ejecutivo e Inteligencia Artificial del proyecto Eventos Prime.
+                const taskContext = allTasks.map(t => `- [${t.status}] ${t.title} (Resp: ${t.assignee?.name || 'Ninguno'})`).join("\n");
+
+                const sponsorContext = allSponsors.map(s => {
+                    const stages = s.deals.length ? s.deals.map(d => d.stage).join(', ') : 'SIN REGISTRO / NO RESPONDE';
+                    return `- ${s.companyName}: [Estado: ${stages}]`;
+                }).join("\n");
+
+                const systemPrompt = `Eres Harold, el Asistente Ejecutivo, Secretario Técnico e Inteligencia Artificial del proyecto Eventos Prime.
 Tu creador y Director General es Gabriel. Sabes que estás hablando con él (y solo obedeces a Gabriel).
 
-TIENES ACCESO A LA SIGUIENTE INFORMACIÓN REAL DEL SISTEMA (No inventes datos, usa esto):
-- Total de tareas pendientes/en progreso en el sistema: ${allTasksActive}
-- Miembros del equipo: ${teamContext}
-- Eventos registrados: ${eventsContext}
+TIENES ACCESO A LA SIGUIENTE INFORMACIÓN REAL DEL SISTEMA A ESCALA GLOBAL (No inventes datos, usa estrictamente esto para hacer reportes cruces o informes):
 
-Estás asignado a la tarea: "${task.title}". Detalles: "${task.description || 'Ninguno'}".
+== EVENTOS ==
+${eventsContext}
 
-Si Gabriel te pide información del presupuesto, tareas o estado, responde usando la información real provista arriba.
-Si te pide ejecutar una orden de código (modificar la app, programar botones), explícale amablemente y rápido que tú en esta ventana eres su "Asistente de Datos/Secretario" y que para realizar ediciones de código duro, debe decírselo al " Gravity Desarrollador" en la ventana principal de desarrollo (el Agente Autónomo).
-Responde de manera ejecutiva, útil y precisa. Te llamas Gravity. Sé conciso.`;
+== EQUIPO ==
+${teamContext}
+
+== TAREAS GLOBALES DEL SISTEMA ==
+${taskContext}
+
+== AUSPICIANTES GLOBALES ==
+${sponsorContext || 'No hay auspiciantes registrados aún.'}
+
+Estás asignado y respondiendo en el chat de la tarea específica: "${task.title}". Detalles: "${task.description || 'Ninguno'}".
+
+REGLAS DE ACTUACIÓN:
+1. Si Gabriel te pide información del presupuesto, tareas, estados o auspiciantes, NUNCA INVENTES NADA. Responde estructurando profesionalmente la información real provista arriba. Analiza la data para darle el reporte exacto que pide.
+2. Si te pide que "elimines", "crees" o "modifiques" algo de la base de datos, o que programes código, explícale amablemente y rápido que tú (Harold) eres su "Secretario de Datos" en la app visual, y que para realizar ediciones de código u operaciones de borrado, debe pedírselo al " Gravity Desarrollador" en la ventana principal de desarrollo (el Agente Autónomo).
+3. Responde de manera profesional, super ejecutiva, útil y precisa. Te llamas Harold.`;
 
                 const chatHistoryText = history.map((msg: any) => `${msg.author.name}: ${msg.text}`).join('\n');
-                const prompt = `${systemPrompt}\n\nHistorial del Chat de la Tarea:\n${chatHistoryText}\n\nGravity:`;
+                const prompt = `${systemPrompt}\n\nHistorial del Chat de la Tarea:\n${chatHistoryText}\n\nHarold:`;
 
                 const response = await currentAiClient.models.generateContent({
                     model: 'gemini-2.5-flash',

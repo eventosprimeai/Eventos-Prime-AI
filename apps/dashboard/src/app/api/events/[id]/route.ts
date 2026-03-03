@@ -31,7 +31,15 @@ export async function GET(
                 incidents: {
                     orderBy: { createdAt: "desc" }
                 },
-                _count: { select: { tasks: true, sponsorDeals: true, tickets: true, checklists: true, incidents: true } },
+                _count: {
+                    select: {
+                        tasks: { where: { status: { notIn: ["COMPLETADA", "CANCELADA"] } } },
+                        sponsorDeals: true,
+                        tickets: true,
+                        checklists: true,
+                        incidents: true
+                    }
+                },
             },
         });
 

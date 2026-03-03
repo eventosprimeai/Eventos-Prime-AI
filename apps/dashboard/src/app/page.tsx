@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
+import { useRouter } from "next/navigation";
 
 interface Event {
     id: string;
@@ -30,6 +31,8 @@ export default function DashboardPage() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
+    const router = useRouter();
+
     useEffect(() => {
         async function load() {
             // Get user info
@@ -42,9 +45,13 @@ export default function DashboardPage() {
                 const res = await fetch("/api/events");
                 if (res.ok) {
                     const data = await res.json();
-                    setEvents(data);
+
+                    // Filter upcoming / active events
+                    const activeEvents = data.filter((e: Event) => e.status !== "CERRADO" && e.status !== "CANCELADO");
+                    setEvents(activeEvents);
+
                     setStats({
-                        events: data.length,
+                        events: activeEvents.length,
                         tasks: data.reduce((sum: number, e: Event) => sum + e._count.tasks, 0),
                         pending: 0,
                         sponsors: data.reduce((sum: number, e: Event) => sum + e._count.sponsorDeals, 0),
@@ -127,21 +134,37 @@ export default function DashboardPage() {
 
             {/* Stats */}
             <div className="stats-grid">
-                <div className="stat-card">
+                <div
+                    className="stat-card"
+                    onClick={() => router.push("/eventos")}
+                    style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
+                >
                     <div className="stat-label">Eventos Activos</div>
                     <div className="stat-value">{stats.events}</div>
                 </div>
-                <div className="stat-card">
+                <div
+                    className="stat-card"
+                    onClick={() => router.push("/tareas")}
+                    style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
+                >
                     <div className="stat-label">Tareas Pendientes</div>
                     <div className="stat-value" style={{ color: stats.pending > 0 ? "var(--color-rag-amber)" : "var(--color-success)" }}>
                         {stats.pending}
                     </div>
                 </div>
-                <div className="stat-card">
+                <div
+                    className="stat-card"
+                    onClick={() => router.push("/tareas")}
+                    style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
+                >
                     <div className="stat-label">Tareas Activas</div>
                     <div className="stat-value">{stats.tasks}</div>
                 </div>
-                <div className="stat-card">
+                <div
+                    className="stat-card"
+                    onClick={() => router.push("/sponsors")}
+                    style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
+                >
                     <div className="stat-label">Sponsors Pipeline</div>
                     <div className="stat-value">{stats.sponsors}</div>
                 </div>
@@ -170,7 +193,12 @@ export default function DashboardPage() {
                         const daysUntil = Math.ceil((start.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 
                         return (
-                            <div key={event.id} className="event-card">
+                            <div
+                                key={event.id}
+                                className="event-card hoverable"
+                                onClick={() => router.push(`/eventos/${event.id}`)}
+                                style={{ cursor: "pointer", transition: "transform 0.2s" }}
+                            >
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "var(--space-3)" }}>
                                     <h3 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-lg)", fontWeight: 700 }}>
                                         {event.name}

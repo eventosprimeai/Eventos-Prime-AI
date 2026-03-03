@@ -68,7 +68,22 @@ export default function EventDetailPage() {
         location: "", venue: "", capacity: "", budget: "", status: "",
     });
 
-    useEffect(() => { fetchEvent(); }, [id]);
+    const [team, setTeam] = useState<{ id: string; name: string; role: string }[]>([]);
+
+    useEffect(() => {
+        fetchEvent();
+        fetchTeam();
+    }, [id]);
+
+    const fetchTeam = async () => {
+        try {
+            const res = await fetch("/api/team");
+            if (res.ok) {
+                const data = await res.json();
+                setTeam(data);
+            }
+        } catch { }
+    };
 
     const fetchEvent = async () => {
         try {
@@ -125,23 +140,45 @@ export default function EventDetailPage() {
     const buildTasksByPriority = () => {
         if (!event) return [];
         const counts: Record<string, number> = {};
-        event.tasks.forEach(t => { counts[t.priority] = (counts[t.priority] || 0) + 1; });
+        // Only count active tasks for priority analysis too to be coherent
+        event.tasks
+            .filter(t => t.status !== "COMPLETADA" && t.status !== "CANCELADA")
+            .forEach(t => { counts[t.priority] = (counts[t.priority] || 0) + 1; });
         return Object.entries(counts).map(([k, v]) => ({ name: taskPriorityLabels[k] || k, value: v }));
     };
 
     const buildTasksByAssignee = () => {
         if (!event) return [];
         const counts: Record<string, { count: number, id: string | null }> = {};
+
+        // 1. Initialize with all team members to ensure total coherency (everyone shows up)
+        team.forEach(member => {
+            const roleStr = ` - ${roleLabels[member.role] || member.role}`;
+            const name = `${member.name}${roleStr}`;
+            counts[name] = { count: 0, id: member.id };
+        });
+
+        // 2. Add unassigned or external people currently associated with tasks
         event.tasks.forEach(t => {
             const roleStr = t.assignee?.role ? ` - ${roleLabels[t.assignee.role] || t.assignee.role}` : "";
             const name = t.assignee ? `${t.assignee.name}${roleStr}` : "Sin asignar";
-
             if (!counts[name]) {
                 counts[name] = { count: 0, id: t.assignee?.id || null };
             }
-            counts[name].count += 1;
         });
-        return Object.entries(counts).map(([k, v]) => ({ name: k, tareas: v.count, id: v.id })).sort((a, b) => b.tareas - a.tareas);
+
+        // 3. Perform the actual active task count
+        event.tasks.forEach(t => {
+            if (t.status !== "COMPLETADA" && t.status !== "CANCELADA") {
+                const roleStr = t.assignee?.role ? ` - ${roleLabels[t.assignee.role] || t.assignee.role}` : "";
+                const name = t.assignee ? `${t.assignee.name}${roleStr}` : "Sin asignar";
+                counts[name].count += 1;
+            }
+        });
+
+        return Object.entries(counts)
+            .map(([k, v]) => ({ name: k, tareas: v.count, id: v.id }))
+            .sort((a, b) => b.tareas - a.tareas); // sort mostly by count descending
     };
 
     const buildSponsorInvestment = () => {

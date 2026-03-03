@@ -1,8 +1,3 @@
-// ═══════════════════════════════════════════════════════
-//  EventosPrime-AI — Prisma Schema
-//  Base de datos PostgreSQL (Supabase + pgvector)
-// ═══════════════════════════════════════════════════════
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
@@ -12,10 +7,319 @@ datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
   directUrl  = env("DIRECT_URL")
-  extensions = [vector]
+  extensions = [uuid_ossp(map: "uuid-ossp", schema: "extensions"), vector]
 }
 
-// ─── USUARIOS ────────────────────────────────────────
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String
+  phone         String?
+  avatarUrl     String?
+  role          UserRole       @default(STAFF)
+  active        Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  auditLogs     AuditLog[]
+  evidence      Evidence[]
+  gpsLogs       GpsLog[]
+  notifications Notification[]
+  taskMessages  TaskMessage[]
+  assignedTasks Task[]         @relation("TaskAssignee")
+  createdTasks  Task[]         @relation("TaskCreator")
+  voiceNotes    VoiceNote[]
+
+  @@map("users")
+}
+
+model Event {
+  id             String          @id @default(uuid())
+  name           String
+  description    String?
+  status         EventStatus     @default(BORRADOR)
+  startDate      DateTime
+  endDate        DateTime
+  location       String?
+  venue          String?
+  capacity       Int             @default(0)
+  budget         Decimal         @default(0) @db.Decimal(12, 2)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  checklists     Checklist[]
+  incidents      Incident[]
+  sponsorDeals   SponsorDeal[]
+  supplierOrders SupplierOrder[]
+  tasks          Task[]
+  tickets        Ticket[]
+
+  @@map("events")
+}
+
+model Task {
+  id               String        @id @default(uuid())
+  title            String
+  description      String?
+  priority         TaskPriority  @default(MEDIA)
+  status           TaskStatus    @default(PENDIENTE)
+  dueDate          DateTime?
+  completedAt      DateTime?
+  evidenceRequired Boolean       @default(true)
+  slaHours         Int?
+  eventId          String
+  assigneeId       String
+  creatorId        String
+  parentId         String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  evidence         Evidence[]
+  messages         TaskMessage[]
+  assignee         User          @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creator          User          @relation("TaskCreator", fields: [creatorId], references: [id])
+  event            Event         @relation(fields: [eventId], references: [id])
+  parent           Task?         @relation("SubTasks", fields: [parentId], references: [id])
+  subtasks         Task[]        @relation("SubTasks")
+  voiceNotes       VoiceNote[]
+
+  @@map("tasks")
+}
+
+model TaskMessage {
+  id        String   @id @default(uuid())
+  text      String
+  taskId    String
+  authorId  String
+  createdAt DateTime @default(now())
+  author    User     @relation(fields: [authorId], references: [id])
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("task_messages")
+}
+
+model Evidence {
+  id        String       @id @default(uuid())
+  type      EvidenceType
+  fileUrl   String
+  fileName  String
+  fileSize  Int?
+  mimeType  String?
+  caption   String?
+  taskId    String
+  userId    String
+  createdAt DateTime     @default(now())
+  task      Task         @relation(fields: [taskId], references: [id])
+  user      User         @relation(fields: [userId], references: [id])
+
+  @@map("evidence")
+}
+
+model VoiceNote {
+  id               String   @id @default(uuid())
+  audioUrl         String
+  durationSeconds  Int?
+  transcription    String?
+  aiInterpretation String?
+  processed        Boolean  @default(false)
+  taskId           String?
+  userId           String
+  createdAt        DateTime @default(now())
+  task             Task?    @relation(fields: [taskId], references: [id])
+  user             User     @relation(fields: [userId], references: [id])
+
+  @@map("voice_notes")
+}
+
+model Sponsor {
+  id            String        @id @default(uuid())
+  companyName   String
+  industry      String?
+  contactName   String?
+  contactEmail  String?
+  contactPhone  String?
+  website       String?
+  notes         String?
+  affinityScore Float?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deals         SponsorDeal[]
+
+  @@map("sponsors")
+}
+
+model SponsorDeal {
+  id            String       @id @default(uuid())
+  stage         SponsorStage @default(PROSPECTO)
+  dealValue     Decimal?     @db.Decimal(12, 2)
+  notes         String?
+  sponsorId     String
+  eventId       String
+  lastContactAt DateTime?
+  closedAt      DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  event         Event        @relation(fields: [eventId], references: [id])
+  sponsor       Sponsor      @relation(fields: [sponsorId], references: [id])
+
+  @@map("sponsor_deals")
+}
+
+model Supplier {
+  id           String          @id @default(uuid())
+  companyName  String
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  category     String?
+  rating       Float?
+  notes        String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  orders       SupplierOrder[]
+
+  @@map("suppliers")
+}
+
+model SupplierOrder {
+  id          String      @id @default(uuid())
+  description String
+  status      OrderStatus @default(PENDIENTE)
+  amount      Decimal?    @db.Decimal(12, 2)
+  dueDate     DateTime?
+  supplierId  String
+  eventId     String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  event       Event       @relation(fields: [eventId], references: [id])
+  supplier    Supplier    @relation(fields: [supplierId], references: [id])
+
+  @@map("supplier_orders")
+}
+
+model Ticket {
+  id         String       @id @default(uuid())
+  ticketCode String       @unique
+  qrCode     String?
+  status     TicketStatus @default(RESERVADO)
+  buyerName  String
+  buyerEmail String
+  buyerPhone String?
+  ticketType String       @default("GENERAL")
+  price      Decimal      @db.Decimal(10, 2)
+  eventId    String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  checkins   CheckIn[]
+  payment    Payment?
+  event      Event        @relation(fields: [eventId], references: [id])
+
+  @@map("tickets")
+}
+
+model CheckIn {
+  id        String   @id @default(uuid())
+  scannedAt DateTime @default(now())
+  gate      String?
+  notes     String?
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+
+  @@map("checkins")
+}
+
+model Payment {
+  id          String          @id @default(uuid())
+  amount      Decimal         @db.Decimal(10, 2)
+  currency    String          @default("USD")
+  status      PaymentStatus   @default(PENDIENTE)
+  provider    PaymentProvider @default(DATAFAST)
+  providerRef String?
+  description String?
+  ticketId    String          @unique
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  ticket      Ticket          @relation(fields: [ticketId], references: [id])
+
+  @@map("payments")
+}
+
+model Checklist {
+  id         String          @id @default(uuid())
+  name       String
+  isTemplate Boolean         @default(false)
+  eventId    String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  items      ChecklistItem[]
+  event      Event?          @relation(fields: [eventId], references: [id])
+
+  @@map("checklists")
+}
+
+model ChecklistItem {
+  id          String    @id @default(uuid())
+  label       String
+  completed   Boolean   @default(false)
+  order       Int       @default(0)
+  checklistId String
+  checklist   Checklist @relation(fields: [checklistId], references: [id])
+
+  @@map("checklist_items")
+}
+
+model GpsLog {
+  id        String   @id @default(uuid())
+  latitude  Float
+  longitude Float
+  accuracy  Float?
+  timestamp DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("gps_logs")
+}
+
+model Incident {
+  id          String           @id @default(uuid())
+  title       String
+  description String?
+  severity    IncidentSeverity @default(MEDIA)
+  resolved    Boolean          @default(false)
+  resolvedAt  DateTime?
+  eventId     String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  event       Event            @relation(fields: [eventId], references: [id])
+
+  @@map("incidents")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  channel   String   @default("push")
+  data      Json?
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  entity    String
+  entityId  String?
+  changes   Json?
+  ipAddress String?
+  userAgent String?
+  userId    String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
 
 enum UserRole {
   DIRECTOR
@@ -26,33 +330,6 @@ enum UserRole {
   SPONSOR
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  phone     String?
-  avatarUrl String?
-  role      UserRole @default(STAFF)
-  active    Boolean  @default(true)
-
-  // Relaciones
-  assignedTasks    Task[]         @relation("TaskAssignee")
-  createdTasks     Task[]         @relation("TaskCreator")
-  evidence         Evidence[]
-  voiceNotes       VoiceNote[]
-  notifications    Notification[]
-  gpsLogs          GpsLog[]
-  auditLogs        AuditLog[]
-  taskMessages     TaskMessage[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("users")
-}
-
-// ─── EVENTOS ─────────────────────────────────────────
-
 enum EventStatus {
   BORRADOR
   PLANIFICADO
@@ -62,34 +339,6 @@ enum EventStatus {
   CERRADO
   CANCELADO
 }
-
-model Event {
-  id          String      @id @default(uuid())
-  name        String
-  description String?
-  status      EventStatus @default(BORRADOR)
-  startDate   DateTime
-  endDate     DateTime
-  location    String?
-  venue       String?
-  capacity    Int         @default(0)
-  budget      Decimal     @default(0) @db.Decimal(12, 2)
-
-  // Relaciones
-  tasks           Task[]
-  sponsorDeals    SponsorDeal[]
-  supplierOrders  SupplierOrder[]
-  tickets         Ticket[]
-  checklists      Checklist[]
-  incidents       Incident[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("events")
-}
-
-// ─── TAREAS ──────────────────────────────────────────
 
 enum TaskPriority {
   BAJA
@@ -106,103 +355,12 @@ enum TaskStatus {
   CANCELADA
 }
 
-model Task {
-  id                String       @id @default(uuid())
-  title             String
-  description       String?
-  priority          TaskPriority @default(MEDIA)
-  status            TaskStatus   @default(PENDIENTE)
-  dueDate           DateTime?
-  completedAt       DateTime?
-  evidenceRequired  Boolean      @default(true)
-  slaHours          Int?
-
-  // Relaciones
-  event       Event     @relation(fields: [eventId], references: [id])
-  eventId     String
-  assignee    User      @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  assigneeId  String
-  creator     User      @relation("TaskCreator", fields: [creatorId], references: [id])
-  creatorId   String
-  parent      Task?     @relation("SubTasks", fields: [parentId], references: [id])
-  parentId    String?
-  subtasks    Task[]    @relation("SubTasks")
-
-  evidence    Evidence[]
-  voiceNotes  VoiceNote[]
-  messages    TaskMessage[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("tasks")
-}
-
-// ─── TASK MESSAGES (CHAT) ────────────────────────────
-
-model TaskMessage {
-  id        String   @id @default(uuid())
-  text      String
-  
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  taskId    String
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  String
-
-  createdAt DateTime @default(now())
-
-  @@map("task_messages")
-}
-
-// ─── EVIDENCIA ───────────────────────────────────────
-
 enum EvidenceType {
   FOTO
   VIDEO
   DOCUMENTO
   AUDIO
 }
-
-model Evidence {
-  id       String       @id @default(uuid())
-  type     EvidenceType
-  fileUrl  String
-  fileName String
-  fileSize Int?
-  mimeType String?
-  caption  String?
-
-  task     Task   @relation(fields: [taskId], references: [id])
-  taskId   String
-  user     User   @relation(fields: [userId], references: [id])
-  userId   String
-
-  createdAt DateTime @default(now())
-
-  @@map("evidence")
-}
-
-// ─── NOTAS DE VOZ ────────────────────────────────────
-
-model VoiceNote {
-  id              String  @id @default(uuid())
-  audioUrl        String
-  durationSeconds Int?
-  transcription   String?
-  aiInterpretation String?
-  processed       Boolean @default(false)
-
-  task   Task?   @relation(fields: [taskId], references: [id])
-  taskId String?
-  user   User    @relation(fields: [userId], references: [id])
-  userId String
-
-  createdAt DateTime @default(now())
-
-  @@map("voice_notes")
-}
-
-// ─── SPONSORS ────────────────────────────────────────
 
 enum SponsorStage {
   PROSPECTO
@@ -214,46 +372,6 @@ enum SponsorStage {
   PERDIDO
 }
 
-model Sponsor {
-  id           String @id @default(uuid())
-  companyName  String
-  industry     String?
-  contactName  String?
-  contactEmail String?
-  contactPhone String?
-  website      String?
-  notes        String?
-
-  affinityScore Float?
-  deals         SponsorDeal[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("sponsors")
-}
-
-model SponsorDeal {
-  id         String       @id @default(uuid())
-  stage      SponsorStage @default(PROSPECTO)
-  dealValue  Decimal?     @db.Decimal(12, 2)
-  notes      String?
-
-  sponsor    Sponsor @relation(fields: [sponsorId], references: [id])
-  sponsorId  String
-  event      Event   @relation(fields: [eventId], references: [id])
-  eventId    String
-
-  lastContactAt DateTime?
-  closedAt      DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  @@map("sponsor_deals")
-}
-
-// ─── PROVEEDORES ─────────────────────────────────────
-
 enum OrderStatus {
   PENDIENTE
   CONFIRMADO
@@ -263,44 +381,6 @@ enum OrderStatus {
   RECHAZADO
 }
 
-model Supplier {
-  id           String  @id @default(uuid())
-  companyName  String
-  contactName  String?
-  contactEmail String?
-  contactPhone String?
-  category     String?
-  rating       Float?
-  notes        String?
-
-  orders SupplierOrder[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("suppliers")
-}
-
-model SupplierOrder {
-  id          String      @id @default(uuid())
-  description String
-  status      OrderStatus @default(PENDIENTE)
-  amount      Decimal?    @db.Decimal(12, 2)
-  dueDate     DateTime?
-
-  supplier   Supplier @relation(fields: [supplierId], references: [id])
-  supplierId String
-  event      Event    @relation(fields: [eventId], references: [id])
-  eventId    String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("supplier_orders")
-}
-
-// ─── TICKETS ─────────────────────────────────────────
-
 enum TicketStatus {
   RESERVADO
   PAGADO
@@ -308,43 +388,6 @@ enum TicketStatus {
   CANCELADO
   REEMBOLSADO
 }
-
-model Ticket {
-  id         String       @id @default(uuid())
-  ticketCode String       @unique
-  qrCode     String?
-  status     TicketStatus @default(RESERVADO)
-  buyerName  String
-  buyerEmail String
-  buyerPhone String?
-  ticketType String       @default("GENERAL")
-  price      Decimal      @db.Decimal(10, 2)
-
-  event   Event  @relation(fields: [eventId], references: [id])
-  eventId String
-
-  payment  Payment?
-  checkins CheckIn[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("tickets")
-}
-
-model CheckIn {
-  id        String   @id @default(uuid())
-  scannedAt DateTime @default(now())
-  gate      String?
-  notes     String?
-
-  ticket   Ticket @relation(fields: [ticketId], references: [id])
-  ticketId String
-
-  @@map("checkins")
-}
-
-// ─── PAGOS ───────────────────────────────────────────
 
 enum PaymentStatus {
   PENDIENTE
@@ -360,128 +403,9 @@ enum PaymentProvider {
   EFECTIVO
 }
 
-model Payment {
-  id              String          @id @default(uuid())
-  amount          Decimal         @db.Decimal(10, 2)
-  currency        String          @default("USD")
-  status          PaymentStatus   @default(PENDIENTE)
-  provider        PaymentProvider @default(DATAFAST)
-  providerRef     String?
-  description     String?
-
-  ticket   Ticket @relation(fields: [ticketId], references: [id])
-  ticketId String @unique
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("payments")
-}
-
-// ─── CHECKLISTS ──────────────────────────────────────
-
-model Checklist {
-  id       String          @id @default(uuid())
-  name     String
-  isTemplate Boolean       @default(false)
-
-  event    Event?  @relation(fields: [eventId], references: [id])
-  eventId  String?
-
-  items    ChecklistItem[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("checklists")
-}
-
-model ChecklistItem {
-  id        String  @id @default(uuid())
-  label     String
-  completed Boolean @default(false)
-  order     Int     @default(0)
-
-  checklist   Checklist @relation(fields: [checklistId], references: [id])
-  checklistId String
-
-  @@map("checklist_items")
-}
-
-// ─── GPS / UBICACIÓN ─────────────────────────────────
-
-model GpsLog {
-  id        String   @id @default(uuid())
-  latitude  Float
-  longitude Float
-  accuracy  Float?
-  timestamp DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id])
-  userId String
-
-  @@map("gps_logs")
-}
-
-// ─── INCIDENTES ──────────────────────────────────────
-
 enum IncidentSeverity {
   BAJA
   MEDIA
   ALTA
   CRITICA
-}
-
-model Incident {
-  id          String           @id @default(uuid())
-  title       String
-  description String?
-  severity    IncidentSeverity @default(MEDIA)
-  resolved    Boolean          @default(false)
-  resolvedAt  DateTime?
-
-  event   Event  @relation(fields: [eventId], references: [id])
-  eventId String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("incidents")
-}
-
-// ─── NOTIFICACIONES ──────────────────────────────────
-
-model Notification {
-  id      String  @id @default(uuid())
-  title   String
-  message String
-  read    Boolean @default(false)
-  channel String  @default("push")
-  data    Json?
-
-  user   User   @relation(fields: [userId], references: [id])
-  userId String
-
-  createdAt DateTime @default(now())
-
-  @@map("notifications")
-}
-
-// ─── AUDITORÍA ───────────────────────────────────────
-
-model AuditLog {
-  id        String  @id @default(uuid())
-  action    String
-  entity    String
-  entityId  String?
-  changes   Json?
-  ipAddress String?
-  userAgent String?
-
-  user   User?   @relation(fields: [userId], references: [id])
-  userId String?
-
-  createdAt DateTime @default(now())
-
-  @@map("audit_logs")
 }

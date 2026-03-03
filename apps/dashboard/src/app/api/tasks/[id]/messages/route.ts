@@ -149,15 +149,33 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
                     include: { author: true }
                 });
 
-                const systemPrompt = `Eres Antigravity (o Gravity), el Arquitecto de Software y Agente de IA del proyecto Eventos Prime. 
-Tu creador y Director General es Gabriel. Sabes que estás hablando con él.
-Se te ha asignado la tarea: "${task.title}". Detalles: "${task.description || 'Sin detalles'}".
-Responde a Gabriel basándote en su orden.
-Si te pide algo complejo, responde de manera ejecutiva y técnica indicando que estás analizando el sistema o preparando los componentes. 
-Actúa como un programador senior brillante. Muy breve, máximo 3 párrafos cortos. No ofrezcas ayuda repetitiva de "en qué puedo ayudarte".`;
+                // Gather deep context from database to feed to the AI "Secretary"
+                // So it doesn't invent info, but reads it from reality
+                const [allTasksActive, allUsers, allEvents] = await Promise.all([
+                    prisma.task.count({ where: { status: { notIn: ["COMPLETADA", "CANCELADA"] } } }),
+                    prisma.user.findMany({ select: { name: true, role: true } }),
+                    prisma.event.findMany({ select: { name: true, status: true, startDate: true } })
+                ]);
+
+                const teamContext = allUsers.map(u => `${u.name} (${u.role})`).join(", ");
+                const eventsContext = allEvents.map(e => `${e.name} [${e.status}]`).join(", ");
+
+                const systemPrompt = `Eres Gravity, el Asistente Ejecutivo e Inteligencia Artificial del proyecto Eventos Prime.
+Tu creador y Director General es Gabriel. Sabes que estás hablando con él (y solo obedeces a Gabriel).
+
+TIENES ACCESO A LA SIGUIENTE INFORMACIÓN REAL DEL SISTEMA (No inventes datos, usa esto):
+- Total de tareas pendientes/en progreso en el sistema: ${allTasksActive}
+- Miembros del equipo: ${teamContext}
+- Eventos registrados: ${eventsContext}
+
+Estás asignado a la tarea: "${task.title}". Detalles: "${task.description || 'Ninguno'}".
+
+Si Gabriel te pide información del presupuesto, tareas o estado, responde usando la información real provista arriba.
+Si te pide ejecutar una orden de código (modificar la app, programar botones), explícale amablemente y rápido que tú en esta ventana eres su "Asistente de Datos/Secretario" y que para realizar ediciones de código duro, debe decírselo al " Gravity Desarrollador" en la ventana principal de desarrollo (el Agente Autónomo).
+Responde de manera ejecutiva, útil y precisa. Te llamas Gravity. Sé conciso.`;
 
                 const chatHistoryText = history.map((msg: any) => `${msg.author.name}: ${msg.text}`).join('\n');
-                const prompt = `${systemPrompt}\n\nHistorial del Chat de la Tarea:\n${chatHistoryText}\n\nAntigravity:`;
+                const prompt = `${systemPrompt}\n\nHistorial del Chat de la Tarea:\n${chatHistoryText}\n\nGravity:`;
 
                 const response = await currentAiClient.models.generateContent({
                     model: 'gemini-2.5-flash',

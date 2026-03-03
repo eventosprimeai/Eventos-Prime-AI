@@ -43,6 +43,7 @@ model User {
   notifications    Notification[]
   gpsLogs          GpsLog[]
   auditLogs        AuditLog[]
+  taskMessages     TaskMessage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -129,11 +130,28 @@ model Task {
 
   evidence    Evidence[]
   voiceNotes  VoiceNote[]
+  messages    TaskMessage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("tasks")
+}
+
+// ─── TASK MESSAGES (CHAT) ────────────────────────────
+
+model TaskMessage {
+  id        String   @id @default(uuid())
+  text      String
+  
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+
+  createdAt DateTime @default(now())
+
+  @@map("task_messages")
 }
 
 // ─── EVIDENCIA ───────────────────────────────────────

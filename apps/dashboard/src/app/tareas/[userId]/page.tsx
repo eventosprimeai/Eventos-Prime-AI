@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 interface Event {
@@ -57,9 +57,59 @@ export default function UserTareasPage() {
         slaHours: "",
     });
 
+    // Chat Modal states
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    const [messages, setMessages] = useState<any[]>([]);
+    const [newMessage, setNewMessage] = useState("");
+    const [sendingMsg, setSendingMsg] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         fetchData();
     }, [filterStatus]);
+
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messages]);
+
+    const loadMessages = async (taskId: string) => {
+        try {
+            const res = await fetch(`/api/tasks/${taskId}/messages`);
+            if (res.ok) setMessages(await res.json());
+        } catch { }
+    };
+
+    const openTaskChat = (task: Task) => {
+        setSelectedTask(task);
+        setMessages([]);
+        loadMessages(task.id);
+    };
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedTask || !newMessage.trim()) return;
+        setSendingMsg(true);
+        try {
+            const res = await fetch(`/api/tasks/${selectedTask.id}/messages`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: newMessage })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setNewMessage("");
+                loadMessages(selectedTask.id);
+                if (data.taskCompleted) {
+                    fetchData();
+                    setSelectedTask(prev => prev ? { ...prev, status: "COMPLETADA" } : null);
+                }
+            }
+        } catch { } finally {
+            setSendingMsg(false);
+        }
+    };
 
     const fetchData = async () => {
         try {
@@ -260,9 +310,10 @@ export default function UserTareasPage() {
                         const ragClass = isOverdue ? "overdue" : task.status === "PENDIENTE" && task.dueDate ? "due-soon" : "on-track";
 
                         return (
-                            <div key={task.id} className={`task-item ${ragClass}`}>
+                            <div key={task.id} className={`task-item ${ragClass} relative`} onClick={() => openTaskChat(task)} style={{ cursor: "pointer", display: "flex", gap: "var(--space-4)", alignItems: "center" }}>
                                 {/* Status Toggle */}
-                                <button onClick={() => {
+                                <button onClick={(e) => {
+                                    e.stopPropagation();
                                     const next: Record<string, string> = {
                                         PENDIENTE: "EN_PROGRESO",
                                         EN_PROGRESO: "REVISION",
@@ -274,7 +325,7 @@ export default function UserTareasPage() {
                                     width: 24, height: 24, borderRadius: "50%", border: `2px solid ${status.color}`,
                                     background: task.status === "COMPLETADA" ? "var(--color-success)" : "transparent",
                                     cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                                    fontSize: "var(--text-xs)", color: "#fff",
+                                    fontSize: "var(--text-xs)", color: "#fff", zIndex: 2
                                 }}>
                                     {task.status === "COMPLETADA" && "✓"}
                                 </button>
@@ -296,9 +347,7 @@ export default function UserTareasPage() {
                                             </span>
                                         )}
                                         {task.evidenceRequired && <span>📸 Evidencia</span>}
-                                        {task._count.evidence > 0 && <span>🖼️ {task._count.evidence}</span>}
-                                        {task._count.subtasks > 0 && <span>📌 {task._count.subtasks} sub</span>}
-                                        {task.assignee && <span>👤 {task.assignee.name}</span>}
+                                        <span>� Chat</span>
                                     </div>
                                 </div>
 
@@ -312,6 +361,95 @@ export default function UserTareasPage() {
                             </div>
                         );
                     })}
+                </div>
+            )}
+
+            {/* Task Detail & Chat Modal */}
+            {selectedTask && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", display: "flex", justifyContent: "flex-end", zIndex: 1000, animation: "fadeIn 0.2s ease" }}>
+                    <div style={{ width: "100%", maxWidth: 500, background: "var(--color-bg-primary)", height: "100%", display: "flex", flexDirection: "column", borderLeft: "1px solid var(--color-border)", boxShadow: "-4px 0 24px rgba(0,0,0,0.5)" }}>
+                        {/* Modal Header */}
+                        <div style={{ padding: "var(--space-4)", borderBottom: "1px solid var(--color-border)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--color-bg-elevated)" }}>
+                            <div style={{ maxWidth: "80%" }}>
+                                <span style={{ fontSize: "var(--text-xs)", color: priorityConfig[selectedTask.priority].color }}>{priorityConfig[selectedTask.priority].label}</span>
+                                <h2 style={{ fontSize: "var(--text-lg)", fontWeight: 700, margin: "var(--space-1) 0" }}>{selectedTask.title}</h2>
+                                <span style={{ fontSize: "var(--text-xs)", padding: "2px 8px", background: `${statusConfig[selectedTask.status].color}20`, color: statusConfig[selectedTask.status].color, borderRadius: "10px", fontWeight: 600 }}>
+                                    {statusConfig[selectedTask.status].label}
+                                </span>
+                            </div>
+                            <button onClick={() => setSelectedTask(null)} style={{ background: "transparent", border: "none", color: "var(--color-text-muted)", fontSize: "var(--text-xl)", cursor: "pointer" }}>✕</button>
+                        </div>
+
+                        {/* Description */}
+                        {selectedTask.description && (
+                            <div style={{ padding: "var(--space-4)", borderBottom: "1px solid var(--color-border)", background: "var(--color-bg-card)", fontSize: "var(--text-sm)", color: "var(--color-text-secondary)" }}>
+                                {selectedTask.description}
+                            </div>
+                        )}
+
+                        {/* Chat Messages */}
+                        <div style={{ flex: 1, padding: "var(--space-4)", overflowY: "auto", display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+                            {messages.length === 0 ? (
+                                <div style={{ textAlign: "center", color: "var(--color-text-muted)", fontSize: "var(--text-sm)", marginTop: "auto", marginBottom: "auto" }}>
+                                    No hay mensajes. ¡Envía "felicidades tarea completada" para cerrarla!
+                                </div>
+                            ) : (
+                                messages.map(msg => {
+                                    const isMe = msg.author.id === userId; // Not strictly true (userId is assignee), but close enough for UI styling, ideally should check against logged in user
+                                    return (
+                                        <div key={msg.id} style={{ display: "flex", gap: "var(--space-2)", flexDirection: isMe ? "row-reverse" : "row" }}>
+                                            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--color-bg-elevated)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: "1px solid var(--color-border)" }}>
+                                                {msg.author.avatarUrl ? <img src={msg.author.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 10 }}>{msg.author.name[0]}</span>}
+                                            </div>
+                                            <div style={{ maxWidth: "75%", background: isMe ? "var(--color-bg-elevated)" : "var(--color-bg-input)", padding: "var(--space-2) var(--space-3)", borderRadius: "var(--radius-lg)", border: isMe ? "1px solid var(--color-gold-400)" : "1px solid var(--color-border)", borderTopRightRadius: isMe ? 0 : "var(--radius-lg)", borderTopLeftRadius: !isMe ? 0 : "var(--radius-lg)" }}>
+                                                <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginBottom: 4 }}>
+                                                    {msg.author.name} {msg.author.role === "STAFF" ? "🤖 (IA)" : ""}
+                                                </div>
+                                                <div style={{ fontSize: "var(--text-sm)", color: "var(--color-text-primary)", whiteSpace: "pre-wrap" }}>
+                                                    {msg.text}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        {/* Chat Input */}
+                        <div style={{ padding: "var(--space-4)", borderTop: "1px solid var(--color-border)", background: "var(--color-bg-card)" }}>
+                            <form onSubmit={handleSendMessage} style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+                                <button type="button" onClick={() => {
+                                    const windowAny = window as any;
+                                    const SpeechRecognition = windowAny.SpeechRecognition || windowAny.webkitSpeechRecognition;
+                                    if (!SpeechRecognition) {
+                                        alert("Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.");
+                                        return;
+                                    }
+                                    const recognition = new SpeechRecognition();
+                                    recognition.lang = 'es-ES';
+                                    recognition.interimResults = false;
+                                    recognition.onresult = (evt: any) => {
+                                        setNewMessage(prev => prev + (prev ? " " : "") + evt.results[0][0].transcript);
+                                    };
+                                    recognition.start();
+                                }} style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--color-bg-elevated)", border: "1px solid var(--color-border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, fontSize: "1.2rem", color: "var(--color-text-primary)" }}>
+                                    🎤
+                                </button>
+                                <input
+                                    type="text"
+                                    value={newMessage}
+                                    onChange={e => setNewMessage(e.target.value)}
+                                    placeholder="Escribe o dicta por voz un mensaje..."
+                                    style={{ ...inputStyle, flex: 1, padding: "var(--space-3)" }}
+                                    disabled={sendingMsg}
+                                />
+                                <button type="submit" disabled={sendingMsg || !newMessage.trim()} style={{
+                                    padding: "0 var(--space-4)", height: 44, background: "var(--gradient-gold)", color: "#000", border: "none", borderRadius: "var(--radius-lg)", fontWeight: 700, cursor: sendingMsg ? "wait" : "pointer", opacity: (!newMessage.trim() || sendingMsg) ? 0.5 : 1
+                                }}>Enviar</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

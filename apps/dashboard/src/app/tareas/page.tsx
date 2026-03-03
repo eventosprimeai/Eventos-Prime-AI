@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 interface Event {
@@ -27,6 +27,7 @@ export default function TeamTareasPage() {
     const [showForm, setShowForm] = useState(false);
     const [saving, setSaving] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
+    const recognitionRef = useRef<any>(null);
     const [form, setForm] = useState({
         title: "",
         description: "",
@@ -124,7 +125,11 @@ export default function TeamTareasPage() {
                             <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "flex-start" }}>
                                 <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Detalles de la tarea..." rows={2} style={{ ...inputStyle, resize: "vertical", flex: 1 }} />
                                 <button type="button" onClick={() => {
-                                    if (isRecording) return;
+                                    if (isRecording) {
+                                        if (recognitionRef.current) recognitionRef.current.stop();
+                                        setIsRecording(false);
+                                        return;
+                                    }
                                     const windowAny = window as any;
                                     const SpeechRecognition = windowAny.SpeechRecognition || windowAny.webkitSpeechRecognition;
                                     if (!SpeechRecognition) {
@@ -132,13 +137,16 @@ export default function TeamTareasPage() {
                                         return;
                                     }
                                     const recognition = new SpeechRecognition();
+                                    recognitionRef.current = recognition;
                                     recognition.lang = 'es-ES';
+                                    recognition.continuous = true;
                                     recognition.interimResults = false;
                                     recognition.onstart = () => setIsRecording(true);
                                     recognition.onend = () => setIsRecording(false);
                                     recognition.onerror = () => setIsRecording(false);
                                     recognition.onresult = (evt: any) => {
-                                        setForm(prev => ({ ...prev, description: prev.description + (prev.description ? " " : "") + evt.results[0][0].transcript }));
+                                        const last = evt.results.length - 1;
+                                        setForm(prev => ({ ...prev, description: prev.description + (prev.description ? " " : "") + evt.results[last][0].transcript }));
                                     };
                                     recognition.start();
                                 }} style={{ width: 44, height: 44, borderRadius: "50%", background: isRecording ? "rgba(255, 60, 60, 0.2)" : "var(--color-bg-elevated)", border: `1px solid ${isRecording ? "red" : "var(--color-border)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, fontSize: "1.2rem", transition: "all 0.2s ease" }}>

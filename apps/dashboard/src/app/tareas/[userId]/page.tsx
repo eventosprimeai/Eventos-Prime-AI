@@ -64,6 +64,12 @@ export default function UserTareasPage() {
     const [sendingMsg, setSendingMsg] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
+    // Voice recognition states
+    const [isRecordingChat, setIsRecordingChat] = useState(false);
+    const recognitionChatRef = useRef<any>(null);
+    const [isRecordingForm, setIsRecordingForm] = useState(false);
+    const recognitionFormRef = useRef<any>(null);
+
     const [showCamera, setShowCamera] = useState(false);
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -303,7 +309,37 @@ export default function UserTareasPage() {
                                 <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "var(--space-1)" }}>
                                     Descripción
                                 </label>
-                                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Detalles de la tarea..." rows={2} style={{ ...inputStyle, resize: "vertical" }} />
+                                <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "flex-start" }}>
+                                    <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Detalles de la tarea..." rows={2} style={{ ...inputStyle, resize: "vertical", flex: 1 }} />
+                                    <button type="button" onClick={() => {
+                                        if (isRecordingForm) {
+                                            if (recognitionFormRef.current) recognitionFormRef.current.stop();
+                                            setIsRecordingForm(false);
+                                            return;
+                                        }
+                                        const windowAny = window as any;
+                                        const SpeechRecognition = windowAny.SpeechRecognition || windowAny.webkitSpeechRecognition;
+                                        if (!SpeechRecognition) {
+                                            alert("Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.");
+                                            return;
+                                        }
+                                        const recognition = new SpeechRecognition();
+                                        recognitionFormRef.current = recognition;
+                                        recognition.lang = 'es-ES';
+                                        recognition.continuous = true;
+                                        recognition.interimResults = false;
+                                        recognition.onstart = () => setIsRecordingForm(true);
+                                        recognition.onend = () => setIsRecordingForm(false);
+                                        recognition.onerror = () => setIsRecordingForm(false);
+                                        recognition.onresult = (evt: any) => {
+                                            const last = evt.results.length - 1;
+                                            setForm(prev => ({ ...prev, description: prev.description + (prev.description ? " " : "") + evt.results[last][0].transcript }));
+                                        };
+                                        recognition.start();
+                                    }} style={{ width: 44, height: 44, borderRadius: "50%", background: isRecordingForm ? "rgba(255, 60, 60, 0.2)" : "var(--color-bg-elevated)", border: `1px solid ${isRecordingForm ? "red" : "var(--color-border)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, fontSize: "1.2rem", transition: "all 0.2s ease" }}>
+                                        🎤
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "var(--space-1)" }}>
@@ -518,6 +554,11 @@ export default function UserTareasPage() {
                                 </div>
                                 <form onSubmit={(e) => handleSendMessage(e)} style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
                                     <button type="button" onClick={() => {
+                                        if (isRecordingChat) {
+                                            if (recognitionChatRef.current) recognitionChatRef.current.stop();
+                                            setIsRecordingChat(false);
+                                            return;
+                                        }
                                         const windowAny = window as any;
                                         const SpeechRecognition = windowAny.SpeechRecognition || windowAny.webkitSpeechRecognition;
                                         if (!SpeechRecognition) {
@@ -525,13 +566,19 @@ export default function UserTareasPage() {
                                             return;
                                         }
                                         const recognition = new SpeechRecognition();
+                                        recognitionChatRef.current = recognition;
                                         recognition.lang = 'es-ES';
+                                        recognition.continuous = true;
                                         recognition.interimResults = false;
+                                        recognition.onstart = () => setIsRecordingChat(true);
+                                        recognition.onend = () => setIsRecordingChat(false);
+                                        recognition.onerror = () => setIsRecordingChat(false);
                                         recognition.onresult = (evt: any) => {
-                                            setNewMessage(prev => prev + (prev ? " " : "") + evt.results[0][0].transcript);
+                                            const last = evt.results.length - 1;
+                                            setNewMessage(prev => prev + (prev ? " " : "") + evt.results[last][0].transcript);
                                         };
                                         recognition.start();
-                                    }} style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--color-bg-elevated)", border: "1px solid var(--color-border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, fontSize: "1.2rem", color: "var(--color-text-primary)" }}>
+                                    }} style={{ width: 44, height: 44, borderRadius: "50%", background: isRecordingChat ? "rgba(255, 60, 60, 0.2)" : "var(--color-bg-elevated)", border: `1px solid ${isRecordingChat ? "red" : "var(--color-border)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, fontSize: "1.2rem", color: "var(--color-text-primary)", transition: "all 0.2s ease" }}>
                                         🎤
                                     </button>
                                     <textarea

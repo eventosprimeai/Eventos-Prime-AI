@@ -13,6 +13,7 @@
         "@eventos-prime/db": "*",
         "@eventos-prime/types": "*",
         "@eventos-prime/ui": "*",
+        "@google/genai": "^1.43.0",
         "@supabase/ssr": "^0.6.0",
         "@supabase/supabase-js": "^2.49.0",
         "next": "^15.3.0",

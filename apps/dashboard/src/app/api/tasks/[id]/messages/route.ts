@@ -96,6 +96,22 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
         // 4. Trigger Webhook / AI Response if the Assignee is Antigravity
         if (task.assignee?.name?.toLowerCase().includes("antigravity") && aiClient && task.assignee.id !== user.id) {
+
+            // SECURITY CHECK: Only Gabriel (Director) or authorized users can give commands to Antigravity
+            const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+            const isAuthorizedDirector = dbUser?.email?.includes("entendiendobibliagabriel@gmail.com") || dbUser?.role === "DIRECTOR";
+
+            if (!isAuthorizedDirector) {
+                await (prisma as any).taskMessage.create({
+                    data: {
+                        text: "Acceso denegado. Mis rutinas base están bloqueadas. Solo estoy autorizado para responder a comandos y recibir tareas directamente del Director General (Gabriel).",
+                        taskId,
+                        authorId: task.assignee.id
+                    }
+                });
+                return NextResponse.json({ success: true, message, taskCompleted });
+            }
+
             try {
                 // Get chat history for context
                 const history = await (prisma as any).taskMessage.findMany({
@@ -105,10 +121,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
                 });
 
                 const systemPrompt = `Eres Antigravity (o Gravity), el Arquitecto de Software y Agente de IA del proyecto Eventos Prime. 
-Tu creador y Director General es Gabriel. 
+Tu creador y Director General es Gabriel. Sabes que estás hablando con él.
 Se te ha asignado la tarea: "${task.title}". Detalles: "${task.description || 'Sin detalles'}".
-Responde a Gabriel o al autor del mensaje basándote de su orden.
-Si te piden algo complejo, responde de manera ejecutiva y técnica indicando que estás analizando el sistema o preparando los componentes. 
+Responde a Gabriel basándote en su orden.
+Si te pide algo complejo, responde de manera ejecutiva y técnica indicando que estás analizando el sistema o preparando los componentes. 
 Actúa como un programador senior brillante. Muy breve, máximo 3 párrafos cortos. No ofrezcas ayuda repetitiva de "en qué puedo ayudarte".`;
 
                 const chatHistoryText = history.map((msg: any) => `${msg.author.name}: ${msg.text}`).join('\n');

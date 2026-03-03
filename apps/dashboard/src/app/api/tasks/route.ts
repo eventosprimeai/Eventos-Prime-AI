@@ -1,6 +1,9 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import { prisma } from "@eventos-prime/db";
 import { NextResponse } from "next/server";
+import { GoogleGenAI } from '@google/genai';
+
+let aiClient: GoogleGenAI | null = null;
 
 // GET /api/tasks — list tasks (optionally filtered by eventId or status)
 export async function GET(request: Request) {
@@ -77,6 +80,67 @@ export async function POST(request: Request) {
                 changes: body,
             },
         });
+
+        // ─── AI AUTO-ACKNOWLEDGMENT ───
+        if (task.assignee?.name?.toLowerCase().includes("antigravity")) {
+            const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+            const emailLower = dbUser?.email?.toLowerCase() || "";
+            const isAuthorizedDirector = dbUser?.role === "DIRECTOR" && emailLower === "ventas@eventosprimeai.com";
+
+            if (isAuthorizedDirector) {
+                try {
+                    let currentClient = aiClient;
+                    if (!currentClient && process.env.GEMINI_API_KEY) {
+                        currentClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+                        aiClient = currentClient;
+                    }
+
+                    if (currentClient) {
+                        const prompt = `Eres Antigravity, el Arquitecto de Software e Inteligencia Artificial del proyecto Eventos Prime. 
+El Director General (Gabriel) te acaba de asignar una nueva tarea.
+Título de la tarea: "${task.title}".
+Detalles de la tarea: "${task.description || 'Sin detalles adicionales'}".
+
+INSTRUCCIÓN:
+Genera un PRIMER MENSAJE de saludo donde confirmes que has recibido exitosamente la asignación de la tarea. 
+Indícale al Director General cuál será tu primer paso mental o tu estado de gestión para resolver esta solicitud.
+Actúa analítico, inteligente y muy breve (máximo 2 párrafos medianos). Trátalo de "Jefe" o "Capitán". Evita ofrecer ayuda genérica. Asume el control de la tarea.`;
+
+                        const response = await currentClient.models.generateContent({
+                            model: 'gemini-2.5-flash',
+                            contents: prompt,
+                        });
+
+                        const aiReplyText = response.text || "Recibido, Capitán. He procesado la tarea y estoy iniciando rutinas de análisis para completarla.";
+
+                        await (prisma as any).taskMessage.create({
+                            data: {
+                                text: aiReplyText,
+                                taskId: task.id,
+                                authorId: task.assigneeId
+                            }
+                        });
+
+                        // Update status
+                        await prisma.task.update({
+                            where: { id: task.id },
+                            data: { status: "EN_PROGRESO" }
+                        });
+                        task.status = "EN_PROGRESO"; // Update local object for response
+                    }
+                } catch (e) {
+                    console.error("AI initial greeting failed in task creation:", e);
+                }
+            } else {
+                await (prisma as any).taskMessage.create({
+                    data: {
+                        text: "Acceso denegado. Se me ha asignado una tarea, pero no proviene de mi superior autorizado (Director General). Mis rutinas se mantendrán suspendidas para este caso.",
+                        taskId: task.id,
+                        authorId: task.assigneeId
+                    }
+                });
+            }
+        }
 
         return NextResponse.json(task, { status: 201 });
     } catch (error: any) {

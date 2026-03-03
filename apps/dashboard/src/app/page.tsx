@@ -15,14 +15,14 @@ interface Event {
 
 interface Stats {
     events: number;
-    tasks: number;
+    tasksCompleted: number;
     pending: number;
-    sponsors: number;
+    inProgress: number;
 }
 
 export default function DashboardPage() {
     const [events, setEvents] = useState<Event[]>([]);
-    const [stats, setStats] = useState<Stats>({ events: 0, tasks: 0, pending: 0, sponsors: 0 });
+    const [stats, setStats] = useState<Stats>({ events: 0, tasksCompleted: 0, pending: 0, inProgress: 0 });
     const [loading, setLoading] = useState(true);
     const [userName, setUserName] = useState("Director");
 
@@ -50,22 +50,39 @@ export default function DashboardPage() {
                     const activeEvents = data.filter((e: Event) => e.status !== "CERRADO" && e.status !== "CANCELADO");
                     setEvents(activeEvents);
 
-                    setStats({
+                    setStats(prev => ({
+                        ...prev,
                         events: activeEvents.length,
-                        tasks: data.reduce((sum: number, e: Event) => sum + e._count.tasks, 0),
-                        pending: 0,
-                        sponsors: data.reduce((sum: number, e: Event) => sum + e._count.sponsorDeals, 0),
-                    });
+                    }));
                 }
             } catch { }
 
-            // Fetch pending tasks count
+            // Fetch tasks breakdown
             try {
-                const res = await fetch("/api/tasks?status=PENDIENTE");
-                if (res.ok) {
-                    const data = await res.json();
-                    setStats(prev => ({ ...prev, pending: data.length }));
+                const [resPending, resInProgress, resCompleted] = await Promise.all([
+                    fetch("/api/tasks?status=PENDIENTE"),
+                    fetch("/api/tasks?status=EN_PROGRESO,REVISION"),
+                    fetch("/api/tasks?status=COMPLETADA")
+                ]);
+
+                let pendingCount = 0;
+                let inProgressCount = 0;
+                let completedCount = 0;
+
+                if (resPending.ok) {
+                    const data = await resPending.json();
+                    pendingCount = data.length || 0;
                 }
+                if (resInProgress.ok) {
+                    const data = await resInProgress.json();
+                    inProgressCount = data.length || 0;
+                }
+                if (resCompleted.ok) {
+                    const data = await resCompleted.json();
+                    completedCount = data.length || 0;
+                }
+
+                setStats(prev => ({ ...prev, pending: pendingCount, inProgress: inProgressCount, tasksCompleted: completedCount }));
             } catch { }
 
             setLoading(false);
@@ -136,37 +153,39 @@ export default function DashboardPage() {
             <div className="stats-grid">
                 <div
                     className="stat-card"
-                    onClick={() => router.push("/eventos")}
-                    style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
-                >
-                    <div className="stat-label">Eventos Activos</div>
-                    <div className="stat-value">{stats.events}</div>
-                </div>
-                <div
-                    className="stat-card"
                     onClick={() => router.push("/tareas")}
                     style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
                 >
+                    <div className="stat-label">Tareas Completadas</div>
+                    <div className="stat-value" style={{ color: "var(--color-text-primary)" }}>{stats.tasksCompleted}</div>
+                </div>
+                <div
+                    className="stat-card"
+                    onClick={() => router.push("/tareas/estado/pendientes")}
+                    style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
+                >
                     <div className="stat-label">Tareas Pendientes</div>
-                    <div className="stat-value" style={{ color: stats.pending > 0 ? "var(--color-rag-amber)" : "var(--color-success)" }}>
+                    <div className="stat-value" style={{ color: stats.pending > 0 ? "var(--color-rag-red)" : "var(--color-success)" }}>
                         {stats.pending}
                     </div>
                 </div>
                 <div
                     className="stat-card"
-                    onClick={() => router.push("/tareas")}
+                    onClick={() => router.push("/tareas/estado/en-progreso")}
                     style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
                 >
-                    <div className="stat-label">Tareas Activas</div>
-                    <div className="stat-value">{stats.tasks}</div>
+                    <div className="stat-label">Tareas en Progreso</div>
+                    <div className="stat-value" style={{ color: stats.inProgress > 0 ? "var(--color-info)" : "var(--color-text-muted)" }}>
+                        {stats.inProgress}
+                    </div>
                 </div>
                 <div
                     className="stat-card"
-                    onClick={() => router.push("/sponsors")}
+                    onClick={() => router.push("/eventos")}
                     style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
                 >
-                    <div className="stat-label">Sponsors Pipeline</div>
-                    <div className="stat-value">{stats.sponsors}</div>
+                    <div className="stat-label">Eventos Activos</div>
+                    <div className="stat-value">{stats.events}</div>
                 </div>
             </div>
 

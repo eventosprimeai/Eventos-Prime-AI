@@ -126,7 +126,11 @@ export default function TeamTareasPage() {
                                 <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Detalles de la tarea..." rows={2} style={{ ...inputStyle, resize: "vertical", flex: 1 }} />
                                 <button type="button" onClick={() => {
                                     if (isRecording) {
-                                        if (recognitionRef.current) recognitionRef.current.stop();
+                                        if (recognitionRef.current) {
+                                            const rec = recognitionRef.current;
+                                            recognitionRef.current = null; // Mark as manually stopped
+                                            rec.stop();
+                                        }
                                         setIsRecording(false);
                                         return;
                                     }
@@ -143,8 +147,20 @@ export default function TeamTareasPage() {
                                     recognition.interimResults = true;
                                     const startingText = form.description ? form.description + " " : "";
                                     recognition.onstart = () => setIsRecording(true);
-                                    recognition.onend = () => setIsRecording(false);
-                                    recognition.onerror = () => setIsRecording(false);
+                                    recognition.onend = () => {
+                                        if (recognitionRef.current) {
+                                            try { recognitionRef.current.start(); } catch (e) { }
+                                        } else {
+                                            setIsRecording(false);
+                                        }
+                                    };
+                                    recognition.onerror = (e: any) => {
+                                        if (e.error === 'not-allowed' || e.error === 'not-supported') {
+                                            recognitionRef.current = null;
+                                            setIsRecording(false);
+                                            alert("Error de micrófono: " + e.error);
+                                        }
+                                    };
                                     recognition.onresult = (evt: any) => {
                                         let finalSegment = "";
                                         let interimSegment = "";

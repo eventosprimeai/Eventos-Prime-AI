@@ -313,7 +313,11 @@ export default function UserTareasPage() {
                                     <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Detalles de la tarea..." rows={2} style={{ ...inputStyle, resize: "vertical", flex: 1 }} />
                                     <button type="button" onClick={() => {
                                         if (isRecordingForm) {
-                                            if (recognitionFormRef.current) recognitionFormRef.current.stop();
+                                            if (recognitionFormRef.current) {
+                                                const rec = recognitionFormRef.current;
+                                                recognitionFormRef.current = null;
+                                                rec.stop();
+                                            }
                                             setIsRecordingForm(false);
                                             return;
                                         }
@@ -330,8 +334,20 @@ export default function UserTareasPage() {
                                         recognition.interimResults = true;
                                         const startingText = form.description ? form.description + " " : "";
                                         recognition.onstart = () => setIsRecordingForm(true);
-                                        recognition.onend = () => setIsRecordingForm(false);
-                                        recognition.onerror = () => setIsRecordingForm(false);
+                                        recognition.onend = () => {
+                                            if (recognitionFormRef.current) {
+                                                try { recognitionFormRef.current.start(); } catch (e) { }
+                                            } else {
+                                                setIsRecordingForm(false);
+                                            }
+                                        };
+                                        recognition.onerror = (e: any) => {
+                                            if (e.error === 'not-allowed' || e.error === 'not-supported') {
+                                                recognitionFormRef.current = null;
+                                                setIsRecordingForm(false);
+                                                alert("Error de micrófono: " + e.error);
+                                            }
+                                        };
                                         recognition.onresult = (evt: any) => {
                                             let finalSegment = "";
                                             let interimSegment = "";
@@ -564,7 +580,11 @@ export default function UserTareasPage() {
                                 <form onSubmit={(e) => handleSendMessage(e)} style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
                                     <button type="button" onClick={() => {
                                         if (isRecordingChat) {
-                                            if (recognitionChatRef.current) recognitionChatRef.current.stop();
+                                            if (recognitionChatRef.current) {
+                                                const rec = recognitionChatRef.current;
+                                                recognitionChatRef.current = null;
+                                                rec.stop();
+                                            }
                                             setIsRecordingChat(false);
                                             return;
                                         }
@@ -581,8 +601,20 @@ export default function UserTareasPage() {
                                         recognition.interimResults = true;
                                         const startingMsg = newMessage ? newMessage + " " : "";
                                         recognition.onstart = () => setIsRecordingChat(true);
-                                        recognition.onend = () => setIsRecordingChat(false);
-                                        recognition.onerror = () => setIsRecordingChat(false);
+                                        recognition.onend = () => {
+                                            if (recognitionChatRef.current) {
+                                                try { recognitionChatRef.current.start(); } catch (e) { }
+                                            } else {
+                                                setIsRecordingChat(false);
+                                            }
+                                        };
+                                        recognition.onerror = (e: any) => {
+                                            if (e.error === 'not-allowed' || e.error === 'not-supported') {
+                                                recognitionChatRef.current = null;
+                                                setIsRecordingChat(false);
+                                                alert("Error de micrófono: " + e.error);
+                                            }
+                                        };
                                         recognition.onresult = (evt: any) => {
                                             let finalSegment = "";
                                             let interimSegment = "";

@@ -259,12 +259,19 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 2 de marzo de 2026
+**Ultimo Punto de Restablecimiento:** 2 de marzo de 2026 (noche) / 3 de marzo de 2026
 **Estatus Actual:**
-- **Contexto:** Se estaba trabajando en la coherencia de contadores de tareas (Task Count Coherency), asegurando que el total de tareas en el dashboard cuadre exactamente con la suma de tareas asignadas en los perfiles de cada miembro del equipo.
-- **Archivos Modificados Recientemente:** `apps/dashboard/src/app/tareas/[userId]/page.tsx`, `apps/dashboard/src/app/api/team/route.ts` (estas áreas fueron trabajadas recientemente para mostrar las tareas asignadas específicamente a un usuario). Se comenzó también con un archivo semilla `packages/db/prisma/seed.ts` para poder generar un entorno base.
-- **Regla de Continuidad:** Siempre al terminar una sesión, el asistente dejará el código en este estado de *Punto de Continuidad*, describiendo exactamente el siguiente paso o error pendiente.
+- **Contexto Principal:** Instalación profunda de **OpenClaw** en el VPS Hostinger en el subdominio `openclawos.eventosprimeai.com`.
+- **Logros Alcanzados:**
+  - Instancia de OpenClaw instalada y corriendo mediante WebSocket en el puerto local 18789.
+  - Proxy Inverso Nginx funcionando correctamente con soporte para WebSockets.
+  - Certificado SSL instalado vía Certbot.
+  - Seguridad reforzada con HTTP Basic Auth (`Marketing` / `Open+2025*`).
+  - Navegador Edge del usuario exitosamente emparejado con el Gateway de OpenClaw (Token guardado en CREDENCIALES.txt).
+- **Problema encontrado (Bloqueo Google Free Tier):** Google Cloud bloquea sistemáticamente (Error 429 Quota Exceeded / limit 0) las peticiones gratuitas a la API de Gemini originadas desde la IP del VPS o región de la cuenta.
 
 **Siguiente Acción Pendiente:**
-- Continuar con el detalle de las tareas asignadas a un `[userId]` específico y asegurar que el modal global de creación de tareas asigne correctamente las tareas a los correspondientes usuarios.
-- Asegurar que la coherencia de los contadores en la página inicial refleje este mecanismo.
+1. El usuario adquirirá una API key de pago el miércoles (idealmente Anthropic / Claude 3.5 Sonnet).
+2. Correr el comando para configurar la nueva API key en OpenClaw: `openclaw models auth paste-token --provider anthropic` o definir la variable de entorno en el servicio de systemd como se aprendió y establecer el modelo primario (`openclaw models set anthropic/claude-3-5-sonnet-latest`).
+3. Posterior a eso, OpenClaw estará completamente funcional para delegarle tareas autónomas en el VPS.
+4. Retomar (si se desea) el desarrollo del Dashboard en el PC local (conexión de tareas/sponsors con base de datos real).

@@ -97,16 +97,22 @@ export default function UserTareasPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ text: newMessage })
             });
+
+            const data = await res.json();
+
             if (res.ok) {
-                const data = await res.json();
                 setNewMessage("");
                 loadMessages(selectedTask.id);
                 if (data.taskCompleted) {
                     fetchData();
                     setSelectedTask(prev => prev ? { ...prev, status: "COMPLETADA" } : null);
                 }
+            } else {
+                alert(`Error al enviar mensaje: ${data.error || "Falla del sistema local"}`);
             }
-        } catch { } finally {
+        } catch (error: any) {
+            alert(`Excepción de red: ${error.message}`);
+        } finally {
             setSendingMsg(false);
         }
     };

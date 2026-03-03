@@ -112,7 +112,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         }
 
         // 4. Trigger Webhook / AI Response if the Assignee is Antigravity
-        if (task.assignee?.name?.toLowerCase().includes("antigravity") && task.assignee.id !== user.id) {
+        if (task.assignee?.email === "antigravity@eventosprimeai.com" && task.assignee.id !== user.id) {
 
             let currentAiClient = aiClient;
             if (!currentAiClient && process.env.GEMINI_API_KEY) {

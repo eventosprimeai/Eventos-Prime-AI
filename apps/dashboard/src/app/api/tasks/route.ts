@@ -66,7 +66,7 @@ export async function POST(request: Request) {
                 parentId: body.parentId || null,
             },
             include: {
-                assignee: { select: { id: true, name: true } },
+                assignee: { select: { id: true, name: true, email: true } },
                 event: { select: { id: true, name: true } },
             },
         });
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
         });
 
         // ─── AI AUTO-ACKNOWLEDGMENT ───
-        if (task.assignee?.name?.toLowerCase().includes("antigravity")) {
+        if (task.assignee?.email === "antigravity@eventosprimeai.com") {
             const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
             const emailLower = dbUser?.email?.toLowerCase() || "";
             const isAuthorizedDirector = dbUser?.role === "DIRECTOR" && emailLower === "ventas@eventosprimeai.com";

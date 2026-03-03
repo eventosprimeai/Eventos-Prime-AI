@@ -107,13 +107,13 @@ export default function UserTareasPage() {
             if (res.ok) {
                 if (!overrideText) setNewMessage("");
                 loadMessages(selectedTask.id);
-                // Dynamically update view based on chat interaction
-                if (data.taskCompleted) {
+                // Dynamically update view based on chat interaction (backend computes the exact state)
+                if (data.newStatus) {
+                    setSelectedTask(prev => prev ? { ...prev, status: data.newStatus } : null);
+                    setTasks(prev => prev.map(t => t.id === selectedTask.id ? { ...t, status: data.newStatus } : t));
+                } else if (data.taskCompleted) {
                     setSelectedTask(prev => prev ? { ...prev, status: "COMPLETADA" } : null);
                     setTasks(prev => prev.map(t => t.id === selectedTask.id ? { ...t, status: "COMPLETADA" } : t));
-                } else if (selectedTask.status === "COMPLETADA") {
-                    setSelectedTask(prev => prev ? { ...prev, status: "EN_PROGRESO" } : null);
-                    setTasks(prev => prev.map(t => t.id === selectedTask.id ? { ...t, status: "EN_PROGRESO" } : t));
                 }
             } else {
                 alert(`Error al enviar mensaje: ${data.error || "Falla del sistema local"}`);

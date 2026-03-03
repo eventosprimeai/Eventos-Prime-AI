@@ -188,7 +188,8 @@ Actúa como un programador senior brillante. Muy breve, máximo 3 párrafos cort
             }
         }
 
-        return NextResponse.json({ success: true, message, taskCompleted });
+        const updatedTask = await prisma.task.findUnique({ where: { id: taskId }, select: { status: true } });
+        return NextResponse.json({ success: true, message, taskCompleted, newStatus: updatedTask?.status || task.status });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

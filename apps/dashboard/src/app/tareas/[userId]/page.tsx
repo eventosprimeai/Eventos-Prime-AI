@@ -327,13 +327,22 @@ export default function UserTareasPage() {
                                         recognitionFormRef.current = recognition;
                                         recognition.lang = 'es-ES';
                                         recognition.continuous = true;
-                                        recognition.interimResults = false;
+                                        recognition.interimResults = true;
+                                        const startingText = form.description ? form.description + " " : "";
                                         recognition.onstart = () => setIsRecordingForm(true);
                                         recognition.onend = () => setIsRecordingForm(false);
                                         recognition.onerror = () => setIsRecordingForm(false);
                                         recognition.onresult = (evt: any) => {
-                                            const last = evt.results.length - 1;
-                                            setForm(prev => ({ ...prev, description: prev.description + (prev.description ? " " : "") + evt.results[last][0].transcript }));
+                                            let finalSegment = "";
+                                            let interimSegment = "";
+                                            for (let i = 0; i < evt.results.length; ++i) {
+                                                if (evt.results[i].isFinal) {
+                                                    finalSegment += evt.results[i][0].transcript;
+                                                } else {
+                                                    interimSegment += evt.results[i][0].transcript;
+                                                }
+                                            }
+                                            setForm(prev => ({ ...prev, description: startingText + finalSegment + interimSegment }));
                                         };
                                         recognition.start();
                                     }} style={{ width: 44, height: 44, borderRadius: "50%", background: isRecordingForm ? "rgba(255, 60, 60, 0.2)" : "var(--color-bg-elevated)", border: `1px solid ${isRecordingForm ? "red" : "var(--color-border)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, fontSize: "1.2rem", transition: "all 0.2s ease" }}>
@@ -569,13 +578,22 @@ export default function UserTareasPage() {
                                         recognitionChatRef.current = recognition;
                                         recognition.lang = 'es-ES';
                                         recognition.continuous = true;
-                                        recognition.interimResults = false;
+                                        recognition.interimResults = true;
+                                        const startingMsg = newMessage ? newMessage + " " : "";
                                         recognition.onstart = () => setIsRecordingChat(true);
                                         recognition.onend = () => setIsRecordingChat(false);
                                         recognition.onerror = () => setIsRecordingChat(false);
                                         recognition.onresult = (evt: any) => {
-                                            const last = evt.results.length - 1;
-                                            setNewMessage(prev => prev + (prev ? " " : "") + evt.results[last][0].transcript);
+                                            let finalSegment = "";
+                                            let interimSegment = "";
+                                            for (let i = 0; i < evt.results.length; ++i) {
+                                                if (evt.results[i].isFinal) {
+                                                    finalSegment += evt.results[i][0].transcript;
+                                                } else {
+                                                    interimSegment += evt.results[i][0].transcript;
+                                                }
+                                            }
+                                            setNewMessage(startingMsg + finalSegment + interimSegment);
                                         };
                                         recognition.start();
                                     }} style={{ width: 44, height: 44, borderRadius: "50%", background: isRecordingChat ? "rgba(255, 60, 60, 0.2)" : "var(--color-bg-elevated)", border: `1px solid ${isRecordingChat ? "red" : "var(--color-border)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, fontSize: "1.2rem", color: "var(--color-text-primary)", transition: "all 0.2s ease" }}>

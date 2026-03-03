@@ -140,13 +140,22 @@ export default function TeamTareasPage() {
                                     recognitionRef.current = recognition;
                                     recognition.lang = 'es-ES';
                                     recognition.continuous = true;
-                                    recognition.interimResults = false;
+                                    recognition.interimResults = true;
+                                    const startingText = form.description ? form.description + " " : "";
                                     recognition.onstart = () => setIsRecording(true);
                                     recognition.onend = () => setIsRecording(false);
                                     recognition.onerror = () => setIsRecording(false);
                                     recognition.onresult = (evt: any) => {
-                                        const last = evt.results.length - 1;
-                                        setForm(prev => ({ ...prev, description: prev.description + (prev.description ? " " : "") + evt.results[last][0].transcript }));
+                                        let finalSegment = "";
+                                        let interimSegment = "";
+                                        for (let i = 0; i < evt.results.length; ++i) {
+                                            if (evt.results[i].isFinal) {
+                                                finalSegment += evt.results[i][0].transcript;
+                                            } else {
+                                                interimSegment += evt.results[i][0].transcript;
+                                            }
+                                        }
+                                        setForm(prev => ({ ...prev, description: startingText + finalSegment + interimSegment }));
                                     };
                                     recognition.start();
                                 }} style={{ width: 44, height: 44, borderRadius: "50%", background: isRecording ? "rgba(255, 60, 60, 0.2)" : "var(--color-bg-elevated)", border: `1px solid ${isRecording ? "red" : "var(--color-border)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, fontSize: "1.2rem", transition: "all 0.2s ease" }}>

@@ -11,29 +11,27 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "No user found" }, { status: 401 });
         }
 
-        // Upsert user into Prisma
+        // Do not use avatarUrl from metadata anymore
         const name = user.user_metadata?.name || user.email?.split("@")[0] || "Usuario";
         const role = user.user_metadata?.role || "STAFF";
-        const avatarUrl = user.user_metadata?.avatarUrl || null;
 
-        await prisma.user.upsert({
+        const dbUser = await prisma.user.upsert({
             where: { id: user.id },
             update: {
                 name,
-                role,
-                avatarUrl,
-                // Do not update email in case it wasn't verified
+                role: role as any,
+                // We keep existing avatarUrl in DB intact
             },
             create: {
                 id: user.id,
                 email: user.email!,
                 name,
-                role,
-                avatarUrl,
+                role: role as any,
+                // Avatar will be null initially if logged in via other means
             },
         });
 
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, dbUser });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

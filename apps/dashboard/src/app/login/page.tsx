@@ -120,20 +120,23 @@ export default function LoginPage() {
         const fullName = `${name} ${lastName}`.trim();
 
         try {
-            const { error } = await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: {
-                        name: fullName,
-                        jobTitle: selectedJob,
-                        role: roleValue,
-                        avatarUrl: avatarUrl
-                    },
-                },
+            const res = await fetch("/api/auth/register-user", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    name: fullName,
+                    role: roleValue,
+                    jobTitle: selectedJob,
+                    avatarUrl
+                })
             });
-            if (error) throw error;
-            setSuccess("Cuenta creada exitosamente. Esperando confirmación.");
+
+            const responseData = await res.json();
+            if (!res.ok) throw new Error(responseData.error);
+
+            setSuccess("Cuenta creada exitosamente. Ya puedes iniciar sesión.");
             setMode("login");
             // clear form
             setName(""); setLastName(""); setEmail(""); setPassword(""); setAvatarUrl(null);

@@ -259,16 +259,17 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 2 de marzo de 2026 (noche) / 3 de marzo de 2026
+**Ultimo Punto de Restablecimiento:** 3 de marzo de 2026 (madrugada)
 **Estatus Actual:**
 - **Contexto Principal (VPS):** Instalación profunda de OpenClaw. Problema de Free Tier con Gemini 2.0 (Error 429), esperando API de pago para continuar en el VPS.
-- **Contexto Principal (Dashboard Local):** Se completó la coherencia de datos en el Dashboard principal y tableros. Se implementó el **Sistema Multiusuario Real**, que exige la Contraseña Maestra (`Gabriel230386@`) para registrar nuevos miembros, permitiendo subir foto (recorte automático) y asignar el **Cargo Estructural** del documento interno `profesionales que necesitamos.md`.
-- **Logros Alcanzados en Dashboard:**
-  - Sidebar dinámica carga la tarjeta (Avatar, Nombre y Cargo resposanble) del usuario autenticado y logueado actualmente en `/layout-shell.tsx`.
-  - Ruta de sincronización `/api/auth/sync` garantiza que usuarios creados por UI pasen a la DB PostgreSQL de Prisma automáticamente al iniciar sesión.
-  - Avatares en base64 para evitar complejidad de Storage en esta fase inicial.
+- **Contexto Principal (Dashboard Local):** Se completó la coherencia de datos en el Dashboard principal y tableros. Se implementó el **Sistema Multiusuario Real**, que exige la Contraseña Maestra (`Gabriel230386@`) para registrar nuevos miembros, permitiendo subir foto (recorte automático) y asignar el **Cargo Estructural**.
+- **Logros Alcanzados (Dashboard Local):**
+  - **Manejo de Equipos (`/equipo`):** Permite al Director visualizar tarjetas de staff, editar perfiles y gestionar imágenes del personal.
+  - **Resolución de Error Estructural (HTTP 431):** Migración total del guardado de Base64 de las Cookies JWT de Supabase Auth → Tabla `User` de Prisma/PostgreSQL. Las fotos ya no quiebran el Header Request, asegurando una sesión encriptada y ligera.
+  - Se creó la habilidad de Inteligencia Artificial `backup-system` (.agents/skills/backup-system/SKILL.md) para un guardado iterativo.
 
 **Siguiente Acción Pendiente:**
-1. Crear un usuario (desde la misma UI del login web local) para Gabriel (Director General) y para EOS (Arquitecto de Software Principal).
-2. Limpiar la tabla de pruebas `users` si es necesario, exceptuando los nuevos.
-3. El usuario adquirirá una API key de pago para OpenClaw (VPS) idealmente Anthropic / Claude 3.5 Sonnet.
+1. Crear definitivamente un usuario nuevo desde la UI (`/login`) para Gabriel (Director General) y para EOS (Arquitecto de Software Principal).
+2. Limpiar la base de datos de Auth User en Supabase de vestigios (Cookies/Users basura) para extinguir definitivamente rezagos del Error 431 (Pausa activa).
+3. Conectar al 100% las "Tareas" o "Sponsors" de forma interactiva en la UI.
+4. (En VPS) Adquirir una API key de pago de Claude 3.5 Sonnet y reactivar OpenClaw en Hostinger.

@@ -60,10 +60,22 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                 if (user) {
                     setUserName(user.user_metadata?.name || user.email?.split("@")[0] || "Usuario");
                     setUserRole(user.user_metadata?.jobTitle || user.user_metadata?.role || "Personal Externo");
-                    setUserAvatar(user.user_metadata?.avatarUrl || "");
+                    setUserAvatar("");
 
-                    // Sync user with DB
-                    fetch("/api/auth/sync", { method: "POST" }).catch(() => { });
+                    // Sync user with DB and grab avatar from DB Profile
+                    fetch("/api/auth/sync", { method: "POST" })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.dbUser) {
+                                if (data.dbUser.avatarUrl) {
+                                    setUserAvatar(data.dbUser.avatarUrl);
+                                }
+                                if (data.dbUser.name) {
+                                    setUserName(data.dbUser.name);
+                                }
+                            }
+                        })
+                        .catch(() => { });
                 } else {
                     window.location.href = "/login";
                 }

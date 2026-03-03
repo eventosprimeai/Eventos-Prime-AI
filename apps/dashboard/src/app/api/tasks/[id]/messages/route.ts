@@ -110,7 +110,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
             // SECURITY CHECK: Only Gabriel (Director) or authorized users can give commands to Antigravity
             const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
-            const isAuthorizedDirector = dbUser?.email?.includes("entendiendobibliagabriel@gmail.com") || dbUser?.email?.includes("ventas@eventosprimeai.com") || dbUser?.role === "DIRECTOR";
+            const emailLower = dbUser?.email?.toLowerCase() || "";
+            const isAuthorizedDirector = dbUser?.role === "DIRECTOR" && emailLower === "ventas@eventosprimeai.com";
 
             if (!isAuthorizedDirector) {
                 await (prisma as any).taskMessage.create({

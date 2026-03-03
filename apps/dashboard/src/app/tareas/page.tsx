@@ -197,7 +197,7 @@ export default function TeamTareasPage() {
                         <div style={{ width: "100%", marginTop: "auto" }}>
                             <div style={{ padding: "var(--space-3)", background: "var(--color-bg-primary)", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-border)", marginBottom: "var(--space-4)" }}>
                                 <span style={{ display: "block", fontSize: "var(--text-2xl)", fontWeight: 800, color: "var(--color-text-primary)" }}>{member._count.assignedTasks}</span>
-                                <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase" }}>Tareas Activas</span>
+                                <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase" }}>Tareas Asignadas</span>
                             </div>
                             <button style={{ width: "100%", padding: "var(--space-2)", background: "var(--color-bg-elevated)", color: "var(--color-text-primary)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", fontSize: "var(--text-sm)", fontWeight: 600, transition: "var(--transition-fast)", cursor: "pointer" }}>
                                 Ver Tareas →

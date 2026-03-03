@@ -21,9 +21,7 @@ export async function GET(request: Request) {
                 avatarUrl: true,
                 _count: {
                     select: {
-                        assignedTasks: {
-                            where: { status: { notIn: ["COMPLETADA", "CANCELADA"] } }
-                        }
+                        assignedTasks: true
                     }
                 }
             },

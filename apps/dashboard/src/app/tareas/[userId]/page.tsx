@@ -373,7 +373,7 @@ export default function UserTareasPage() {
             {/* Task Detail & Chat Modal */}
             {selectedTask && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", display: "flex", justifyContent: "flex-end", zIndex: 1000, animation: "fadeIn 0.2s ease" }}>
-                    <div style={{ width: "100%", maxWidth: 500, background: "var(--color-bg-primary)", height: "100%", display: "flex", flexDirection: "column", borderLeft: "1px solid var(--color-border)", boxShadow: "-4px 0 24px rgba(0,0,0,0.5)" }}>
+                    <div style={{ width: "100%", maxWidth: 750, background: "var(--color-bg-primary)", height: "100%", display: "flex", flexDirection: "column", borderLeft: "1px solid var(--color-border)", boxShadow: "-4px 0 24px rgba(0,0,0,0.5)" }}>
                         {/* Modal Header */}
                         <div style={{ padding: "var(--space-4)", borderBottom: "1px solid var(--color-border)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--color-bg-elevated)" }}>
                             <div style={{ maxWidth: "80%" }}>
@@ -442,13 +442,21 @@ export default function UserTareasPage() {
                                 }} style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--color-bg-elevated)", border: "1px solid var(--color-border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, fontSize: "1.2rem", color: "var(--color-text-primary)" }}>
                                     🎤
                                 </button>
-                                <input
-                                    type="text"
+                                <textarea
                                     value={newMessage}
                                     onChange={e => setNewMessage(e.target.value)}
-                                    placeholder="Escribe o dicta por voz un mensaje..."
-                                    style={{ ...inputStyle, flex: 1, padding: "var(--space-3)" }}
+                                    onKeyDown={e => {
+                                        if (e.key === "Enter" && !e.shiftKey) {
+                                            e.preventDefault();
+                                            if (newMessage.trim() && !sendingMsg) {
+                                                handleSendMessage(e as any);
+                                            }
+                                        }
+                                    }}
+                                    placeholder="Escribe o dicta por voz un mensaje... (Presiona Enter para enviar, Shift+Enter para nueva línea)"
+                                    style={{ ...inputStyle, flex: 1, padding: "var(--space-3)", resize: "none", height: "auto", minHeight: "44px", maxHeight: "150px" }}
                                     disabled={sendingMsg}
+                                    rows={newMessage.split('\n').length > 1 ? Math.min(5, newMessage.split('\n').length) : 1}
                                 />
                                 <button type="submit" disabled={sendingMsg || !newMessage.trim()} style={{
                                     padding: "0 var(--space-4)", height: 44, background: "var(--gradient-gold)", color: "#000", border: "none", borderRadius: "var(--radius-lg)", fontWeight: 700, cursor: sendingMsg ? "wait" : "pointer", opacity: (!newMessage.trim() || sendingMsg) ? 0.5 : 1

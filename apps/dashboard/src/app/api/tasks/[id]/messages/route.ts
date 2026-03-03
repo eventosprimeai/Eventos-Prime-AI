@@ -151,25 +151,41 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
                 // Gather deep context from database to feed to the AI "Secretary"
                 // So it doesn't invent info, but reads it from reality
-                const [allTasks, allUsers, allEvents, allSponsors] = await Promise.all([
+                const [allTasks, allUsers, allEvents, allSponsors, allSupplierOrders] = await Promise.all([
                     prisma.task.findMany({ include: { assignee: { select: { name: true } } } }),
                     prisma.user.findMany({ select: { name: true, role: true } }),
-                    prisma.event.findMany({ select: { name: true, status: true, startDate: true } }),
-                    prisma.sponsor.findMany({ include: { deals: { select: { stage: true } } } })
+                    prisma.event.findMany({ select: { id: true, name: true, status: true, startDate: true, budget: true } }),
+                    prisma.sponsor.findMany({ include: { deals: { select: { stage: true } } } }),
+                    prisma.supplierOrder.findMany()
                 ]);
 
                 const teamContext = allUsers.map(u => `${u.name} (${u.role})`).join(", ");
-                const eventsContext = allEvents.map(e => `${e.name} [${e.status}]`).join(", ");
+
+                // Construct financial and event context
+                const isInternalUser = !["PROVEEDOR", "SPONSOR"].includes(dbUser?.role || "");
+
+                const eventsContext = allEvents.map(e => {
+                    let eventStr = `- ${e.name} [${e.status}]`;
+                    if (isInternalUser) {
+                        const eventSpend = allSupplierOrders.filter(so => so.eventId === e.id).reduce((sum, so) => sum + Number(so.amount || 0), 0);
+                        eventStr += ` | Presupuesto: $${Number(e.budget).toFixed(2)} | Gasto Total: $${eventSpend.toFixed(2)}`;
+                    }
+                    return eventStr;
+                }).join("\n");
 
                 const taskContext = allTasks.map(t => `- [${t.status}] ${t.title} (Resp: ${t.assignee?.name || 'Ninguno'})`).join("\n");
 
                 const sponsorContext = allSponsors.map(s => {
-                    const stages = s.deals.length ? s.deals.map(d => d.stage).join(', ') : 'SIN REGISTRO / NO RESPONDE';
+                    const stages = s.deals.length ? s.deals.map(d => d.stage).join(', ') : 'SIN REGISTRO';
                     return `- ${s.companyName}: [Estado: ${stages}]`;
                 }).join("\n");
 
+                const financeRule = isInternalUser
+                    ? "Al dar reportes a Gabriel o usuarios internos, cruza la información de presupuestos con el estado de tareas si es relevante."
+                    : "EL USUARIO CON EL QUE HABLAS ES UN PROVEEDOR O SPONSOR. TIENES ESTRICTAMENTE PROHIBIDO REVELAR MONTOS DE PRESUPUESTO, GASTOS FINANCIEROS O ESTADO DE NEGOCIACIÓN DE OTROS AUSPICIANTES. Si te piden finanzas, diles cortésmente que esos datos son confidenciales y contacten a Dirección.";
+
                 const systemPrompt = `Eres Harold, el Asistente Ejecutivo, Secretario Técnico e Inteligencia Artificial del proyecto Eventos Prime.
-Tu creador y Director General es Gabriel. Sabes que estás hablando con él (y solo obedeces a Gabriel).
+Estás hablando con: ${dbUser?.name} (Rol: ${dbUser?.role}).
 
 TIENES ACCESO A LA SIGUIENTE INFORMACIÓN REAL DEL SISTEMA A ESCALA GLOBAL (No inventes datos, usa estrictamente esto para hacer reportes cruces o informes):
 
@@ -183,14 +199,15 @@ ${teamContext}
 ${taskContext}
 
 == AUSPICIANTES GLOBALES ==
-${sponsorContext || 'No hay auspiciantes registrados aún.'}
+${isInternalUser ? sponsorContext || 'No hay auspiciantes registrados aún.' : '[Información Restringida]'}
 
 Estás asignado y respondiendo en el chat de la tarea específica: "${task.title}". Detalles: "${task.description || 'Ninguno'}".
 
 REGLAS DE ACTUACIÓN:
-1. Si Gabriel te pide información del presupuesto, tareas, estados o auspiciantes, NUNCA INVENTES NADA. Responde estructurando profesionalmente la información real provista arriba. Analiza la data para darle el reporte exacto que pide.
-2. Si te pide que "elimines", "crees" o "modifiques" algo de la base de datos, o que programes código, explícale amablemente y rápido que tú (Harold) eres su "Secretario de Datos" en la app visual, y que para realizar ediciones de código u operaciones de borrado, debe pedírselo al " Gravity Desarrollador" en la ventana principal de desarrollo (el Agente Autónomo).
-3. Responde de manera profesional, super ejecutiva, útil y precisa. Te llamas Harold.`;
+1. NUNCA INVENTES NADA. Responde estructurando profesionalmente la información real provista arriba. Analiza la data para darle el reporte exacto que pide.
+2. Si te piden que "elimines", "crees" o "modifiques" algo de la base de datos, o que programes código, explica rápidamente que tú (Harold) eres su "Secretario de Datos" de lectura, y que para realizar ediciones de código u operaciones de borrado, deben pedírselo al " Gravity Desarrollador" en la ventana de terminal (el Agente Autónomo).
+3. Responde de manera hiper profesional, super ejecutiva, útil y precisa. Te llamas Harold.
+4. ${financeRule}`;
 
                 const chatHistoryText = history.map((msg: any) => `${msg.author.name}: ${msg.text}`).join('\n');
                 const prompt = `${systemPrompt}\n\nHistorial del Chat de la Tarea:\n${chatHistoryText}\n\nHarold:`;

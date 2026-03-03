@@ -120,7 +120,26 @@ export default function TeamTareasPage() {
                         </div>
                         <div style={{ gridColumn: "1 / -1" }}>
                             <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Descripción</label>
-                            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Detalles de la tarea..." rows={2} style={{ ...inputStyle, resize: "vertical" }} />
+                            <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "flex-start" }}>
+                                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Detalles de la tarea..." rows={2} style={{ ...inputStyle, resize: "vertical", flex: 1 }} />
+                                <button type="button" onClick={() => {
+                                    const windowAny = window as any;
+                                    const SpeechRecognition = windowAny.SpeechRecognition || windowAny.webkitSpeechRecognition;
+                                    if (!SpeechRecognition) {
+                                        alert("Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.");
+                                        return;
+                                    }
+                                    const recognition = new SpeechRecognition();
+                                    recognition.lang = 'es-ES';
+                                    recognition.interimResults = false;
+                                    recognition.onresult = (evt: any) => {
+                                        setForm(prev => ({ ...prev, description: prev.description + (prev.description ? " " : "") + evt.results[0][0].transcript }));
+                                    };
+                                    recognition.start();
+                                }} style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--color-bg-elevated)", border: "1px solid var(--color-border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, fontSize: "1.2rem" }}>
+                                    🎤
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Responsable *</label>

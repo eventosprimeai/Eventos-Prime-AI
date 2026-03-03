@@ -138,7 +138,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
                 <div className="stat-card">
-                    <div className="stat-label">Tareas Totales</div>
+                    <div className="stat-label">Tareas Activas</div>
                     <div className="stat-value">{stats.tasks}</div>
                 </div>
                 <div className="stat-card">

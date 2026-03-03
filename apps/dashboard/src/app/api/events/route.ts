@@ -12,7 +12,13 @@ export async function GET() {
         const events = await prisma.event.findMany({
             orderBy: { createdAt: "desc" },
             include: {
-                _count: { select: { tasks: true, sponsorDeals: true, tickets: true } },
+                _count: {
+                    select: {
+                        tasks: { where: { status: { notIn: ["COMPLETADA", "CANCELADA"] } } },
+                        sponsorDeals: true,
+                        tickets: true
+                    }
+                },
             },
         });
 

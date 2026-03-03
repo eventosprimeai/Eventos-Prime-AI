@@ -12,8 +12,9 @@ interface EventDetail {
     id: string; name: string; description: string | null; status: string;
     startDate: string; endDate: string; location: string | null; venue: string | null;
     capacity: number; budget: string; createdAt: string;
-    tasks: { id: string; title: string; status: string; priority: string; dueDate: string | null; assignee: { name: string } | null }[];
+    tasks: { id: string; title: string; status: string; priority: string; dueDate: string | null; assignee: { id: string; name: string; role: string } | null }[];
     sponsorDeals: { id: string; stage: string; dealValue: string | null; sponsor: { companyName: string; industry: string | null } }[];
+    incidents: { id: string; title: string; severity: string; resolved: boolean; resolvedAt: string | null }[];
     _count: { tasks: number; sponsorDeals: number; tickets: number; checklists: number; incidents: number };
 }
 
@@ -33,6 +34,9 @@ const taskStatusLabels: Record<string, string> = {
 };
 const taskPriorityLabels: Record<string, string> = {
     BAJA: "Baja", MEDIA: "Media", ALTA: "Alta", URGENTE: "Urgente",
+};
+const roleLabels: Record<string, string> = {
+    DIRECTOR: "Director", ADMIN: "Administrador", COORDINADOR: "Coordinador", STAFF: "Ejecutivo/Staff", PROVEEDOR: "Proveedor", SPONSOR: "Sponsor"
 };
 
 /* ─── Tooltip personalizado ──────────────────────── */
@@ -127,12 +131,17 @@ export default function EventDetailPage() {
 
     const buildTasksByAssignee = () => {
         if (!event) return [];
-        const counts: Record<string, number> = {};
+        const counts: Record<string, { count: number, id: string | null }> = {};
         event.tasks.forEach(t => {
-            const name = t.assignee?.name || "Sin asignar";
-            counts[name] = (counts[name] || 0) + 1;
+            const roleStr = t.assignee?.role ? ` - ${roleLabels[t.assignee.role] || t.assignee.role}` : "";
+            const name = t.assignee ? `${t.assignee.name}${roleStr}` : "Sin asignar";
+
+            if (!counts[name]) {
+                counts[name] = { count: 0, id: t.assignee?.id || null };
+            }
+            counts[name].count += 1;
         });
-        return Object.entries(counts).map(([k, v]) => ({ name: k, tareas: v })).sort((a, b) => b.tareas - a.tareas);
+        return Object.entries(counts).map(([k, v]) => ({ name: k, tareas: v.count, id: v.id })).sort((a, b) => b.tareas - a.tareas);
     };
 
     const buildSponsorInvestment = () => {
@@ -375,30 +384,23 @@ export default function EventDetailPage() {
                             {/* Tareas por responsable — Bar */}
                             <div style={{ gridColumn: "1 / -1" }}>
                                 <h3 style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginBottom: "var(--space-3)" }}>Tareas por Responsable</h3>
-                                <ResponsiveContainer width="100%" height={250}>
-                                    <BarChart data={buildTasksByAssignee()} layout="vertical" margin={{ left: 80 }}>
+                                <ResponsiveContainer width="100%" height={280}>
+                                    <BarChart data={buildTasksByAssignee()} layout="vertical" margin={{ left: 80 }} barSize={35}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#2a2a36" />
                                         <XAxis type="number" tick={{ fill: "#71717a", fontSize: 12 }} />
-                                        <YAxis dataKey="name" type="category" tick={{ fill: "#a1a1aa", fontSize: 12 }} width={80} />
-                                        <Tooltip content={<CustomTooltip />} />
-                                        <Bar dataKey="tareas" fill="#facc15" radius={[0, 4, 4, 0]} />
+                                        <YAxis dataKey="name" type="category" tick={{ fill: "#a1a1aa", fontSize: 12 }} width={200} />
+                                        <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
+                                        <Bar
+                                            dataKey="tareas"
+                                            fill="#facc15"
+                                            radius={[0, 4, 4, 0]}
+                                            style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
+                                            onClick={(data) => {
+                                                if (data.id) router.push(`/tareas/${data.id}`);
+                                            }}
+                                        />
                                     </BarChart>
                                 </ResponsiveContainer>
-                            </div>
-                            {/* Task list */}
-                            <div style={{ gridColumn: "1 / -1" }}>
-                                <h3 style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginBottom: "var(--space-3)" }}>Listado de Tareas</h3>
-                                <div className="task-list">
-                                    {event.tasks.map(t => (
-                                        <div key={t.id} className={`task-item ${t.status === "COMPLETADA" ? "on-track" : t.dueDate && new Date(t.dueDate) < new Date() ? "overdue" : ""}`}>
-                                            <div style={{ flex: 1 }}>
-                                                <span style={{ fontWeight: 600, fontSize: "var(--text-sm)", textDecoration: t.status === "COMPLETADA" ? "line-through" : "none" }}>{t.title}</span>
-                                                {t.assignee && <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginLeft: "var(--space-2)" }}>👤 {t.assignee.name}</span>}
-                                            </div>
-                                            <span style={{ fontSize: "var(--text-xs)", padding: "2px 8px", borderRadius: "var(--radius-full)", background: "var(--color-bg-elevated)", color: "var(--color-text-muted)" }}>{taskStatusLabels[t.status] || t.status}</span>
-                                        </div>
-                                    ))}
-                                </div>
                             </div>
                         </div>
                     )}
@@ -555,40 +557,55 @@ export default function EventDetailPage() {
             )}
 
             {/* ── INCIDENCIAS Section ── */}
-            {activeTab === "incidencias" && (
-                <div className="glass-card animate-fade-in" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)" }}>
-                    <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-6)" }}>
-                        ⚠️ Incidencias — {event.name}
-                    </h2>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--space-4)", textAlign: "center" }}>
-                        <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-5)" }}>
-                            <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Total</div>
-                            <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800 }}>{event._count.incidents}</div>
+            {activeTab === "incidencias" && (() => {
+                const resolvedIncidents = event.incidents ? event.incidents.filter(i => i.resolved).length : 0;
+                const pendingIncidents = event.incidents ? event.incidents.length - resolvedIncidents : 0;
+                return (
+                    <div className="glass-card animate-fade-in" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)" }}>
+                        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-6)" }}>
+                            ⚠️ Incidencias — {event.name}
+                        </h2>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--space-4)", textAlign: "center" }}>
+                            <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-5)" }}>
+                                <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Total</div>
+                                <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800 }}>{event.incidents?.length || 0}</div>
+                            </div>
+                            <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-5)" }}>
+                                <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Resueltas</div>
+                                <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800, color: "var(--color-success)" }}>{resolvedIncidents}</div>
+                            </div>
+                            <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-5)" }}>
+                                <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Pendientes</div>
+                                <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800, color: "var(--color-error)" }}>{pendingIncidents}</div>
+                            </div>
                         </div>
-                        <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-5)" }}>
-                            <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Resueltas</div>
-                            <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800, color: "var(--color-success)" }}>0</div>
-                        </div>
-                        <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-5)" }}>
-                            <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Pendientes</div>
-                            <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: 800, color: "var(--color-error)" }}>0</div>
-                        </div>
+                        {(!event.incidents || event.incidents.length === 0) ? (
+                            <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)", textAlign: "center", marginTop: "var(--space-4)" }}>
+                                ✅ No hay incidencias reportadas — ¡excelente!
+                            </p>
+                        ) : (
+                            <div style={{ marginTop: "var(--space-6)" }}>
+                                <h3 style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginBottom: "var(--space-3)" }}>Listado de Incidencias</h3>
+                                <div className="task-list">
+                                    {event.incidents.map(inc => (
+                                        <div key={inc.id} className="task-item">
+                                            <div style={{ flex: 1 }}>
+                                                <span style={{ fontWeight: 600, fontSize: "var(--text-sm)", textDecoration: inc.resolved ? "line-through" : "none" }}>{inc.title}</span>
+                                                <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginLeft: "var(--space-2)", padding: "2px 6px", border: "1px solid var(--color-border)", borderRadius: "var(--radius-sm)" }}>
+                                                    {inc.severity}
+                                                </span>
+                                            </div>
+                                            <span style={{ fontSize: "var(--text-xs)", padding: "2px 8px", borderRadius: "var(--radius-full)", background: inc.resolved ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: inc.resolved ? "var(--color-success)" : "var(--color-error)", fontWeight: 600 }}>
+                                                {inc.resolved ? "Resuelta" : "Pendiente"}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
-                    {event._count.incidents === 0 ? (
-                        <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)", textAlign: "center", marginTop: "var(--space-4)" }}>
-                            ✅ No hay incidencias reportadas — ¡excelente!
-                        </p>
-                    ) : (
-                        <div style={{ marginTop: "var(--space-4)", textAlign: "center" }}>
-                            <a href={`/incidencias?evento=${event.id}`} style={{
-                                display: "inline-flex", alignItems: "center", gap: "var(--space-2)",
-                                padding: "var(--space-2) var(--space-4)", background: "var(--color-bg-card)", border: "1px solid var(--color-border)",
-                                borderRadius: "var(--radius-lg)", color: "var(--color-gold-400)", fontSize: "var(--text-sm)", textDecoration: "none", fontWeight: 600,
-                            }}>Ver detalle de incidencias →</a>
-                        </div>
-                    )}
-                </div>
-            )}
+                );
+            })()}
 
             {/* ── Metadata ── */}
             <div style={{ padding: "var(--space-4)", borderTop: "1px solid var(--color-border)" }}>

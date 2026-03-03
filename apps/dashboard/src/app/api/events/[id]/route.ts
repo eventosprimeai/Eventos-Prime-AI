@@ -19,15 +19,17 @@ export async function GET(
             include: {
                 tasks: {
                     orderBy: { createdAt: "desc" },
-                    take: 10,
                     include: {
-                        assignee: { select: { id: true, name: true } },
+                        assignee: { select: { id: true, name: true, role: true } },
                     },
                 },
                 sponsorDeals: {
                     include: {
                         sponsor: { select: { id: true, companyName: true, industry: true } },
                     },
+                },
+                incidents: {
+                    orderBy: { createdAt: "desc" }
                 },
                 _count: { select: { tasks: true, sponsorDeals: true, tickets: true, checklists: true, incidents: true } },
             },

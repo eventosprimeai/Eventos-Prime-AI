@@ -2,7 +2,8 @@
 
 > **Este documento existe para que cualquier agente IA pueda entender rápidamente
 > el estado del proyecto, las decisiones de arquitectura, y qué falta por hacer.**  
-> Última actualización: 1 de marzo, 2026
+> **[REGLA ESTRICTA DE CONTINUIDAD]**: Este archivo `DEVELOPMENT_CONTEXT.md` DEBE ser actualizado de forma obligatoria cada vez que: (1) Se culmina una etapa de un plan, (2) Se termina por completo una tarea exitosa, o (3) En momentos considerados relevantes o puntos de quiebre (restablecimiento). Esto asegura que al abrir el proyecto desde otra cuenta de Google/IA, el contexto sea siempre el correcto y exacto.
+> Última actualización: 2 de marzo, 2026
 
 ---
 
@@ -253,3 +254,17 @@ cd apps/dashboard && npx next dev --port 3001
 - **Pagos**: DataFast (gateway de Ecuador)
 - **Comunicación interna**: Telegram (priorizado sobre WhatsApp)
 - **WhatsApp**: Solo para atención al cliente externo
+
+---
+
+## 🔄 Punto de Continuidad (Cross-Account & Backup)
+
+**Ultimo Punto de Restablecimiento:** 2 de marzo de 2026
+**Estatus Actual:**
+- **Contexto:** Se estaba trabajando en la coherencia de contadores de tareas (Task Count Coherency), asegurando que el total de tareas en el dashboard cuadre exactamente con la suma de tareas asignadas en los perfiles de cada miembro del equipo.
+- **Archivos Modificados Recientemente:** `apps/dashboard/src/app/tareas/[userId]/page.tsx`, `apps/dashboard/src/app/api/team/route.ts` (estas áreas fueron trabajadas recientemente para mostrar las tareas asignadas específicamente a un usuario). Se comenzó también con un archivo semilla `packages/db/prisma/seed.ts` para poder generar un entorno base.
+- **Regla de Continuidad:** Siempre al terminar una sesión, el asistente dejará el código en este estado de *Punto de Continuidad*, describiendo exactamente el siguiente paso o error pendiente.
+
+**Siguiente Acción Pendiente:**
+- Continuar con el detalle de las tareas asignadas a un `[userId]` específico y asegurar que el modal global de creación de tareas asigne correctamente las tareas a los correspondientes usuarios.
+- Asegurar que la coherencia de los contadores en la página inicial refleje este mecanismo.

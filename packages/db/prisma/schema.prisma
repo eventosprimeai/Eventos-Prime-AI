@@ -119,8 +119,8 @@ model Task {
   // Relaciones
   event       Event     @relation(fields: [eventId], references: [id])
   eventId     String
-  assignee    User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  assigneeId  String?
+  assignee    User      @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  assigneeId  String
   creator     User      @relation("TaskCreator", fields: [creatorId], references: [id])
   creatorId   String
   parent      Task?     @relation("SubTasks", fields: [parentId], references: [id])

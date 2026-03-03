@@ -12,10 +12,12 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const eventId = searchParams.get("eventId");
         const status = searchParams.get("status");
+        const assigneeId = searchParams.get("assigneeId");
 
         const where: any = {};
         if (eventId) where.eventId = eventId;
         if (status) where.status = status;
+        if (assigneeId) where.assigneeId = assigneeId;
 
         const tasks = await prisma.task.findMany({
             where,
@@ -42,6 +44,10 @@ export async function POST(request: Request) {
 
         const body = await request.json();
 
+        if (!body.assigneeId) {
+            return NextResponse.json({ error: "Toda tarea debe tener un responsable asignado" }, { status: 400 });
+        }
+
         const task = await prisma.task.create({
             data: {
                 title: body.title,
@@ -52,7 +58,7 @@ export async function POST(request: Request) {
                 evidenceRequired: body.evidenceRequired ?? true,
                 slaHours: body.slaHours || null,
                 eventId: body.eventId,
-                assigneeId: body.assigneeId || null,
+                assigneeId: body.assigneeId,
                 creatorId: user.id,
                 parentId: body.parentId || null,
             },

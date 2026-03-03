@@ -19,7 +19,9 @@ export async function GET(request: Request) {
 
         const where: any = {};
         if (eventId) where.eventId = eventId;
-        if (status) where.status = status;
+        if (status) {
+            where.status = status.includes(",") ? { in: status.split(",") } : status;
+        }
         if (assigneeId) where.assigneeId = assigneeId;
 
         const tasks = await prisma.task.findMany({

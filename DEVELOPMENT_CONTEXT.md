@@ -259,17 +259,17 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 3 de marzo de 2026 (madrugada)
+**Ultimo Punto de Restablecimiento:** 3 de marzo de 2026 (18:25 local)
 **Estatus Actual:**
-- **Contexto Principal (VPS):** Instalación profunda de OpenClaw. Problema de Free Tier con Gemini 2.0 (Error 429), esperando API de pago para continuar en el VPS.
-- **Contexto Principal (Dashboard Local):** Se completó la coherencia de datos en el Dashboard principal y tableros. Se implementó el **Sistema Multiusuario Real**, que exige la Contraseña Maestra (`Gabriel230386@`) para registrar nuevos miembros, permitiendo subir foto (recorte automático) y asignar el **Cargo Estructural**.
+- **Contexto Principal (VPS):** Instalación profunda de OpenClaw y configuración de bots en n8n esperando tokens.
+- **Contexto Principal (Dashboard Local):** Se perfeccionó toda la mecánica de Tareas y Asignación.
 - **Logros Alcanzados (Dashboard Local):**
-  - **Manejo de Equipos (`/equipo`):** Permite al Director visualizar tarjetas de staff, editar perfiles y gestionar imágenes del personal.
-  - **Resolución de Error Estructural (HTTP 431):** Migración total del guardado de Base64 de las Cookies JWT de Supabase Auth → Tabla `User` de Prisma/PostgreSQL. Las fotos ya no quiebran el Header Request, asegurando una sesión encriptada y ligera.
-  - Se creó la habilidad de Inteligencia Artificial `backup-system` (.agents/skills/backup-system/SKILL.md) para un guardado iterativo.
+  - **Módulo de Tareas (`/tareas`):** Creación global con selector de responsable, lista de tareas asignadas individuales.
+  - **Identidad "Harold":** Se renombró al asistente de tareas a Harold (eliminando Gravity/Antigravity). Se implementó un RBAC para ocultar finanzas corporativas (Supplier Orders) a roles PROVEEDOR y SPONSOR.
+  - **Reconocimiento de Voz Nativo:** Se integró el API `SpeechRecognition` nativo con modo `continuous=true` y `interimResults=true` tanto para la creación de tareas como para chatear con Harold, programando un reinicio automático (`onend`) que elimina el defecto de "no-speech" por silencios de Google Chrome, logrando una dictación continua real y sin límite con switch manual.
 
 **Siguiente Acción Pendiente:**
-1. Crear definitivamente un usuario nuevo desde la UI (`/login`) para Gabriel (Director General) y para EOS (Arquitecto de Software Principal).
-2. Limpiar la base de datos de Auth User en Supabase de vestigios (Cookies/Users basura) para extinguir definitivamente rezagos del Error 431 (Pausa activa).
-3. Conectar al 100% las "Tareas" o "Sponsors" de forma interactiva en la UI.
-4. (En VPS) Adquirir una API key de pago de Claude 3.5 Sonnet y reactivar OpenClaw en Hostinger.
+1. Validar la creación global de tareas y que se asigne correctamente, mostrándose en el contador lateral unificado.
+2. Afinar al sistema de Notificaciones (quizás conectar Webhooks / Telegram al crear tareas).
+3. Asegurar limpieza total en la base de datos de usuarios (Supabase Auth vs Prisma) para remover vestigios de pruebas.
+4. Adquirir API de pago para OpenClaw (VPS) cuando sea posible.

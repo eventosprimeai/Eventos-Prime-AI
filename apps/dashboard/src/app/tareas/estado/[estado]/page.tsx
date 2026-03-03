@@ -54,7 +54,7 @@ export default function EstadoTareasPage() {
                         userCounts[t.assignee.id] = {
                             id: t.assignee.id,
                             name: t.assignee.name,
-                            role: "Desconocido", // We'll update this if needed, or rely on the basic info
+                            role: t.assignee.role || "Desconocido",
                             avatarUrl: t.assignee.avatarUrl,
                             taskCount: 0
                         };

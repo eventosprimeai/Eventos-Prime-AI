@@ -261,17 +261,14 @@ cd apps/dashboard && npx next dev --port 3001
 
 **Ultimo Punto de Restablecimiento:** 2 de marzo de 2026 (noche) / 3 de marzo de 2026
 **Estatus Actual:**
-- **Contexto Principal:** Instalación profunda de **OpenClaw** en el VPS Hostinger en el subdominio `openclawos.eventosprimeai.com`.
-- **Logros Alcanzados:**
-  - Instancia de OpenClaw instalada y corriendo mediante WebSocket en el puerto local 18789.
-  - Proxy Inverso Nginx funcionando correctamente con soporte para WebSockets.
-  - Certificado SSL instalado vía Certbot.
-  - Seguridad reforzada con HTTP Basic Auth (`Marketing` / `Open+2025*`).
-  - Navegador Edge del usuario exitosamente emparejado con el Gateway de OpenClaw (Token guardado en CREDENCIALES.txt).
-- **Problema encontrado (Bloqueo Google Free Tier):** Google Cloud bloquea sistemáticamente (Error 429 Quota Exceeded / limit 0) las peticiones gratuitas a la API de Gemini originadas desde la IP del VPS o región de la cuenta.
+- **Contexto Principal (VPS):** Instalación profunda de OpenClaw. Problema de Free Tier con Gemini 2.0 (Error 429), esperando API de pago para continuar en el VPS.
+- **Contexto Principal (Dashboard Local):** Se completó la coherencia de datos en el Dashboard principal y tableros. Se implementó el **Sistema Multiusuario Real**, que exige la Contraseña Maestra (`Gabriel230386@`) para registrar nuevos miembros, permitiendo subir foto (recorte automático) y asignar el **Cargo Estructural** del documento interno `profesionales que necesitamos.md`.
+- **Logros Alcanzados en Dashboard:**
+  - Sidebar dinámica carga la tarjeta (Avatar, Nombre y Cargo resposanble) del usuario autenticado y logueado actualmente en `/layout-shell.tsx`.
+  - Ruta de sincronización `/api/auth/sync` garantiza que usuarios creados por UI pasen a la DB PostgreSQL de Prisma automáticamente al iniciar sesión.
+  - Avatares en base64 para evitar complejidad de Storage en esta fase inicial.
 
 **Siguiente Acción Pendiente:**
-1. El usuario adquirirá una API key de pago el miércoles (idealmente Anthropic / Claude 3.5 Sonnet).
-2. Correr el comando para configurar la nueva API key en OpenClaw: `openclaw models auth paste-token --provider anthropic` o definir la variable de entorno en el servicio de systemd como se aprendió y establecer el modelo primario (`openclaw models set anthropic/claude-3-5-sonnet-latest`).
-3. Posterior a eso, OpenClaw estará completamente funcional para delegarle tareas autónomas en el VPS.
-4. Retomar (si se desea) el desarrollo del Dashboard en el PC local (conexión de tareas/sponsors con base de datos real).
+1. Crear un usuario (desde la misma UI del login web local) para Gabriel (Director General) y para EOS (Arquitecto de Software Principal).
+2. Limpiar la tabla de pruebas `users` si es necesario, exceptuando los nuevos.
+3. El usuario adquirirá una API key de pago para OpenClaw (VPS) idealmente Anthropic / Claude 3.5 Sonnet.

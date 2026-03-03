@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 
 // Sidebar navigation config
 const navItems = [
@@ -42,6 +44,33 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
     const pathname = usePathname();
     const isLoginPage = pathname === "/login";
 
+    // User state
+    const [userName, setUserName] = useState("");
+    const [userRole, setUserRole] = useState("");
+    const [userAvatar, setUserAvatar] = useState("");
+
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    useEffect(() => {
+        if (!isLoginPage) {
+            supabase.auth.getUser().then(({ data: { user } }) => {
+                if (user) {
+                    setUserName(user.user_metadata?.name || user.email?.split("@")[0] || "Usuario");
+                    setUserRole(user.user_metadata?.jobTitle || user.user_metadata?.role || "Personal Externo");
+                    setUserAvatar(user.user_metadata?.avatarUrl || "");
+
+                    // Sync user with DB
+                    fetch("/api/auth/sync", { method: "POST" }).catch(() => { });
+                } else {
+                    window.location.href = "/login";
+                }
+            });
+        }
+    }, [isLoginPage]);
+
     // Login page: full-screen, no sidebar
     if (isLoginPage) {
         return <>{children}</>;
@@ -51,33 +80,50 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
     return (
         <div className="dashboard-layout">
             {/* Sidebar */}
-            <aside className="sidebar">
-                <div className="sidebar-logo">
-                    <span className="text-gold">Prime</span> Dashboard
+            <aside className="sidebar" style={{ display: "flex", flexDirection: "column" }}>
+
+                {/* User Profile Card */}
+                <div style={{ marginBottom: "var(--space-6)", padding: "var(--space-4)", background: "var(--color-bg-card)", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-gold-400)", display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+                    <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--color-bg-elevated)", border: "1px solid var(--color-border)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                        {userAvatar ? (
+                            <img src={userAvatar} alt="Perfil" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                            <span style={{ fontSize: "var(--text-lg)", fontWeight: 700, color: "var(--color-gold-400)" }}>
+                                {userName.charAt(0).toUpperCase()}
+                            </span>
+                        )}
+                    </div>
+                    <div style={{ overflow: "hidden" }}>
+                        <h3 style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--color-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {userName}
+                        </h3>
+                        <p style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {userRole}
+                        </p>
+                    </div>
                 </div>
 
-                {navItems.map((section) => (
-                    <div key={section.section}>
-                        <div className="sidebar-section">{section.section}</div>
-                        {section.items.map((item) => (
-                            <a
-                                key={item.href}
-                                href={item.href}
-                                className={`sidebar-link${pathname === item.href ? " active" : ""}`}
-                            >
-                                <span>{item.icon}</span>
-                                <span>{item.label}</span>
-                            </a>
-                        ))}
-                    </div>
-                ))}
+                <div style={{ flex: 1, overflowY: "auto" }}>
+                    {navItems.map((section) => (
+                        <div key={section.section}>
+                            <div className="sidebar-section">{section.section}</div>
+                            {section.items.map((item) => (
+                                <a
+                                    key={item.href}
+                                    href={item.href}
+                                    className={`sidebar-link${pathname === item.href ? " active" : ""}`}
+                                >
+                                    <span>{item.icon}</span>
+                                    <span>{item.label}</span>
+                                </a>
+                            ))}
+                        </div>
+                    ))}
+                </div>
 
-                {/* User section at bottom */}
-                <div style={{ marginTop: "auto", paddingTop: "var(--space-4)", borderTop: "1px solid var(--color-border)" }}>
-                    <div className="sidebar-link">
-                        <span>👤</span>
-                        <span>Director</span>
-                    </div>
+                {/* Brand Footnote */}
+                <div style={{ marginTop: "auto", paddingTop: "var(--space-4)", textAlign: "center", fontSize: "var(--text-xs)", color: "var(--color-text-muted)", opacity: 0.5 }}>
+                    <span className="text-gold" style={{ fontWeight: 800 }}>Eventos</span>Prime AI
                 </div>
             </aside>
 

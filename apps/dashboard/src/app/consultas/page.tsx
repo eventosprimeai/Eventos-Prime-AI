@@ -25,6 +25,16 @@ const statusConfig: Record<string, { label: string; color: string }> = {
     COMPLETADA: { label: "Resuelto", color: "var(--color-success)" },
 };
 
+const formatMessageText = (text: string) => {
+    if (!text) return { __html: "" };
+    const html = text
+        .replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/\*\*(.*?)\*\*/g, '<strong style="color: var(--color-text-primary); font-weight: 700;">$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n/g, '<br/>');
+    return { __html: html };
+};
+
 export default function ConsultasPage() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
@@ -328,7 +338,7 @@ export default function ConsultasPage() {
                                                 </div>
                                                 <div style={{ background: isMe ? "var(--color-bg-elevated)" : (isHarold ? "rgba(250,204,21,0.05)" : "var(--color-bg-card)"), border: isMe ? "1px solid var(--color-border)" : (isHarold ? "1px solid rgba(250,204,21,0.3)" : "1px solid var(--color-border)"), padding: "var(--space-3)", borderRadius: "var(--radius-lg)", borderBottomRightRadius: isMe ? 0 : "var(--radius-lg)", borderBottomLeftRadius: !isMe ? 0 : "var(--radius-lg)", color: "var(--color-text-primary)", fontSize: "var(--text-sm)", lineHeight: 1.5 }}>
                                                     {isHarold && <div style={{ fontSize: "0.65rem", color: "var(--color-gold-400)", fontWeight: 700, marginBottom: "4px", textTransform: "uppercase" }}>Asistente IA</div>}
-                                                    {msg.text}
+                                                    <div dangerouslySetInnerHTML={formatMessageText(msg.text)} />
                                                 </div>
                                             </div>
                                             <div style={{ fontSize: "0.65rem", color: "var(--color-text-muted)", marginTop: "4px", textAlign: isMe ? "right" : "left", padding: "0 36px" }}>

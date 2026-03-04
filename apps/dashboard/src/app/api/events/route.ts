@@ -3,11 +3,24 @@ import { prisma } from "@eventos-prime/db";
 import { NextResponse } from "next/server";
 
 // GET /api/events — list all events
-export async function GET() {
+export async function GET(request: Request) {
     try {
+        const { searchParams } = new URL(request.url);
+        const isPublic = searchParams.get('public') === 'true';
+
         const supabase = await createServerSupabase();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+        if (!user && !isPublic) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+        if (isPublic) {
+            const publicEvents = await prisma.event.findMany({
+                where: { status: { notIn: ["CERRADO", "CANCELADO"] } },
+                select: { id: true, name: true, status: true },
+                orderBy: { createdAt: "desc" }
+            });
+            return NextResponse.json(publicEvents);
+        }
 
         const events = await prisma.event.findMany({
             orderBy: { createdAt: "desc" },

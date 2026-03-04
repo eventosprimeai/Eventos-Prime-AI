@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { email, password, name, personType, area, category, jobTitle, avatarUrl } = body;
+        const { email, password, name, personType, area, category, jobTitle, avatarUrl, contractType, contractEventId } = body;
 
         // Validar formato básico de email para asegurar cuentas reales (con excepción de harold si ya existe)
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -40,7 +40,9 @@ export async function POST(request: Request) {
                 personType,
                 area,
                 category,
-                jobTitle
+                jobTitle,
+                contractType,
+                contractEventId
             }
         });
 
@@ -57,6 +59,8 @@ export async function POST(request: Request) {
                     area: area || null,
                     category: category || null,
                     jobTitle: jobTitle || null,
+                    contractType: contractType || null,
+                    contractEventId: contractEventId || null,
                     avatarUrl: avatarUrl || null
                 },
                 create: {
@@ -68,12 +72,14 @@ export async function POST(request: Request) {
                     area: area || null,
                     category: category || null,
                     jobTitle: jobTitle || null,
+                    contractType: contractType || null,
+                    contractEventId: contractEventId || null,
                     avatarUrl: avatarUrl || null
                 }
             });
 
             // 3. Dispatch the welcome email asynchronously (placeholder layout ready for SMTP)
-            sendWelcomeEmail({ email, name, password, jobTitle, personType })
+            sendWelcomeEmail({ email, name, password, jobTitle, personType, contractType })
                 .catch(err => console.error("Error dispatching welcome email:", err));
         }
 

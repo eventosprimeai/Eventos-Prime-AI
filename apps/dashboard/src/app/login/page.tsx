@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 
 const personTypesList = ["Socio", "Sponsor", "Proveedor", "Staff", "Artista", "Voluntario", "Contratista"];
@@ -43,6 +43,10 @@ export default function LoginPage() {
     const [customJobTitle, setCustomJobTitle] = useState("");
     const [category, setCategory] = useState(categoriesList[0]);
 
+    const [contractType, setContractType] = useState("Por Evento");
+    const [contractEventId, setContractEventId] = useState("");
+    const [eventsOptions, setEventsOptions] = useState<any[]>([]);
+
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -83,7 +87,7 @@ export default function LoginPage() {
         reader.readAsDataURL(file);
     };
 
-    const handleMasterPassword = (e: React.FormEvent) => {
+    const handleMasterPassword = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
         if (masterPassword === "Gabriel230386@") {
@@ -93,6 +97,21 @@ export default function LoginPage() {
             setJobTitle(areasAndRoles[Object.keys(areasAndRoles)[0]][0]);
             setCategory(categoriesList[0]);
             setCustomJobTitle("");
+
+            // Fetch events options
+            try {
+                const evRes = await fetch("/api/events?public=true");
+                if (evRes.ok) {
+                    const data = await evRes.json();
+                    setEventsOptions(data);
+                    if (data.length > 0) {
+                        setContractEventId(data[0].id);
+                    }
+                }
+            } catch (err) {
+                console.error("Could not fetch events:", err);
+            }
+
         } else {
             setError("Contraseña maestra incorrecta.");
         }
@@ -145,6 +164,8 @@ export default function LoginPage() {
                     area,
                     category,
                     jobTitle: finalJobTitle,
+                    contractType,
+                    contractEventId: contractType === "Por Evento" ? contractEventId : null,
                     avatarUrl
                 })
             });
@@ -305,6 +326,28 @@ export default function LoginPage() {
                                             <option key={idx} value={cat}>{cat}</option>
                                         ))}
                                     </select>
+                                </div>
+                                <div style={{ gridColumn: "1 / -1", background: "var(--color-bg-primary)", padding: "var(--space-3)", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-border)" }}>
+                                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-gold-400)", fontWeight: 700, textTransform: "uppercase", display: "block", marginBottom: "var(--space-2)" }}>Condición Contractual</label>
+                                    <select value={contractType} onChange={(e) => setContractType(e.target.value)} required style={{ ...inputStyle, cursor: "pointer", marginBottom: "var(--space-3)" }}>
+                                        <option value="Permanente">Plantilla Permanente (Multi-evento)</option>
+                                        <option value="Por Evento">Exclusivo por Evento / Proyecto</option>
+                                    </select>
+
+                                    {contractType === "Por Evento" && (
+                                        <div>
+                                            <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Vincular a Evento Activo</label>
+                                            <select value={contractEventId} onChange={(e) => setContractEventId(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
+                                                {eventsOptions.length > 0 ? (
+                                                    eventsOptions.map((ev) => (
+                                                        <option key={ev.id} value={ev.id}>{ev.name} ({ev.status})</option>
+                                                    ))
+                                                ) : (
+                                                    <option value="" disabled>No hay eventos creados. Cree uno primero.</option>
+                                                )}
+                                            </select>
+                                        </div>
+                                    )}
                                 </div>
                                 <div style={{ gridColumn: "1 / -1" }}>
                                     <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Correo corporativo</label>

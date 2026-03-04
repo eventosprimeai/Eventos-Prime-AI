@@ -21,6 +21,8 @@ model User {
   area          String?
   jobTitle      String?
   category      String?
+  contractType  String?
+  contractEventId String?
   active        Boolean        @default(true)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -31,6 +33,7 @@ model User {
   taskMessages  TaskMessage[]
   assignedTasks Task[]         @relation("TaskAssignee")
   createdTasks  Task[]         @relation("TaskCreator")
+  contractEvent Event?         @relation("UserContractEvent", fields: [contractEventId], references: [id])
   voiceNotes    VoiceNote[]
 
   @@map("users")
@@ -55,6 +58,7 @@ model Event {
   supplierOrders SupplierOrder[]
   tasks          Task[]
   tickets        Ticket[]
+  contractedUsers User[]       @relation("UserContractEvent")
 
   @@map("events")
 }

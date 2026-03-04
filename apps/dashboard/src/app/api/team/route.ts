@@ -9,16 +9,28 @@ export async function GET(request: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
+        const { searchParams } = new URL(request.url);
+        const isManage = searchParams.get('manage') === 'true';
+
+        let whereClause: any = {
+            email: { not: "antigravity@eventosprimeai.com" } // Harold no se muestra en el equipo
+        };
+
+        if (!isManage) {
+            whereClause.active = true;
+            whereClause.role = { in: ["DIRECTOR", "ADMIN", "COORDINADOR", "STAFF"] };
+        }
+
         const team = await (prisma as any).user.findMany({
-            where: {
-                active: true,
-                role: { in: ["DIRECTOR", "ADMIN", "COORDINADOR", "STAFF"] },
-                email: { not: "antigravity@eventosprimeai.com" } // Harold should not be displayed in team tasks
-            },
+            where: whereClause,
             select: {
                 id: true,
                 name: true,
                 role: true,
+                active: true,
+                personType: true,
+                category: true,
+                jobTitle: true,
                 avatarUrl: true,
                 _count: {
                     select: {

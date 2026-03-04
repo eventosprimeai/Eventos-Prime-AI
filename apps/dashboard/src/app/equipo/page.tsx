@@ -7,8 +7,12 @@ interface TeamMember {
     id: string;
     name: string;
     role: string;
+    active?: boolean;
+    jobTitle?: string;
+    personType?: string;
+    category?: string;
     avatarUrl: string | null;
-    _count: { assignedTasks: number };
+    _count?: { assignedTasks: number };
 }
 
 const roleLabels: Record<string, string> = {
@@ -49,7 +53,7 @@ export default function EquipoPage() {
 
         // Fetch team
         try {
-            const res = await fetch("/api/team");
+            const res = await fetch("/api/team?manage=true");
             if (res.ok) {
                 const data = await res.json();
                 setTeam(data);
@@ -128,6 +132,27 @@ export default function EquipoPage() {
         }
     };
 
+    const handleDeactivateToggle = async () => {
+        if (!editingUser) return;
+        if (!confirm(`¿Estás seguro de que quieres ${editingUser.active ? 'DESACTIVAR' : 'RESTAURAR'} a este usuario?`)) return;
+        setSaving(true);
+        try {
+            const res = await fetch(`/api/team/${editingUser.id}/deactivate`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" }
+            });
+            if (res.ok) {
+                setEditingUser(null);
+                fetchData();
+            } else {
+                const { error } = await res.json();
+                alert(error);
+            }
+        } catch (e: any) { alert(e.message); } finally {
+            setSaving(false);
+        }
+    };
+
     const canEdit = (memberId: string) => {
         return currentUserId === memberId || currentUserRole === "DIRECTOR" || currentUserRole === "ADMIN";
     };
@@ -154,18 +179,26 @@ export default function EquipoPage() {
             {/* Grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "var(--space-6)" }}>
                 {team.map(member => (
-                    <div key={member.id} className="glass-card" style={{ padding: "var(--space-6)", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-                        <div style={{ width: 100, height: 100, borderRadius: "50%", background: "var(--color-bg-card)", border: "2px solid var(--color-gold-400)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--text-3xl)", marginBottom: "var(--space-4)", overflow: "hidden" }}>
+                    <div key={member.id} className="glass-card" style={{ padding: "var(--space-6)", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", opacity: member.active === false ? 0.6 : 1, filter: member.active === false ? "grayscale(100%)" : "none" }}>
+                        <div style={{ width: 100, height: 100, borderRadius: "50%", background: "var(--color-bg-card)", border: `2px solid ${member.active === false ? 'gray' : 'var(--color-gold-400)'}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--text-3xl)", marginBottom: "var(--space-4)", overflow: "hidden" }}>
                             {member.avatarUrl ? (
                                 <img src={member.avatarUrl} alt={member.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                             ) : (
                                 <span>{member.name.charAt(0).toUpperCase()}</span>
                             )}
                         </div>
-                        <h3 style={{ fontSize: "var(--text-lg)", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "var(--space-1)" }}>{member.name}</h3>
-                        <span style={{ fontSize: "var(--text-xs)", color: "var(--color-gold-400)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600, marginBottom: "var(--space-4)" }}>
-                            {roleLabels[member.role] || member.role}
+                        <h3 style={{ fontSize: "var(--text-lg)", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "var(--space-1)" }}>
+                            {member.active === false ? <span style={{ textDecoration: "line-through" }}>{member.name}</span> : member.name}
+                        </h3>
+                        <span style={{ fontSize: "var(--text-xs)", color: member.active === false ? "gray" : "var(--color-gold-400)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600, marginBottom: "var(--space-2)" }}>
+                            {member.jobTitle || roleLabels[member.role] || member.role}
                         </span>
+
+                        {member.active === false && (
+                            <span style={{ fontSize: "var(--text-xs)", background: "rgba(255,50,50,0.2)", color: "#ff4444", padding: "4px 8px", borderRadius: "10px", fontWeight: "bold", marginBottom: "var(--space-4)" }}>
+                                EX-EMPLEADO (Desactivado)
+                            </span>
+                        )}
 
                         {canEdit(member.id) && (
                             <button
@@ -238,7 +271,15 @@ export default function EquipoPage() {
                                 </div>
                             )}
 
-                            <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-3)", marginTop: "var(--space-4)" }}>
+                            {(currentUserRole === "DIRECTOR" || currentUserRole === "ADMIN") && editingUser.id !== currentUserId && (
+                                <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "var(--space-4)", marginTop: "var(--space-2)" }}>
+                                    <button type="button" onClick={handleDeactivateToggle} style={{ width: "100%", padding: "var(--space-3)", background: editingUser.active === false ? "rgba(50,255,50,0.1)" : "rgba(255,50,50,0.1)", color: editingUser.active === false ? "#44ff44" : "#ff4444", border: `1px solid ${editingUser.active === false ? '#44ff44' : '#ff4444'}`, borderRadius: "var(--radius-lg)", fontWeight: 700, cursor: "pointer" }}>
+                                        {editingUser.active === false ? "Restaurar Accesos" : "Desactivar Perfil y Batear Accesos (Soft Delete)"}
+                                    </button>
+                                </div>
+                            )}
+
+                            <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-3)", marginTop: "var(--space-2)" }}>
                                 <button type="button" onClick={() => setEditingUser(null)} style={{ padding: "var(--space-2) var(--space-4)", background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", color: "var(--color-text-secondary)", cursor: "pointer" }}>
                                     Cancelar
                                 </button>

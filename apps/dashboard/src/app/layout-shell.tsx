@@ -52,6 +52,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
     const [userPersonType, setUserPersonType] = useState("");
     const [userAvatar, setUserAvatar] = useState("");
     const [pendingTasksCount, setPendingTasksCount] = useState(0);
+    const [showSubprofileModal, setShowSubprofileModal] = useState(false);
 
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -186,6 +187,19 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                         <p style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             {userRole}
                         </p>
+
+                        {/* Sub Profile Button */}
+                        <button
+                            onClick={() => setShowSubprofileModal(true)}
+                            style={{
+                                marginTop: "var(--space-3)", padding: "var(--space-1) var(--space-3)",
+                                background: "var(--color-bg-input)", color: "var(--color-gold-400)",
+                                border: "1px dashed var(--color-gold-400)", borderRadius: "var(--radius-lg)",
+                                fontSize: "10px", fontWeight: 700, cursor: "pointer", transition: "all 0.2s"
+                            }}
+                        >
+                            + SOLICITAR SUB-PERFIL
+                        </button>
                     </div>
                 </div>
 
@@ -217,6 +231,30 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
             <main className="main-content">
                 {children}
             </main>
+
+            {/* Sub Profile Modal */}
+            {showSubprofileModal && (
+                <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "var(--space-4)" }}>
+                    <div className="glass-card" style={{ padding: "var(--space-8)", width: "100%", maxWidth: 450, border: "2px solid var(--color-gold-400)", animation: "fadeIn 0.2s", textAlign: "center" }}>
+                        <div style={{ fontSize: "40px", marginBottom: "var(--space-4)" }}>🤝</div>
+                        <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "var(--text-2xl)", color: "var(--color-gold-400)", marginBottom: "var(--space-2)" }}>Solicitud de Sub-Perfil</h3>
+                        <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-sm)", lineHeight: 1.6, marginBottom: "var(--space-6)" }}>
+                            Para crear un sub-perfil supervisado bajo su jerarquía (ideal para personal externo o agencias compartidas), por favor contacte al Director General: <br /><br />
+                            <strong style={{ color: "var(--color-text-primary)", fontSize: "var(--text-lg)" }}>Gabriel J. Lorca</strong><br />
+                            <span style={{ color: "var(--color-gold-400)", fontSize: "var(--text-md)", fontWeight: 700 }}>+593 99 999 9999</span> (WhatsApp / Telegram)
+                        </p>
+                        <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-xs)", marginBottom: "var(--space-6)" }}>
+                            Indique los datos de su personal (Nombre, Correo de la persona a delegar). Nosotros procesaremos y conectaremos este sub-perfil internamente lo antes posible.
+                        </p>
+                        <button
+                            onClick={() => setShowSubprofileModal(false)}
+                            style={{ padding: "var(--space-3)", width: "100%", background: "var(--color-bg-input)", color: "var(--color-text-primary)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", fontWeight: 700, cursor: "pointer" }}
+                        >
+                            Entendido, cerrar
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -16,6 +16,7 @@ export async function GET(request: Request) {
         const eventId = searchParams.get("eventId");
         const status = searchParams.get("status");
         const assigneeId = searchParams.get("assigneeId");
+        const isConsultaParam = searchParams.get("isConsulta");
 
         const where: any = {};
         if (eventId) where.eventId = eventId;
@@ -23,6 +24,12 @@ export async function GET(request: Request) {
             where.status = status.includes(",") ? { in: status.split(",") } : status;
         }
         if (assigneeId) where.assigneeId = assigneeId;
+
+        if (isConsultaParam === "true") {
+            where.isConsulta = true;
+        } else if (isConsultaParam === "false") {
+            where.isConsulta = false;
+        }
 
         const tasks = await prisma.task.findMany({
             where,
@@ -78,6 +85,7 @@ export async function POST(request: Request) {
                 assigneeId: body.assigneeId,
                 creatorId: user.id,
                 parentId: body.parentId || null,
+                isConsulta: body.isConsulta || false,
             },
             include: {
                 assignee: { select: { id: true, name: true, email: true } },
@@ -96,12 +104,13 @@ export async function POST(request: Request) {
         });
 
         // ─── AI AUTO-ACKNOWLEDGMENT ───
-        if (task.assignee?.email === "antigravity@eventosprimeai.com") {
+        const taskAny = task as any;
+        if (taskAny.assignee?.email === "antigravity@eventosprimeai.com" || taskAny.isConsulta) {
             const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
             const emailLower = dbUser?.email?.toLowerCase() || "";
             const isAuthorizedDirector = dbUser?.role === "DIRECTOR" && emailLower === "ventas@eventosprimeai.com";
 
-            if (isAuthorizedDirector) {
+            if (isAuthorizedDirector || taskAny.isConsulta) {
                 try {
                     let currentClient = aiClient;
                     if (!currentClient && process.env.GEMINI_API_KEY) {
@@ -110,7 +119,18 @@ export async function POST(request: Request) {
                     }
 
                     if (currentClient) {
-                        const prompt = `Eres Harold, el Asistente Ejecutivo, Secretario Técnico e Inteligencia Artificial del proyecto Eventos Prime. 
+                        let prompt = "";
+
+                        if (task.isConsulta) {
+                            prompt = `Eres Harold, el Asistente Ejecutivo e Inteligencia Artificial del proyecto Eventos Prime.
+El usuario: ${dbUser?.name} (Rol: ${dbUser?.role}) acaba de abrir una línea directa de Consulta contigo (Consulta AI).
+Asunto/Contexto: "${task.title}".
+Consulta detallada: "${task.description || 'Sin detalles adicionales'}".
+
+INSTRUCCIÓN:
+Responde de forma inmediata y certera a su consulta. Analiza su pregunta como un consejero inteligente, profesional, amable y con profundo conocimiento de gestión de eventos. Si te pide un consejo, dáselo. Tu estilo es corporativo pero robóticamente elegante (ej. "Comprendido.", "A la orden.", "Analizando la solicitud."). No seas un simple chat; da valor agregado en 2 a 3 párrafos como máximo. Si haces alusión al usuario, respeta su nombre y cargo.`;
+                        } else {
+                            prompt = `Eres Harold, el Asistente Ejecutivo, Secretario Técnico e Inteligencia Artificial del proyecto Eventos Prime. 
 El Director General (Gabriel) te acaba de asignar una nueva tarea o solicitud en el sistema.
 Título de la tarea: "${task.title}".
 Detalles de la tarea: "${task.description || 'Sin detalles adicionales'}".
@@ -118,19 +138,27 @@ Detalles de la tarea: "${task.description || 'Sin detalles adicionales'}".
 INSTRUCCIÓN:
 Genera un PRIMER MENSAJE SALUDANDO donde confirmes que has recibido exitosamente la asignación de la tarea.
 Actúa analítico, inteligente y muy breve (máximo 2 párrafos). Eres un secretario virtual hiper-eficiente humanoide, no un programa informático abstracto. Trátalo de "Señor", "Jefe" o "Capitán". Evita ofrecer ayuda genérica repetitiva ("en qué más puedo ayudarte"). Asume con elegancia y proactividad tu recepción de este ticket.`;
+                        }
 
                         const response = await currentClient.models.generateContent({
                             model: 'gemini-2.5-flash',
                             contents: prompt,
                         });
 
-                        const aiReplyText = response.text || "Recibido, Capitán. He procesado la tarea y estoy iniciando rutinas de análisis para completarla.";
+                        const aiReplyText = response.text || "Recibido. He procesado la solicitud e inicio rutinas de análisis.";
+
+                        // Find Harold User to assign as message author if this is a Consulta
+                        let authorId = task.assigneeId;
+                        if (taskAny.isConsulta) {
+                            const haroldUser = await prisma.user.findFirst({ where: { email: "antigravity@eventosprimeai.com" } });
+                            if (haroldUser) authorId = haroldUser.id;
+                        }
 
                         await (prisma as any).taskMessage.create({
                             data: {
                                 text: aiReplyText,
                                 taskId: task.id,
-                                authorId: task.assigneeId
+                                authorId: authorId
                             }
                         });
 

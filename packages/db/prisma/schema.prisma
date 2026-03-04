@@ -63,6 +63,7 @@ model Task {
   status           TaskStatus    @default(PENDIENTE)
   dueDate          DateTime?
   completedAt      DateTime?
+  isConsulta       Boolean       @default(false)
   evidenceRequired Boolean       @default(true)
   slaHours         Int?
   eventId          String

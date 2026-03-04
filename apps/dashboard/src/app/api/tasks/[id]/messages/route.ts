@@ -115,8 +115,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
             }
         }
 
-        // 4. Trigger Webhook / AI Response if the Assignee is Antigravity
-        if (task.assignee?.email === "antigravity@eventosprimeai.com" && task.assignee.id !== user.id) {
+        // 4. Trigger Webhook / AI Response if the Assignee is Antigravity OR if it's a Consulta
+        const taskAny = task as any;
+        if ((taskAny.assignee?.email === "antigravity@eventosprimeai.com" && taskAny.assignee.id !== user.id) || taskAny.isConsulta) {
 
             let currentAiClient = aiClient;
             if (!currentAiClient && process.env.GEMINI_API_KEY) {
@@ -129,17 +130,18 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
                 return NextResponse.json({ success: true, message, taskCompleted });
             }
 
-            // SECURITY CHECK: Only Gabriel (Director) or authorized users can give commands to Antigravity
+            // SECURITY CHECK
             const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
             const emailLower = dbUser?.email?.toLowerCase() || "";
             const isAuthorizedDirector = dbUser?.role === "DIRECTOR" && emailLower === "ventas@eventosprimeai.com";
 
-            if (!isAuthorizedDirector) {
+            if (!isAuthorizedDirector && !taskAny.isConsulta) {
+                // Deny only if it's a direct task to Harold and the user is not Gabriel. Consultas are open.
                 await (prisma as any).taskMessage.create({
                     data: {
                         text: "Acceso denegado. Mis rutinas base están bloqueadas. Solo estoy autorizado para responder a comandos y recibir tareas directamente del Director General (Gabriel).",
                         taskId,
-                        authorId: task.assignee.id
+                        authorId: taskAny.assignee?.id || user.id
                     }
                 });
                 return NextResponse.json({ success: true, message, taskCompleted });

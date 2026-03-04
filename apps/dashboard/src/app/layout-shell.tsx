@@ -15,6 +15,7 @@ const navItems = [
     {
         section: "Operaciones", items: [
             { label: "Tareas", href: "/tareas", icon: "✅" },
+            { label: "Consultas", href: "/consultas", icon: "🤖" },
             { label: "Checklists", href: "/checklists", icon: "📋" },
             { label: "Equipo", href: "/equipo", icon: "👥" },
         ]

@@ -187,16 +187,29 @@ export default function UserTareasPage() {
     const renderMessageText = (text: string) => {
         const imgRegex = /!\[.*?\]\((data:image\/.*?;base64,.*?)\)/;
         const match = text.match(imgRegex);
+        // Parse basic markdown styles (* text *, _ text _, and \n)
+        const formatText = (content: string) => {
+            const parts = content.split(/(\*\*.*?\*\*|\*.*?\*|__.*?__|_.*?_|\n)/g);
+            return parts.map((part, index) => {
+                if (part === '\n') return <br key={index} />;
+                if (part.startsWith('**') && part.endsWith('**')) return <strong key={index}>{part.slice(2, -2)}</strong>;
+                if (part.startsWith('__') && part.endsWith('__')) return <strong key={index}>{part.slice(2, -2)}</strong>;
+                if (part.startsWith('*') && part.endsWith('*')) return <strong key={index}>{part.slice(1, -1)}</strong>; // Assuming typical LLM *bold* logic for headers
+                if (part.startsWith('_') && part.endsWith('_')) return <em key={index}>{part.slice(1, -1)}</em>;
+                return part;
+            });
+        };
+
         if (match) {
             const cleanText = text.replace(imgRegex, '').trim();
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <img src={match[1]} alt="Evidencia" style={{ width: "100%", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }} />
-                    {cleanText && <span>{cleanText}</span>}
+                    {cleanText && <span>{formatText(cleanText)}</span>}
                 </div>
             );
         }
-        return <span>{text}</span>;
+        return <span>{formatText(text)}</span>;
     };
 
     const fetchData = async () => {

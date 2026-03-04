@@ -47,6 +47,7 @@ export default function UserTareasPage() {
     const [showForm, setShowForm] = useState(false);
     const [saving, setSaving] = useState(false);
     const [currentUserRole, setCurrentUserRole] = useState("");
+    const [currentUserId, setCurrentUserId] = useState("");
     const [filterStatus, setFilterStatus] = useState<string>("");
     const [form, setForm] = useState({
         title: "",
@@ -205,6 +206,7 @@ export default function UserTareasPage() {
             if (authRes.ok) {
                 const data = await authRes.json();
                 setCurrentUserRole(data.dbUser?.role || "");
+                setCurrentUserId(data.dbUser?.id || "");
             }
         } catch { } finally {
             setLoading(false);
@@ -472,6 +474,10 @@ export default function UserTareasPage() {
                                     {/* Status Toggle */}
                                     <button onClick={(e) => {
                                         e.stopPropagation();
+                                        if (currentUserRole !== "DIRECTOR" && currentUserId !== task.assignee?.id) {
+                                            alert("No tienes permiso para cambiar el estado de esta tarea.");
+                                            return;
+                                        }
                                         const next: Record<string, string> = {
                                             PENDIENTE: "EN_PROGRESO",
                                             EN_PROGRESO: "REVISION",
@@ -482,7 +488,8 @@ export default function UserTareasPage() {
                                     }} style={{
                                         width: 24, height: 24, borderRadius: "50%", border: `2px solid ${status.color}`,
                                         background: task.status === "COMPLETADA" ? "var(--color-success)" : "transparent",
-                                        cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                                        cursor: (currentUserRole === "DIRECTOR" || currentUserId === task.assignee?.id) ? "pointer" : "not-allowed",
+                                        flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
                                         fontSize: "var(--text-xs)", color: "#fff", zIndex: 2
                                     }}>
                                         {task.status === "COMPLETADA" && "✓"}
@@ -510,7 +517,7 @@ export default function UserTareasPage() {
                                     </div>
 
                                     {currentUserRole === "DIRECTOR" && (
-                                        <button onClick={(e) => handleDeleteTask(task.id, e)} style={{
+                                        <button onClickCapture={(e) => handleDeleteTask(task.id, e)} style={{
                                             background: "rgba(255, 60, 60, 0.1)", border: "1px solid var(--color-rag-red)", cursor: "pointer",
                                             fontSize: "1.1rem", padding: "4px 8px", color: "var(--color-rag-red)", borderRadius: "var(--radius-sm)",
                                             opacity: 0.9, transition: "all 0.2s", position: "relative", zIndex: 10
@@ -604,26 +611,30 @@ export default function UserTareasPage() {
                                 ) : null}
 
                                 <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
-                                    {selectedTask.status !== "COMPLETADA" && selectedTask.status !== "REVISION" && (
-                                        <button onClick={() => {
-                                            handleSendMessage(undefined, "Perfecto, estoy revisando. Más tarde te doy novedades.");
-                                        }} disabled={sendingMsg} style={{
-                                            background: "var(--color-bg-elevated)",
-                                            color: "var(--color-info)",
-                                            border: `1px solid var(--color-border)`,
-                                            padding: "4px 12px", borderRadius: "16px", fontSize: "0.8rem", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: 4
-                                        }}>
-                                            🕵️ En Revisión
-                                        </button>
+                                    {(currentUserRole === "DIRECTOR" || currentUserId === selectedTask.assignee?.id) && (
+                                        <>
+                                            {selectedTask.status !== "COMPLETADA" && selectedTask.status !== "REVISION" && (
+                                                <button onClick={() => {
+                                                    handleSendMessage(undefined, "Perfecto, estoy revisando. Más tarde te doy novedades.");
+                                                }} disabled={sendingMsg} style={{
+                                                    background: "var(--color-bg-elevated)",
+                                                    color: "var(--color-info)",
+                                                    border: `1px solid var(--color-border)`,
+                                                    padding: "4px 12px", borderRadius: "16px", fontSize: "0.8rem", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: 4
+                                                }}>
+                                                    🕵️ En Revisión
+                                                </button>
+                                            )}
+                                            <button onClick={handleCompleteTaskClick} disabled={sendingMsg || selectedTask.status === "COMPLETADA"} style={{
+                                                background: selectedTask.status === "COMPLETADA" ? "var(--color-bg-elevated)" : "var(--color-success)20",
+                                                color: selectedTask.status === "COMPLETADA" ? "var(--color-text-muted)" : "var(--color-success)",
+                                                border: `1px solid ${selectedTask.status === "COMPLETADA" ? "var(--color-border)" : "var(--color-success)"}`,
+                                                padding: "4px 12px", borderRadius: "16px", fontSize: "0.8rem", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: 4
+                                            }}>
+                                                ✅ {selectedTask.status === "COMPLETADA" ? "Tarea Completada" : (selectedTask.evidenceRequired ? "Completar con evidencia 📸" : "Completar Tarea")}
+                                            </button>
+                                        </>
                                     )}
-                                    <button onClick={handleCompleteTaskClick} disabled={sendingMsg || selectedTask.status === "COMPLETADA"} style={{
-                                        background: selectedTask.status === "COMPLETADA" ? "var(--color-bg-elevated)" : "var(--color-success)20",
-                                        color: selectedTask.status === "COMPLETADA" ? "var(--color-text-muted)" : "var(--color-success)",
-                                        border: `1px solid ${selectedTask.status === "COMPLETADA" ? "var(--color-border)" : "var(--color-success)"}`,
-                                        padding: "4px 12px", borderRadius: "16px", fontSize: "0.8rem", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: 4
-                                    }}>
-                                        ✅ {selectedTask.status === "COMPLETADA" ? "Tarea Completada" : (selectedTask.evidenceRequired ? "Completar con evidencia 📸" : "Completar Tarea")}
-                                    </button>
                                 </div>
                                 <form onSubmit={(e) => handleSendMessage(e)} style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
                                     <button type="button" onClick={() => {

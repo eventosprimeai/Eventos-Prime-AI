@@ -185,3 +185,43 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+// DELETE /api/tasks?id=123 — delete task
+export async function DELETE(request: Request) {
+    try {
+        const supabase = await createServerSupabase();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get("id");
+
+        if (!id) return NextResponse.json({ error: "ID de tarea requerido" }, { status: 400 });
+
+        // Verify that the user is a DIRECTOR
+        const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+        if (dbUser?.role !== "DIRECTOR") {
+            return NextResponse.json({ error: "No autorizado. Solo rango de Director puede eliminar tareas." }, { status: 403 });
+        }
+
+        // Must delete task messages, evidence, and finally the task itself. 
+        // Note: Prisma might have cascade deletes enabled depending on schema, but let's delete the task directly.
+        await prisma.task.delete({
+            where: { id },
+        });
+
+        await prisma.auditLog.create({
+            data: {
+                action: "DELETE",
+                entity: "Task",
+                entityId: id,
+                userId: user.id,
+                changes: { notes: "Tarea eliminada desde el panel" },
+            },
+        });
+
+        return NextResponse.json({ success: true, message: "Tarea eliminada exitosamente" });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}

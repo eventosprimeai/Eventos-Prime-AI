@@ -46,6 +46,7 @@ export default function UserTareasPage() {
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [currentUserRole, setCurrentUserRole] = useState("");
     const [filterStatus, setFilterStatus] = useState<string>("");
     const [form, setForm] = useState({
         title: "",
@@ -193,14 +194,36 @@ export default function UserTareasPage() {
             if (filterStatus) queryParams.append("status", filterStatus);
             if (userId) queryParams.append("assigneeId", userId);
 
-            const [tasksRes, eventsRes] = await Promise.all([
+            const [tasksRes, eventsRes, authRes] = await Promise.all([
                 fetch(`/api/tasks?${queryParams.toString()}`),
                 fetch("/api/events"),
+                fetch("/api/auth/sync", { method: "POST" })
             ]);
             if (tasksRes.ok) setTasks(await tasksRes.json());
             if (eventsRes.ok) setEvents(await eventsRes.json());
+            if (authRes.ok) {
+                const data = await authRes.json();
+                setCurrentUserRole(data.dbUser?.role || "");
+            }
         } catch { } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteTask = async (taskId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!confirm("⚠️ ¿Estás totalmente seguro de eliminar todo el hilo de esta tarea de la base de datos?")) return;
+
+        try {
+            const res = await fetch(`/api/tasks?id=${taskId}`, { method: "DELETE" });
+            if (res.ok) {
+                fetchData();
+            } else {
+                const errorData = await res.json();
+                alert(`Error: ${errorData.error}`);
+            }
+        } catch (e) {
+            alert("Error de red eliminando la tarea");
         }
     };
 
@@ -482,6 +505,16 @@ export default function UserTareasPage() {
                                             <span>� Chat</span>
                                         </div>
                                     </div>
+
+                                    {currentUserRole === "DIRECTOR" && (
+                                        <button onClick={(e) => handleDeleteTask(task.id, e)} style={{
+                                            background: "transparent", border: "none", cursor: "pointer",
+                                            fontSize: "1.2rem", padding: "4px", color: "var(--color-rag-red)",
+                                            opacity: 0.8, transition: "opacity 0.2s"
+                                        }} title="Eliminar tarea definitivamente">
+                                            🗑️
+                                        </button>
+                                    )}
 
                                     {/* Status Badge */}
                                     <span style={{

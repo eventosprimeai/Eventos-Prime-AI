@@ -259,19 +259,20 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 3 de marzo de 2026 (18:25 local)
+**Ultimo Punto de Restablecimiento:** 3 de marzo de 2026 (20:15 local)
 **Estatus Actual:**
 - **Contexto Principal (VPS):** Instalación profunda de OpenClaw y configuración de bots en n8n esperando tokens.
-- **Contexto Principal (Dashboard Local):** Se perfeccionó toda la mecánica de Tareas y Asignación.
+- **Contexto Principal (Dashboard Local):** Se perfeccionó toda la mecánica de Notificaciones, Lecturas de mensajes y Seguridad en Tareas.
 - **Logros Alcanzados (Dashboard Local):**
-  - **Módulo de Tareas (`/tareas`):** Creación global con selector de responsable, lista de tareas asignadas individuales.
-  - **Campanita de Notificaciones:** Se integró un badge o "campanita" en la tarjeta de perfil lateral izquierdo que cuenta dinámicamente cuántas Tareas `PENDIENTE` tiene el usuario que inició sesión.
-  - **Etiquetas de Estado Dinámicos:** Se reorganizó el dashboard (`/`) y las rutas (`/tareas/estado/[estado]`) para agrupar dinámicamente tareas a modo de concentrador, separando "Tareas Completadas", "Pendientes" y "En progreso". Se habilitó también el estado "REVISION" mediante validación de hotword y auto-resume.
-  - **Identidad "Harold":** Se renombró al asistente de tareas a Harold (eliminando Gravity/Antigravity). Se implementó un RBAC para ocultar finanzas corporativas (Supplier Orders) a roles PROVEEDOR y SPONSOR.
-  - **Reconocimiento de Voz Nativo:** Se integró el API `SpeechRecognition` nativo con modo `continuous=true` y `interimResults=true` tanto para la creación de tareas como para chatear con Harold, programando un reinicio automático (`onend`) que elimina el defecto de "no-speech" por silencios de Google Chrome, logrando una dictación continua real y sin límite con switch manual.
+  - **Módulo de Tareas (`/tareas`):** Ordenamiento cronológico estricto (más nuevas arriba) implementado globalmente. Se retiró la función destructiva de borrado de tareas por seguridad.
+  - **Campanita de Notificaciones Unificada:** Se integró un badge (campanita) en el perfil lateral que ahora suma tanto las Tareas asignadas en estado `PENDIENTE` como el total de mensajes no leídos en chats en los que el usuario participe (como asignado o creador).
+  - **Recibos de Lectura ("Vistos"):** Se expandió el esquema de Prisma con `readBy` en `TaskMessage`. Aparecen pequeños badges rojos de "mensajes no leídos" adentro del botón de cada tarea, desapareciendo en tiempo real al hacer clic gracias a la API `/api/tasks/[id]/read`.
+  - **Etiquetas de Estado Dinámicos:** El estado "REVISION" auto-resume y la segregación de vistas dinámicas está activa. 
+  - **Reconocimiento de Voz Nativo:** Dictación continua operando con switch manual para Tareas e interacciones con Harold.
+  - **Seguridad en Formularios:** Bloqueo de botones para prevenir que usuarios sin permisos alteren los estados de tareas que no les pertenecen.
 
 **Siguiente Acción Pendiente:**
-1. Validar la creación global de tareas y que se asigne correctamente, mostrándose en el contador lateral unificado.
+1. Validar la creación global de tareas y que se asigne correctamente, mostrando el badge con sincronización perfecta.
 2. Afinar al sistema de Notificaciones (quizás conectar Webhooks / Telegram al crear tareas).
 3. Asegurar limpieza total en la base de datos de usuarios (Supabase Auth vs Prisma) para remover vestigios de pruebas.
 4. Desarrollar la PWA (Progressive Web App) con Service Workers para habilitar notificaciones push y el conteo tipo burbuja (badge) en el icono (Home Screen) cuando se descargue en Android/iOS.

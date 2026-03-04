@@ -204,8 +204,12 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ error: "No autorizado. Solo rango de Director puede eliminar tareas." }, { status: 403 });
         }
 
-        // Must delete task messages, evidence, and finally the task itself. 
-        // Note: Prisma might have cascade deletes enabled depending on schema, but let's delete the task directly.
+        // Hard delete all related entities to prevent Foreign Key constraint errors
+        await (prisma as any).taskMessage.deleteMany({ where: { taskId: id } });
+        await prisma.evidence.deleteMany({ where: { taskId: id } });
+        await prisma.voiceNote.deleteMany({ where: { taskId: id } });
+
+        // Finally delete the task
         await prisma.task.delete({
             where: { id },
         });

@@ -193,6 +193,7 @@ export default function UserTareasPage() {
             const queryParams = new URLSearchParams();
             if (filterStatus) queryParams.append("status", filterStatus);
             if (userId) queryParams.append("assigneeId", userId);
+            queryParams.append("_ts", Date.now().toString()); // Cache buster
 
             const [tasksRes, eventsRes, authRes] = await Promise.all([
                 fetch(`/api/tasks?${queryParams.toString()}`),
@@ -211,18 +212,20 @@ export default function UserTareasPage() {
     };
 
     const handleDeleteTask = async (taskId: string, e: React.MouseEvent) => {
+        e.preventDefault();
         e.stopPropagation();
-        if (!confirm("⚠️ ¿Estás totalmente seguro de eliminar todo el hilo de esta tarea de la base de datos?")) return;
+        if (!window.confirm("⚠️ ¿Estás totalmente seguro de eliminar todo el hilo de esta tarea de la base de datos?")) return;
 
         try {
             const res = await fetch(`/api/tasks?id=${taskId}`, { method: "DELETE" });
             if (res.ok) {
+                alert("Tarea eliminada con éxito del sistema.");
                 fetchData();
             } else {
                 const errorData = await res.json();
                 alert(`Error: ${errorData.error}`);
             }
-        } catch (e) {
+        } catch (error) {
             alert("Error de red eliminando la tarea");
         }
     };
@@ -508,9 +511,9 @@ export default function UserTareasPage() {
 
                                     {currentUserRole === "DIRECTOR" && (
                                         <button onClick={(e) => handleDeleteTask(task.id, e)} style={{
-                                            background: "transparent", border: "none", cursor: "pointer",
-                                            fontSize: "1.2rem", padding: "4px", color: "var(--color-rag-red)",
-                                            opacity: 0.8, transition: "opacity 0.2s"
+                                            background: "rgba(255, 60, 60, 0.1)", border: "1px solid var(--color-rag-red)", cursor: "pointer",
+                                            fontSize: "1.1rem", padding: "4px 8px", color: "var(--color-rag-red)", borderRadius: "var(--radius-sm)",
+                                            opacity: 0.9, transition: "all 0.2s", position: "relative", zIndex: 10
                                         }} title="Eliminar tarea definitivamente">
                                             🗑️
                                         </button>

@@ -247,8 +247,7 @@ export default function DashboardPage() {
                         alignItems: "center",
                         gap: "var(--space-2)"
                     }}>
-                        <img src="/harold_avatar.png" alt="Harold" style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover" }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                        {showConsulta ? "Cancelar" : "Consulta"}
+                        {showConsulta ? "Cancelar" : "+ Nueva Consulta"}
                     </button>
                     <button onClick={handleLogout} style={{
                         padding: "var(--space-2) var(--space-4)",

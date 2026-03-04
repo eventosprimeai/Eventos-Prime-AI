@@ -3,7 +3,7 @@
 > **Este documento existe para que cualquier agente IA pueda entender rápidamente
 > el estado del proyecto, las decisiones de arquitectura, y qué falta por hacer.**  
 > **[REGLA ESTRICTA DE CONTINUIDAD]**: Este archivo `DEVELOPMENT_CONTEXT.md` DEBE ser actualizado de forma obligatoria cada vez que: (1) Se culmina una etapa de un plan, (2) Se termina por completo una tarea exitosa, o (3) En momentos considerados relevantes o puntos de quiebre (restablecimiento). Esto asegura que al abrir el proyecto desde otra cuenta de Google/IA, el contexto sea siempre el correcto y exacto.
-> Última actualización: 2 de marzo, 2026
+> Última actualización: 4 de marzo, 2026
 
 ---
 
@@ -259,20 +259,18 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 4 de marzo de 2026 (17:35 local)
+**Ultimo Punto de Restablecimiento:** 4 de marzo de 2026 (18:16 local)
 **Estatus Actual:**
-- **Contexto Principal (VPS):** Instalación profunda de OpenClaw y configuración de bots en n8n esperando tokens.
-- **Contexto Principal (Dashboard Local):** Estabilidad del sistema de Chat y Tareas Reforzada; Harold reubicado como IA Consultor. Reconstrucción masiva del modelo de registro de usuarios (Auth).
+- **Contexto Principal (Dashboard Local):** Estabilidad del sistema y blindaje de seguridad corporativo completado. Arquitectura de Inteligencias Artificiales integradas nativamente como empleados.
 
 **Logros Alcanzados (Dashboard Local):**
-  - **Identidad Modular Completa:** El registro de cuentas ya no depende de opciones estáticas para roles. Todo `User` de Prisma ahora alberga `personType`, `area`, `jobTitle` (más de 13 áreas y 100 perfiles estructurados) y `category` (permisos y reglas subyacentes mapeados inteligente a su respectivo `Role` en Prisma).
-  - **Condiciones de Contratación Inteligente:** Al crear un perfil internamente, se determina si es "Plantilla Permanente" o "Por Evento". Si es la segunda, la plataforma inyecta eventos no completados activos leyendo en tiempo real de la base de datos a través de `GET /api/events?public=true`.
-  - **Desterrado Fantasmas Auth/Database:** Se erradicó permanentemente el riesgo de desbalance entre Supabase Auth y Postgres, mediante un controlador de sanidad de limpieza total con TypeScript, eliminando en cascada dependencias de tareas y evidencias. A la par, el Core de Registro cuenta con validación antispam vía Regex (emails funcionales obligatorios `^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$`).
-  - **Motor Dispatching Correos:** Plantilla Dark Golden HTML embebida nativamente y lista para conectarse al servicio SMTP (Envío Temporal de credenciales automático y silencioso vía `sendWelcomeEmail()`).
-  - **Tarjeta de Identidad Magnética:** La Interfaz (Layout-Shell) interpreta e impone jerárquicamente esta información al visualizar la foto, inyectando el área, tipo de personal y categoría estricta desde un solo Hook global.
+  - **Identidad Modular Completa:** El registro de cuentas ya no depende de opciones estáticas para roles. Todo `User` de Prisma ahora alberga `personType`, `area`, `jobTitle` y `category` (permisos y reglas subyacentes mapeados inteligente a su respectivo `Role` en Prisma).
+  - **Arquitectura de Seguridad y Trazabilidad Extrema:** Implementación de Bóveda de Auditoría exclusiva para Directores (`/auditoria`), capturando intentos de acceso prohibidos y mutaciones en base de datos.
+  - **Soft-Delete Corporativo:** Reemplazo de eliminación de cuentas por un sistema de suspensión ("Ex-empleados"). Revoca acceso nativamente usando Supabase Admin Auth (ban de duración), aplica estilo de deshabilitado en UI (`filter: grayscale`), e impide pérdida de registros e historiales en el sistema.
+  - **Onboarding de IAs Automatizado:** Creada lógica en el registro que auto-genera correos válidos y contraseñas ocultas para `personType: "Profesional IA"`, eludiendo envíos transaccionales reales que generarían métricas de "bounce" perjudiciales con la capa Anti-Robot.
+  - **Solicitud de Sub-perfiles:** Inyección en Layout bloqueada inteligentemente según rango y contrato (Director/Socio excluido) para invitar a delegación de terceros contactando al número oficial.
 
 **Siguiente Acción Pendiente:**
-1. Abastecer al sistema con un Volcado Inteligente y categorización de archivos y proveedores históricos del "Evento Anterior".
-2. Revisión de Políticas Supabase (RLS): Ajustar los SELECT/INSERT nativos para que usuarios "Por Evento" queden cegados por completo a Tareas y Proyectos a los que no pertenecen bajo clausula de seguridad (`user.contractEventId`).
+1. Cargar contexto orgánico, audios o reportes del "*Evento Anterior*" del usuario final para crear el primer volcado oficial de la Data y preparar a la Base de Datos para operaciones en vivo.
+2. Revisión de Políticas Supabase (RLS): Ajustar los SELECT/INSERT nativos para que usuarios "Por Evento" queden cegados por completo a Tareas y Proyectos a los que no pertenecen.
 3. Desarrollar la PWA (Progressive Web App) con Service Workers para habilitar notificaciones push y el badge numérico.
-4. Integrar flujos de n8n para emails oficiales vía SendGrid.

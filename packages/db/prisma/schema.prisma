@@ -88,6 +88,7 @@ model TaskMessage {
   text      String
   taskId    String
   authorId  String
+  readBy    String[] @default([])
   createdAt DateTime @default(now())
   author    User     @relation(fields: [authorId], references: [id])
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)

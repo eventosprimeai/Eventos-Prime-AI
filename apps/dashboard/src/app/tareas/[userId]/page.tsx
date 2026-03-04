@@ -18,7 +18,7 @@ interface Task {
     evidenceRequired: boolean;
     assignee: { id: string; name: string; avatarUrl: string | null } | null;
     event: { id: string; name: string };
-    _count: { evidence: number; voiceNotes: number; subtasks: number };
+    _count: { evidence: number; voiceNotes: number; subtasks: number; messages?: number };
 }
 
 const priorityConfig = {
@@ -92,10 +92,19 @@ export default function UserTareasPage() {
         } catch { }
     };
 
-    const openTaskChat = (task: Task) => {
+    const openTaskChat = async (task: Task) => {
         setSelectedTask(task);
         setMessages([]);
         loadMessages(task.id);
+
+        if (task._count?.messages && task._count.messages > 0) {
+            try {
+                // Mark messages as read
+                await fetch(`/api/tasks/${task.id}/read`, { method: "POST" });
+                // We update local state tasks to reflect the read state instantly
+                setTasks(prev => prev.map(t => t.id === task.id ? { ...t, _count: { ...t._count, messages: 0 } } : t));
+            } catch { }
+        }
     };
 
     const handleSendMessage = async (e?: React.FormEvent, overrideText?: string) => {
@@ -493,7 +502,28 @@ export default function UserTareasPage() {
                                                 </span>
                                             )}
                                             {task.evidenceRequired && <span>📸 Evidencia</span>}
-                                            <span>� Chat</span>
+                                            <span style={{ position: "relative" }}>
+                                                💬 Chat
+                                                {task._count?.messages ? (
+                                                    <span style={{
+                                                        background: "var(--color-rag-red)",
+                                                        color: "white",
+                                                        fontSize: "0.6rem",
+                                                        fontWeight: "bold",
+                                                        borderRadius: "50%",
+                                                        width: 14,
+                                                        height: 14,
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        position: "absolute",
+                                                        top: -8,
+                                                        right: -12
+                                                    }}>
+                                                        {task._count.messages}
+                                                    </span>
+                                                ) : null}
+                                            </span>
                                         </div>
                                     </div>
 
@@ -509,7 +539,7 @@ export default function UserTareasPage() {
                         })}
                     </div>
                 )}
-            </div>
+            </div >
 
             {/* Task Detail & Chat Modal */}
             {

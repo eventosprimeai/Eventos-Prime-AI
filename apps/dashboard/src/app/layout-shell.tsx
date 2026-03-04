@@ -78,17 +78,27 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                         })
                         .catch(() => { });
 
-                    // Fetch personal pending tasks count
-                    fetch(`/api/tasks?status=PENDIENTE&assigneeId=${user.id}`)
+                    // Fetch aggregated unread messages + pending tasks count
+                    fetch(`/api/notifications/sidebar`)
                         .then(res => res.json())
-                        .then(tasks => {
-                            if (Array.isArray(tasks)) {
-                                setPendingTasksCount(tasks.length);
+                        .then(data => {
+                            if (typeof data.count === 'number') {
+                                setPendingTasksCount(data.count);
                             }
                         })
                         .catch(() => { });
 
-                    // Optional: We can set up an interval to refresh this, but for now doing it on mount/page load is okay.
+                    // We can set up an interval to refresh this, doing it every 15 seconds to simulate real-time notification
+                    const interval = setInterval(() => {
+                        fetch(`/api/notifications/sidebar`)
+                            .then(res => res.json())
+                            .then(data => {
+                                if (typeof data.count === 'number') {
+                                    setPendingTasksCount(data.count);
+                                }
+                            }).catch(() => { });
+                    }, 15000);
+                    return () => clearInterval(interval);
                 } else {
                     window.location.href = "/login";
                 }

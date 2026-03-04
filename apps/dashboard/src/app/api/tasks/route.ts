@@ -30,7 +30,19 @@ export async function GET(request: Request) {
             include: {
                 assignee: { select: { id: true, name: true, avatarUrl: true } },
                 event: { select: { id: true, name: true } },
-                _count: { select: { evidence: true, voiceNotes: true, subtasks: true } },
+                _count: {
+                    select: {
+                        evidence: true,
+                        voiceNotes: true,
+                        subtasks: true,
+                        messages: {
+                            where: {
+                                authorId: { not: user.id },
+                                NOT: { readBy: { has: user.id } }
+                            }
+                        }
+                    }
+                },
             },
         });
 

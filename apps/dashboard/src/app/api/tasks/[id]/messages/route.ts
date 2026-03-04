@@ -238,12 +238,19 @@ REGLAS DE ACTUACIÓN:
 
                 const aiReplyText = response.text || "Recibido capitán. Ejecutando rutinas de análisis...";
 
+                // Determine correct AuthorId (Must be Harold, not the User making the consultation)
+                let finalAuthorId = taskAny.assignee?.id;
+                if (taskAny.isConsulta || !finalAuthorId || finalAuthorId === user.id) {
+                    const haroldUser = await prisma.user.findFirst({ where: { email: "antigravity@eventosprimeai.com" } });
+                    if (haroldUser) finalAuthorId = haroldUser.id;
+                }
+
                 // Save the AI's reply
                 await (prisma as any).taskMessage.create({
                     data: {
                         text: aiReplyText,
                         taskId,
-                        authorId: task.assignee.id // Antigravity's own ID
+                        authorId: finalAuthorId // Antigravity's own ID strictly
                     }
                 });
 

@@ -9,7 +9,7 @@ export async function GET(request: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-        const team = await prisma.user.findMany({
+        const team = await (prisma as any).user.findMany({
             where: {
                 active: true,
                 role: { in: ["DIRECTOR", "ADMIN", "COORDINADOR", "STAFF"] },
@@ -22,7 +22,9 @@ export async function GET(request: Request) {
                 avatarUrl: true,
                 _count: {
                     select: {
-                        assignedTasks: true
+                        assignedTasks: {
+                            where: { isConsulta: false }
+                        }
                     }
                 }
             },

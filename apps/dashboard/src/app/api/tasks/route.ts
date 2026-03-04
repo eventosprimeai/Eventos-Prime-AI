@@ -133,14 +133,64 @@ export async function POST(request: Request) {
                     if (currentClient) {
                         let prompt = "";
 
-                        if (task.isConsulta) {
+                        if (taskAny.isConsulta) {
+                            // Gather deep context from database to feed to the AI "Secretary"
+                            const [allTasks, allUsers, allEvents, allSponsors, allSupplierOrders] = await Promise.all([
+                                prisma.task.findMany({ include: { assignee: { select: { name: true } } } }),
+                                prisma.user.findMany({ select: { name: true, role: true } }),
+                                prisma.event.findMany({ select: { id: true, name: true, status: true, startDate: true, budget: true } }),
+                                prisma.sponsor.findMany({ include: { deals: { select: { stage: true } } } }),
+                                prisma.supplierOrder.findMany()
+                            ]);
+
+                            const teamContext = allUsers.map(u => `${u.name} (${u.role})`).join(", ");
+
+                            const isInternalUser = !["PROVEEDOR", "SPONSOR"].includes(dbUser?.role || "");
+
+                            const eventsContext = allEvents.map(e => {
+                                let eventStr = `- ${e.name} [${e.status}]`;
+                                if (isInternalUser) {
+                                    const eventSpend = allSupplierOrders.filter(so => so.eventId === e.id).reduce((sum, so) => sum + Number(so.amount || 0), 0);
+                                    eventStr += ` | Presupuesto: $${Number(e.budget).toFixed(2)} | Gasto Total: $${eventSpend.toFixed(2)}`;
+                                }
+                                return eventStr;
+                            }).join("\n");
+
+                            const taskContext = allTasks.map(t => `- [${t.status}] ${t.title} ${(t as any).isConsulta ? '(Consulta)' : ''} (Resp: ${t.assignee?.name || 'Ninguno'})`).join("\n");
+
+                            const sponsorContext = allSponsors.map(s => {
+                                const stages = s.deals.length ? s.deals.map(d => d.stage).join(', ') : 'SIN REGISTRO';
+                                return `- ${s.companyName}: [Estado: ${stages}]`;
+                            }).join("\n");
+
+                            const financeRule = isInternalUser
+                                ? "Al dar reportes a Gabriel o usuarios internos, cruza la información de presupuestos con el estado de tareas si es relevante."
+                                : "EL USUARIO CON EL QUE HABLAS ES UN PROVEEDOR O SPONSOR. TIENES ESTRICTAMENTE PROHIBIDO REVELAR MONTOS DE PRESUPUESTO, GASTOS FINANCIEROS O ESTADO DE NEGOCIACIÓN DE OTROS AUSPICIANTES. Si te piden finanzas, diles cortésmente que esos datos son confidenciales y contacten a Dirección.";
+
                             prompt = `Eres Harold, el Asistente Ejecutivo e Inteligencia Artificial del proyecto Eventos Prime.
 El usuario: ${dbUser?.name} (Rol: ${dbUser?.role}) acaba de abrir una línea directa de Consulta contigo (Consulta AI).
 Asunto/Contexto: "${task.title}".
 Consulta detallada: "${task.description || 'Sin detalles adicionales'}".
 
-INSTRUCCIÓN:
-Responde de forma inmediata y certera a su consulta. Analiza su pregunta como un consejero inteligente, profesional, amable y con profundo conocimiento de gestión de eventos. Si te pide un consejo, dáselo. Tu estilo es corporativo pero robóticamente elegante (ej. "Comprendido.", "A la orden.", "Analizando la solicitud."). No seas un simple chat; da valor agregado en 2 a 3 párrafos como máximo. Si haces alusión al usuario, respeta su nombre y cargo.`;
+TIENES ACCESO A LA SIGUIENTE INFORMACIÓN REAL DEL SISTEMA A ESCALA GLOBAL (No inventes datos, usa estrictamente esto para hacer reportes cruces o informes):
+
+== EVENTOS ==
+${eventsContext}
+
+== EQUIPO ==
+${teamContext}
+
+== TAREAS GLOBALES DEL SISTEMA ==
+${taskContext}
+
+== SPONSORS Y NEGOCIACIONES ==
+${sponsorContext}
+
+REGLAS DE SEGURIDAD Y ESTILO:
+1. ${financeRule}
+2. Responde de forma inmediata y certera a su consulta. Analiza su pregunta como un consejero inteligente, profesional, amable y con profundo conocimiento de gestión de eventos.
+3. Si te pide un informe o estatus de tareas, bríndale números precisos BASADOS EN LOS DATOS REALES DE ARRIBA. No inventes bajo ninguna circunstancia.
+4. Tu estilo es corporativo pero robóticamente elegante (ej. "Comprendido.", "A la orden.", "Analizando la solicitud."). No seas un simple chat; da valor agregado en 2 a 3 párrafos como máximo. Si haces alusión al usuario, respeta su nombre y cargo.`;
                         } else {
                             prompt = `Eres Harold, el Asistente Ejecutivo, Secretario Técnico e Inteligencia Artificial del proyecto Eventos Prime. 
 El Director General (Gabriel) te acaba de asignar una nueva tarea o solicitud en el sistema.

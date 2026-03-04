@@ -67,11 +67,14 @@ export default function UserTareasPage() {
     const [sendingMsg, setSendingMsg] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Voice recognition states
-    const [isRecordingChat, setIsRecordingChat] = useState(false);
-    const recognitionChatRef = useRef<any>(null);
+    const [isRecording, setIsRecording] = useState(false);
+    const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+    const [previewingPhoto, setPreviewingPhoto] = useState<string | null>(null);
+    const recognitionRef = useRef<any>(null);
     const [isRecordingForm, setIsRecordingForm] = useState(false);
     const recognitionFormRef = useRef<any>(null);
+    const [isRecordingChat, setIsRecordingChat] = useState(false);
+    const recognitionChatRef = useRef<any>(null);
 
     const [showCamera, setShowCamera] = useState(false);
     const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -171,6 +174,7 @@ export default function UserTareasPage() {
             stream.getTracks().forEach(track => track.stop());
         }
         setShowCamera(false);
+        setCapturedPhoto(null);
     };
 
     const capturePhoto = () => {
@@ -179,9 +183,29 @@ export default function UserTareasPage() {
         canvas.width = videoRef.current.videoWidth;
         canvas.height = videoRef.current.videoHeight;
         canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
-        const base64Image = canvas.toDataURL('image/jpeg', 0.6);
-        stopCamera();
-        handleSendMessage(undefined, `![Evidencia Fotográfica](${base64Image})\n\nFelicidades tarea completada`);
+
+        // Use high-quality webp compression to save space
+        const compressedImage = canvas.toDataURL('image/webp', 0.8);
+        setCapturedPhoto(compressedImage);
+
+        // Stop video tracks but keep the camera overlay open to show preview
+        if (videoRef.current && videoRef.current.srcObject) {
+            const stream = videoRef.current.srcObject as MediaStream;
+            stream.getTracks().forEach(track => track.stop());
+        }
+    };
+
+    const approvePhotoAndSend = () => {
+        if (!capturedPhoto) return;
+        const imageToSend = capturedPhoto;
+        setShowCamera(false);
+        setCapturedPhoto(null);
+        handleSendMessage(undefined, `![Evidencia Fotográfica](${imageToSend})\n\nFelicidades tarea completada`);
+    };
+
+    const retakePhoto = () => {
+        setCapturedPhoto(null);
+        startCamera();
     };
 
     const renderMessageText = (text: string) => {
@@ -204,7 +228,10 @@ export default function UserTareasPage() {
             const cleanText = text.replace(imgRegex, '').trim();
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <img src={match[1]} alt="Evidencia" style={{ width: "100%", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }} />
+                    <div style={{ position: 'relative', cursor: 'zoom-in' }} onClick={() => setPreviewingPhoto(match[1])}>
+                        <img src={match[1]} alt="Evidencia" style={{ width: "100%", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)", display: "block" }} />
+                        <div style={{ position: 'absolute', bottom: 8, right: 8, background: 'rgba(0,0,0,0.6)', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', pointerEvents: 'none' }}>🔍 Ampliar</div>
+                    </div>
                     {cleanText && <span>{formatText(cleanText)}</span>}
                 </div>
             );
@@ -639,11 +666,31 @@ export default function UserTareasPage() {
                             <div style={{ padding: "var(--space-4)", borderTop: "1px solid var(--color-border)", background: "var(--color-bg-card)", flexShrink: 0 }}>
                                 {showCamera ? (
                                     <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#000", display: "flex", flexDirection: "column" }}>
-                                        <video ref={videoRef} autoPlay playsInline style={{ flex: 1, width: "100%", objectFit: "cover" }} />
-                                        <div style={{ padding: "var(--space-4)", display: "flex", justifyContent: "space-between", background: "#111" }}>
-                                            <button onClick={stopCamera} style={{ background: "transparent", color: "#fff", border: "1px solid #333", padding: "12px 24px", borderRadius: "24px" }}>Cancelar</button>
-                                            <button onClick={capturePhoto} style={{ background: "var(--color-success)", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "24px", fontWeight: "bold" }}>📸 Tomar Foto y Completar</button>
-                                        </div>
+                                        {capturedPhoto ? (
+                                            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                                                <img src={capturedPhoto} alt="Review" style={{ flex: 1, width: "100%", objectFit: "contain", background: "#000" }} />
+                                                <div style={{ padding: "var(--space-4)", display: "flex", justifyContent: "space-between", background: "#111", borderTop: "1px solid #333" }}>
+                                                    <button onClick={retakePhoto} style={{ background: "transparent", color: "#fff", border: "1px solid #555", padding: "12px 24px", borderRadius: "24px", cursor: "pointer" }}>↻ Volver a tomar</button>
+                                                    <button onClick={approvePhotoAndSend} style={{ background: "var(--color-success)", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "24px", fontWeight: "bold", cursor: "pointer", boxShadow: "0 0 15px rgba(0,255,100,0.3)" }}>✅ Usar y Guardar</button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                                                <video ref={videoRef} autoPlay playsInline style={{ flex: 1, width: "100%", objectFit: "cover" }} />
+                                                <div style={{ padding: "var(--space-4)", display: "flex", justifyContent: "space-between", background: "#111" }}>
+                                                    <button onClick={stopCamera} style={{ background: "transparent", color: "#fff", border: "1px solid #333", padding: "12px 24px", borderRadius: "24px", cursor: "pointer" }}>Cancelar</button>
+                                                    <button onClick={capturePhoto} style={{ background: "white", color: "#000", border: "none", padding: "12px 24px", borderRadius: "24px", fontWeight: "bold", cursor: "pointer" }}>📷 Tomar Foto</button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : null}
+
+                                {/* Lightbox out of flow */}
+                                {previewingPhoto ? (
+                                    <div style={{ position: "fixed", inset: 0, zIndex: 11000, background: "rgba(0,0,0,0.9)", display: "flex", alignItems: "center", justifyContent: "center", padding: "var(--space-4)" }} onClick={() => setPreviewingPhoto(null)}>
+                                        <button style={{ position: "absolute", top: "var(--space-4)", right: "var(--space-4)", background: "transparent", border: "none", color: "white", fontSize: "2rem", cursor: "pointer" }}>✕</button>
+                                        <img src={previewingPhoto} style={{ maxWidth: "100%", maxHeight: "90vh", borderRadius: "var(--radius-lg)", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }} alt="Evidencia Ampliada" />
                                     </div>
                                 ) : null}
 

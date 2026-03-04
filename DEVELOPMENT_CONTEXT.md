@@ -249,6 +249,7 @@ cd apps/dashboard && npx next dev --port 3001
 - **Equipo**: 5-25 usuarios iniciales, hasta 50+ staff
 - **Email corporativo**: ventas@eventosprimeai.com
 - **VPS**: Hostinger (eventosprimeai.com)
+- **OpenClaw OS**: openclawos.eventosprimeai.com (self-hosted)
 - **n8n**: n8n.eventosprimeai.com (self-hosted)
 - **Idioma**: Todo en español
 - **Pagos**: DataFast (gateway de Ecuador)

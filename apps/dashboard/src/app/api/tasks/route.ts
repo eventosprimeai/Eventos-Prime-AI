@@ -156,6 +156,12 @@ export async function POST(request: Request) {
                                 return eventStr;
                             }).join("\n");
 
+                            // Calculate exact Dashboard KPIs to match user view
+                            const totalCompletadas = allTasks.filter(t => t.status === "COMPLETADA" && !(t as any).isConsulta).length;
+                            const totalPendientes = allTasks.filter(t => t.status === "PENDIENTE" && !(t as any).isConsulta).length;
+                            const totalEnProgreso = allTasks.filter(t => (t.status === "EN_PROGRESO" || t.status === "REVISION") && !(t as any).isConsulta).length;
+                            const totalEventosActivos = allEvents.filter(e => e.status !== "CERRADO" && e.status !== "CANCELADO").length;
+
                             const taskContext = allTasks.map(t => `- [${t.status}] ${t.title} ${(t as any).isConsulta ? '(Consulta)' : ''} (Resp: ${t.assignee?.name || 'Ninguno'})`).join("\n");
 
                             const sponsorContext = allSponsors.map(s => {
@@ -173,6 +179,13 @@ Asunto/Contexto: "${task.title}".
 Consulta detallada: "${task.description || 'Sin detalles adicionales'}".
 
 TIENES ACCESO A LA SIGUIENTE INFORMACIÓN REAL DEL SISTEMA A ESCALA GLOBAL (No inventes datos, usa estrictamente esto para hacer reportes cruces o informes):
+
+== MÉTRICAS GLOBALES DEL DASHBOARD JEFATURA ==
+(Usa estos números exactos si te piden un resumen de estatus de tareas o eventos).
+- Tareas Completadas: ${totalCompletadas}
+- Tareas Pendientes: ${totalPendientes}
+- Tareas en Progreso o Revisión: ${totalEnProgreso}
+- Eventos Activos: ${totalEventosActivos}
 
 == EVENTOS ==
 ${eventsContext}

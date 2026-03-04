@@ -179,13 +179,30 @@ export default function UserTareasPage() {
 
     const capturePhoto = () => {
         if (!videoRef.current) return;
-        const canvas = document.createElement('canvas');
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
-        canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
 
-        // Use high-quality webp compression to save space
-        const compressedImage = canvas.toDataURL('image/webp', 0.8);
+        const MAX_SIZE = 1000;
+        let width = videoRef.current.videoWidth;
+        let height = videoRef.current.videoHeight;
+
+        if (width > height) {
+            if (width > MAX_SIZE) {
+                height = Math.round((height * MAX_SIZE) / width);
+                width = MAX_SIZE;
+            }
+        } else {
+            if (height > MAX_SIZE) {
+                width = Math.round((width * MAX_SIZE) / height);
+                height = MAX_SIZE;
+            }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0, width, height);
+
+        // Use moderate webp compression to ensure the base64 string doesn't break API size limits
+        const compressedImage = canvas.toDataURL('image/webp', 0.6);
         setCapturedPhoto(compressedImage);
 
         // Stop video tracks but keep the camera overlay open to show preview

@@ -213,25 +213,6 @@ export default function UserTareasPage() {
         }
     };
 
-    const handleDeleteTask = async (taskId: string, e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!window.confirm("⚠️ ¿Estás totalmente seguro de eliminar todo el hilo de esta tarea de la base de datos?")) return;
-
-        try {
-            const res = await fetch(`/api/tasks?id=${taskId}`, { method: "DELETE" });
-            if (res.ok) {
-                alert("Tarea eliminada con éxito del sistema.");
-                fetchData();
-            } else {
-                const errorData = await res.json();
-                alert(`Error: ${errorData.error}`);
-            }
-        } catch (error) {
-            alert("Error de red eliminando la tarea");
-        }
-    };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.eventId) return;
@@ -515,16 +496,6 @@ export default function UserTareasPage() {
                                             <span>� Chat</span>
                                         </div>
                                     </div>
-
-                                    {currentUserRole === "DIRECTOR" && (
-                                        <button onClickCapture={(e) => handleDeleteTask(task.id, e)} style={{
-                                            background: "rgba(255, 60, 60, 0.1)", border: "1px solid var(--color-rag-red)", cursor: "pointer",
-                                            fontSize: "1.1rem", padding: "4px 8px", color: "var(--color-rag-red)", borderRadius: "var(--radius-sm)",
-                                            opacity: 0.9, transition: "all 0.2s", position: "relative", zIndex: 10
-                                        }} title="Eliminar tarea definitivamente">
-                                            🗑️
-                                        </button>
-                                    )}
 
                                     {/* Status Badge */}
                                     <span style={{

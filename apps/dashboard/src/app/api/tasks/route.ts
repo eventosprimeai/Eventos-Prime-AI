@@ -17,25 +17,37 @@ export async function GET(request: Request) {
         const status = searchParams.get("status");
         const assigneeId = searchParams.get("assigneeId");
         const isConsultaParam = searchParams.get("isConsulta");
+        const globalParam = searchParams.get("global");
+
+        // get current user from db to check role
+        const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
 
         const where: any = {};
         if (eventId) where.eventId = eventId;
         if (status) {
             where.status = status.includes(",") ? { in: status.split(",") } : status;
         }
-        if (assigneeId) where.assigneeId = assigneeId;
 
         if (isConsultaParam === "true") {
             where.isConsulta = true;
+            if (globalParam === "true" && dbUser?.role === "DIRECTOR") {
+                // Director sees all, do not filter by assigneeId
+            } else {
+                // Regular users only see their own consultas
+                where.assigneeId = assigneeId || user.id;
+            }
         } else if (isConsultaParam === "false") {
             where.isConsulta = false;
+            if (assigneeId) where.assigneeId = assigneeId;
+        } else {
+            if (assigneeId) where.assigneeId = assigneeId;
         }
 
         const tasks = await prisma.task.findMany({
             where,
             orderBy: [{ createdAt: "desc" }],
             include: {
-                assignee: { select: { id: true, name: true, avatarUrl: true } },
+                assignee: { select: { id: true, name: true, avatarUrl: true, role: true } },
                 event: { select: { id: true, name: true } },
                 _count: {
                     select: {

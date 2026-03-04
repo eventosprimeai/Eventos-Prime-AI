@@ -13,7 +13,7 @@ interface Task {
     dueDate: string | null;
     createdAt: string;
     evidenceRequired: boolean;
-    assignee: { id: string; name: string; avatarUrl: string | null } | null;
+    assignee: { id: string; name: string; avatarUrl: string | null; role: string } | null;
     event: { id: string; name: string };
     _count: { evidence: number; voiceNotes: number; subtasks: number; messages?: number };
 }
@@ -52,7 +52,7 @@ export default function ConsultasPage() {
             if (!user) return;
             setCurrentUserId(user.id);
 
-            const res = await fetch(`/api/tasks?isConsulta=true&assigneeId=${user.id}`);
+            const res = await fetch(`/api/tasks?isConsulta=true&global=true`);
             if (res.ok) {
                 const data = await res.json();
                 setTasks(data);
@@ -231,17 +231,26 @@ export default function ConsultasPage() {
                             return (
                                 <div key={task.id} className="task-item glass-card" onClick={() => openTaskChat(task)}>
                                     <div style={{ display: "flex", gap: "var(--space-4)", alignItems: "center" }}>
-                                        {/* Avatar Representing Harold since it's an AI Query */}
-                                        <div style={{ flexShrink: 0, width: 40, height: 40, borderRadius: "50%", background: "var(--color-bg-elevated)", border: "1px solid var(--color-gold-400)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                                            <img src="/harold_avatar.png" alt="Harold" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                        {/* Avatar Representing the User who made the Query */}
+                                        <div style={{ flexShrink: 0, width: 48, height: 48, borderRadius: "50%", background: "var(--color-bg-elevated)", border: "1px solid var(--color-border)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", fontSize: "1.2rem", fontWeight: "bold" }}>
+                                            {task.assignee?.avatarUrl ? (
+                                                <img src={task.assignee.avatarUrl} alt={task.assignee.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                            ) : (
+                                                <span>{task.assignee?.name?.charAt(0) || "U"}</span>
+                                            )}
                                         </div>
 
                                         {/* Content */}
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-1)" }}>
-                                                <span style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--color-text-primary)" }}>
-                                                    {task.title.replace("[CONSULTA]", "").trim() || "Consulta IA"}
-                                                </span>
+                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "var(--space-1)" }}>
+                                                <div>
+                                                    <span style={{ fontWeight: 800, fontSize: "var(--text-sm)", color: "var(--color-gold-400)", display: "block" }}>
+                                                        {task.assignee?.name || "Usuario Desconocido"} - <span style={{ fontWeight: 400, fontSize: "var(--text-xs)", color: "var(--color-text-secondary)" }}>{task.assignee?.role || "Cargo Desconocido"}</span>
+                                                    </span>
+                                                    <span style={{ fontWeight: 600, fontSize: "var(--text-md)", color: "var(--color-text-primary)", display: "block", marginTop: "2px" }}>
+                                                        {task.title.replace("[CONSULTA]", "").trim() || "Consulta IA"}
+                                                    </span>
+                                                </div>
                                             </div>
                                             <div style={{ display: "flex", gap: "var(--space-3)", fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
                                                 <span>📅 {dateStr}</span>

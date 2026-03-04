@@ -173,7 +173,7 @@ GOOGLE_APPLICATION_CREDENTIALS=./credentials/gcp-service-account.json
 ### Corto plazo (Semana 2-3)
 - [ ] **Voz → Tarea**: Grabar audio → Speech-to-Text → Gemini interpreta → crear tarea automática
 - [ ] **Notificaciones Telegram**: Bot que notifica tareas asignadas y vencimientos
-- [ ] **PWA**: Service worker + manifest para instalar como app
+- [ ] **PWA & Notificaciones Nativas**: Service worker + manifest para instalar como app en Android/iOS. Implementar Push Notifications y Badge en el ícono de la app con el conteo numerico real de Tareas Pendientes del usuario logueado.
 - [ ] **Checklists**: CRUD de plantillas clonables
 - [ ] **Equipo**: Gestión de miembros y asignación de roles
 
@@ -265,6 +265,8 @@ cd apps/dashboard && npx next dev --port 3001
 - **Contexto Principal (Dashboard Local):** Se perfeccionó toda la mecánica de Tareas y Asignación.
 - **Logros Alcanzados (Dashboard Local):**
   - **Módulo de Tareas (`/tareas`):** Creación global con selector de responsable, lista de tareas asignadas individuales.
+  - **Campanita de Notificaciones:** Se integró un badge o "campanita" en la tarjeta de perfil lateral izquierdo que cuenta dinámicamente cuántas Tareas `PENDIENTE` tiene el usuario que inició sesión.
+  - **Etiquetas de Estado Dinámicos:** Se reorganizó el dashboard (`/`) y las rutas (`/tareas/estado/[estado]`) para agrupar dinámicamente tareas a modo de concentrador, separando "Tareas Completadas", "Pendientes" y "En progreso". Se habilitó también el estado "REVISION" mediante validación de hotword y auto-resume.
   - **Identidad "Harold":** Se renombró al asistente de tareas a Harold (eliminando Gravity/Antigravity). Se implementó un RBAC para ocultar finanzas corporativas (Supplier Orders) a roles PROVEEDOR y SPONSOR.
   - **Reconocimiento de Voz Nativo:** Se integró el API `SpeechRecognition` nativo con modo `continuous=true` y `interimResults=true` tanto para la creación de tareas como para chatear con Harold, programando un reinicio automático (`onend`) que elimina el defecto de "no-speech" por silencios de Google Chrome, logrando una dictación continua real y sin límite con switch manual.
 
@@ -272,4 +274,4 @@ cd apps/dashboard && npx next dev --port 3001
 1. Validar la creación global de tareas y que se asigne correctamente, mostrándose en el contador lateral unificado.
 2. Afinar al sistema de Notificaciones (quizás conectar Webhooks / Telegram al crear tareas).
 3. Asegurar limpieza total en la base de datos de usuarios (Supabase Auth vs Prisma) para remover vestigios de pruebas.
-4. Adquirir API de pago para OpenClaw (VPS) cuando sea posible.
+4. Desarrollar la PWA (Progressive Web App) con Service Workers para habilitar notificaciones push y el conteo tipo burbuja (badge) en el icono (Home Screen) cuando se descargue en Android/iOS.

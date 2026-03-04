@@ -79,8 +79,11 @@ export async function POST(request: Request) {
             });
 
             // 3. Dispatch the welcome email asynchronously (placeholder layout ready for SMTP)
-            sendWelcomeEmail({ email, name, password, jobTitle, personType, contractType })
-                .catch(err => console.error("Error dispatching welcome email:", err));
+            // Skip sending welcome email if it's an AI agent (avoids bounce from fake email)
+            if (personType !== "Profesional IA") {
+                sendWelcomeEmail({ email, name, password, jobTitle, personType, contractType })
+                    .catch(err => console.error("Error dispatching welcome email:", err));
+            }
         }
 
         return NextResponse.json({ success: true });

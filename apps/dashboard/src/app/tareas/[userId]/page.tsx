@@ -17,6 +17,7 @@ interface Task {
     dueDate: string | null;
     evidenceRequired: boolean;
     assignee: { id: string; name: string; avatarUrl: string | null } | null;
+    creatorId: string;
     event: { id: string; name: string };
     _count: { evidence: number; voiceNotes: number; subtasks: number; messages?: number };
 }
@@ -555,7 +556,29 @@ export default function UserTareasPage() {
                                         {statusConfig[selectedTask.status].label}
                                     </span>
                                 </div>
-                                <button onClick={() => setSelectedTask(null)} style={{ background: "transparent", border: "none", color: "var(--color-text-muted)", fontSize: "var(--text-xl)", cursor: "pointer" }}>✕</button>
+                                <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+                                    {(currentUserRole === "DIRECTOR" || selectedTask.creatorId === currentUserId) && (
+                                        <button onClick={async () => {
+                                            if (confirm("¿Estás súper seguro de que quieres eliminar esta tarea permanentemente y todo su historial de mensajes? Esta acción no se puede deshacer.")) {
+                                                try {
+                                                    const res = await fetch(`/api/tasks/${selectedTask.id}`, { method: "DELETE" });
+                                                    if (res.ok) {
+                                                        setSelectedTask(null);
+                                                        fetchData();
+                                                    } else {
+                                                        const data = await res.json();
+                                                        alert(data.error || "Error al eliminar");
+                                                    }
+                                                } catch (e) {
+                                                    alert("Fallo de conexión al eliminar.");
+                                                }
+                                            }
+                                        }} style={{ background: "rgba(255,50,50,0.1)", border: "1px solid rgba(255,50,50,0.3)", color: "var(--color-error)", padding: "var(--space-2)", borderRadius: "var(--radius-md)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "var(--transition-fast)" }} title="Eliminar Tarea">
+                                            🗑️
+                                        </button>
+                                    )}
+                                    <button onClick={() => setSelectedTask(null)} style={{ background: "transparent", border: "none", color: "var(--color-text-muted)", fontSize: "var(--text-xl)", cursor: "pointer", marginLeft: "var(--space-2)" }}>✕</button>
+                                </div>
                             </div>
 
                             {/* Description */}

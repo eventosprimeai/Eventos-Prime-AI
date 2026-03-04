@@ -665,19 +665,23 @@ export default function UserTareasPage() {
                             {/* Chat Input */}
                             <div style={{ padding: "var(--space-4)", borderTop: "1px solid var(--color-border)", background: "var(--color-bg-card)", flexShrink: 0 }}>
                                 {showCamera ? (
-                                    <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#000", display: "flex", flexDirection: "column" }}>
+                                    <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#000" }}>
                                         {capturedPhoto ? (
-                                            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                                                <img src={capturedPhoto} alt="Review" style={{ flex: 1, width: "100%", objectFit: "contain", background: "#000" }} />
-                                                <div style={{ padding: "var(--space-4)", display: "flex", justifyContent: "space-between", background: "#111", borderTop: "1px solid #333" }}>
+                                            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>
+                                                <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+                                                    <img src={capturedPhoto} alt="Review" style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000" }} />
+                                                </div>
+                                                <div style={{ padding: "var(--space-4)", paddingBottom: "calc(var(--space-4) + env(safe-area-inset-bottom, 16px))", display: "flex", justifyContent: "space-between", background: "#111", borderTop: "1px solid #333" }}>
                                                     <button onClick={retakePhoto} style={{ background: "transparent", color: "#fff", border: "1px solid #555", padding: "12px 24px", borderRadius: "24px", cursor: "pointer" }}>↻ Volver a tomar</button>
                                                     <button onClick={approvePhotoAndSend} style={{ background: "var(--color-success)", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "24px", fontWeight: "bold", cursor: "pointer", boxShadow: "0 0 15px rgba(0,255,100,0.3)" }}>✅ Usar y Guardar</button>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                                                <video ref={videoRef} autoPlay playsInline style={{ flex: 1, width: "100%", objectFit: "cover" }} />
-                                                <div style={{ padding: "var(--space-4)", display: "flex", justifyContent: "space-between", background: "#111" }}>
+                                            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>
+                                                <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+                                                    <video ref={videoRef} autoPlay playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                                </div>
+                                                <div style={{ padding: "var(--space-4)", paddingBottom: "calc(var(--space-4) + env(safe-area-inset-bottom, 16px))", display: "flex", justifyContent: "space-between", background: "#111" }}>
                                                     <button onClick={stopCamera} style={{ background: "transparent", color: "#fff", border: "1px solid #333", padding: "12px 24px", borderRadius: "24px", cursor: "pointer" }}>Cancelar</button>
                                                     <button onClick={capturePhoto} style={{ background: "white", color: "#000", border: "none", padding: "12px 24px", borderRadius: "24px", fontWeight: "bold", cursor: "pointer" }}>📷 Tomar Foto</button>
                                                 </div>

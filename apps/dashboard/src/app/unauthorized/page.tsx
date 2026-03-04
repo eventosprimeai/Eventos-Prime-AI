@@ -27,7 +27,7 @@ export default function UnauthorizedPage() {
 
                 <div style={{ background: "rgba(255, 68, 68, 0.1)", padding: "var(--space-4)", borderRadius: "var(--radius-lg)", border: "1px dashed #ff4444", marginBottom: "var(--space-8)", display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
                     <span style={{ fontSize: "var(--text-sm)", color: "var(--color-text-primary)", fontWeight: 600 }}>Alerta de Seguridad Registrada</span>
-                    <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>Su intento de acceso a "{target}" ha sido bloqueado y notificado automáticamente a la Dirección Gral.</span>
+                    <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>Su intento de acceso ha sido bloqueado y notificado automáticamente a la Dirección Gral.</span>
                 </div>
 
                 <a href="/" style={{ display: "inline-block", textDecoration: "none", padding: "var(--space-3) var(--space-6)", background: "var(--color-bg-input)", color: "var(--color-text-primary)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", fontWeight: 700, cursor: "pointer", transition: "var(--transition-fast)" }}

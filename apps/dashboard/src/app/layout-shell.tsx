@@ -50,6 +50,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
     const [userRole, setUserRole] = useState("");
     const [userCategory, setUserCategory] = useState("");
     const [userPersonType, setUserPersonType] = useState("");
+    const [userSystemRole, setUserSystemRole] = useState("");
     const [userAvatar, setUserAvatar] = useState("");
     const [pendingTasksCount, setPendingTasksCount] = useState(0);
     const [showSubprofileModal, setShowSubprofileModal] = useState(false);
@@ -86,6 +87,9 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                                 }
                                 if (data.dbUser.jobTitle) {
                                     setUserRole(data.dbUser.jobTitle);
+                                }
+                                if (data.dbUser.role) {
+                                    setUserSystemRole(data.dbUser.role);
                                 }
                             }
                         })
@@ -189,17 +193,19 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                         </p>
 
                         {/* Sub Profile Button */}
-                        <button
-                            onClick={() => setShowSubprofileModal(true)}
-                            style={{
-                                marginTop: "var(--space-3)", padding: "var(--space-1) var(--space-3)",
-                                background: "var(--color-bg-input)", color: "var(--color-gold-400)",
-                                border: "1px dashed var(--color-gold-400)", borderRadius: "var(--radius-lg)",
-                                fontSize: "10px", fontWeight: 700, cursor: "pointer", transition: "all 0.2s"
-                            }}
-                        >
-                            + SOLICITAR SUB-PERFIL
-                        </button>
+                        {userSystemRole !== "DIRECTOR" && userPersonType !== "Socio" && (
+                            <button
+                                onClick={() => setShowSubprofileModal(true)}
+                                style={{
+                                    marginTop: "var(--space-3)", padding: "var(--space-1) var(--space-3)",
+                                    background: "var(--color-bg-input)", color: "var(--color-gold-400)",
+                                    border: "1px dashed var(--color-gold-400)", borderRadius: "var(--radius-lg)",
+                                    fontSize: "10px", fontWeight: 700, cursor: "pointer", transition: "all 0.2s"
+                                }}
+                            >
+                                + SOLICITAR SUB-PERFIL
+                            </button>
+                        )}
                     </div>
                 </div>
 

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 
-const personTypesList = ["Socio", "Sponsor", "Proveedor", "Staff", "Artista", "Voluntario", "Contratista"];
+const personTypesList = ["Socio", "Sponsor", "Proveedor", "Staff", "Artista", "Voluntario", "Contratista", "Profesional IA"];
 
 const areasAndRoles: Record<string, string[]> = {
     "Dirección y Administración": ["Director General", "Socio", "Event Producer Ejecutivo", "Gerente de Proyecto", "Coordinador Administrativo", "Secretario Ejecutivo", "Asistente Ejecutivo", "Partner Co-Productor de Eventos", "Contratista"],
@@ -21,7 +21,7 @@ const areasAndRoles: Record<string, string[]> = {
     "Roles de IA / Automatización": ["AI Agent", "AI Scheduler", "AI Email Agent", "AI Task Agent", "Infraestructura IA Manager"]
 };
 
-const categoriesList = ["Socio", "Sponsor", "Proveedor", "Artista", "Staff Administrativo", "Staff Operativo", "Staff Técnico", "Staff Creativo", "Personal Contratado", "Voluntario", "Agencia Externa", "Consultor", "Empresa Aliada"];
+const categoriesList = ["Socio", "Sponsor", "Proveedor", "Artista", "Staff Administrativo", "Staff Operativo", "Staff Técnico", "Staff Creativo", "Personal Contratado", "Voluntario", "Agencia Externa", "Consultor", "Empresa Aliada", "Agente Inteligencia Artificial"];
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -50,6 +50,14 @@ export default function LoginPage() {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (personType === "Profesional IA" && name) {
+            const cleanName = (name + (lastName ? ` ${lastName}` : '')).toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '');
+            setEmail(`ia.${cleanName}@eventosprimeai.com`);
+            setPassword("AgenteAutonomoIA#2026");
+        }
+    }, [personType, name, lastName]);
 
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -350,12 +358,16 @@ export default function LoginPage() {
                                     )}
                                 </div>
                                 <div style={{ gridColumn: "1 / -1" }}>
-                                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Correo corporativo</label>
-                                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="usuario@eventosprime.com" required style={inputStyle} />
+                                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>
+                                        {personType === "Profesional IA" ? "Identificación del Agente (Auto-Generado)" : "Correo corporativo"}
+                                    </label>
+                                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="usuario@eventosprime.com" required style={{ ...inputStyle, opacity: personType === "Profesional IA" ? 0.7 : 1 }} readOnly={personType === "Profesional IA"} />
                                 </div>
                                 <div style={{ gridColumn: "1 / -1" }}>
-                                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Contraseña inicial</label>
-                                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min. 6 caracteres" required minLength={6} style={inputStyle} />
+                                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>
+                                        {personType === "Profesional IA" ? "Clave de API Interna (Oculta)" : "Contraseña inicial"}
+                                    </label>
+                                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min. 6 caracteres" required minLength={6} style={{ ...inputStyle, opacity: personType === "Profesional IA" ? 0.7 : 1 }} readOnly={personType === "Profesional IA"} />
                                 </div>
                             </div>
 

@@ -259,20 +259,19 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 3 de marzo de 2026 (20:15 local)
+**Ultimo Punto de Restablecimiento:** 4 de marzo de 2026 (16:25 local)
 **Estatus Actual:**
 - **Contexto Principal (VPS):** Instalación profunda de OpenClaw y configuración de bots en n8n esperando tokens.
-- **Contexto Principal (Dashboard Local):** Se perfeccionó toda la mecánica de Notificaciones, Lecturas de mensajes y Seguridad en Tareas.
+- **Contexto Principal (Dashboard Local):** Estabilidad del sistema de Chat y Tareas Reforzada; Harold reubicado como IA Consultor.
 - **Logros Alcanzados (Dashboard Local):**
-  - **Módulo de Tareas (`/tareas`):** Ordenamiento cronológico estricto (más nuevas arriba) implementado globalmente. Se retiró la función destructiva de borrado de tareas por seguridad.
-  - **Campanita de Notificaciones Unificada:** Se integró un badge (campanita) en el perfil lateral que ahora suma tanto las Tareas asignadas en estado `PENDIENTE` como el total de mensajes no leídos en chats en los que el usuario participe (como asignado o creador).
-  - **Recibos de Lectura ("Vistos"):** Se expandió el esquema de Prisma con `readBy` en `TaskMessage`. Aparecen pequeños badges rojos de "mensajes no leídos" adentro del botón de cada tarea, desapareciendo en tiempo real al hacer clic gracias a la API `/api/tasks/[id]/read`.
-  - **Etiquetas de Estado Dinámicos:** El estado "REVISION" auto-resume y la segregación de vistas dinámicas está activa. 
-  - **Reconocimiento de Voz Nativo:** Dictación continua operando con switch manual para Tareas e interacciones con Harold.
-  - **Seguridad en Formularios:** Bloqueo de botones para prevenir que usuarios sin permisos alteren los estados de tareas que no les pertenecen.
+  - **Aislamiento de Harold:** Se modificaron los hooks y APIs de la plataforma para excluir explícitamente a Harold ("Consultas") del panel de "Equipo" y de los contadores globales de notificaciones de tareas, limpiando alertas fantasma del dashboard.
+  - **Renderizado Markdown:** Todos los chats de la plataforma ahora soportan e interpretan formato básico de Markdown (`**`, `__`, etc.) para renderizar correctamente las negritas provistas por la IA.
+  - **Borrador Destructivo de Tareas:** Se habilitó un Endpoint DELETE (`/api/tasks/[id]`) y un icono de "Papelera" exclusivo para usarios con rol DIRECTOR o creadores de la tarea, permitiendo la limpieza manual de tareas obsoletas y sus hilos de mensajería completa en la base de datos.
+  - **Cámara de Evidencia (2 Pasos):** Se re-escribió totalmente el front-end de la cámara para completar tareas (UI Móvil Responsiva sin desbordamientos de flexbox). Ahora ofrece un flujo de Captura -> Previsualización -> Aprobar/Repetir.
+  - **Eficiencia y Compresión de Imagen:** Se añadió un algoritmo masivo de rescale y compresión WebP al `60%` con límite de `1000px` al capturar evidencia. Esto elimina por completo las caídas de RAM de Node.js ("Failed to fetch") originadas por Base64 crudos de 8-12MB.
+  - **Inspección de Imágenes (Lightbox):** Las evidencias subidas al chat ahora pueden ser clicadas ("Ampliar") para abrirse oscureciendo la pantalla para revisión detallada.
 
 **Siguiente Acción Pendiente:**
-1. Validar la creación global de tareas y que se asigne correctamente, mostrando el badge con sincronización perfecta.
-2. Afinar al sistema de Notificaciones (quizás conectar Webhooks / Telegram al crear tareas).
-3. Asegurar limpieza total en la base de datos de usuarios (Supabase Auth vs Prisma) para remover vestigios de pruebas.
-4. Desarrollar la PWA (Progressive Web App) con Service Workers para habilitar notificaciones push y el conteo tipo burbuja (badge) en el icono (Home Screen) cuando se descargue en Android/iOS.
+1. Desarrollar la PWA (Progressive Web App) con Service Workers para habilitar notificaciones push y el conteo tipo burbuja (badge) en el icono (Home Screen) cuando se descargue de forma nativa en los celulares.
+2. Limpieza final de usuarios en Base de Datos (Supabase Auth vs Prisma) para remover accounts de prueba huérfanas o no sincronizadas.
+3. Avanzar con el sistema de Notificaciones externas (Eventos automáticos, Telegram o Webhooks tras creación de una tarea).

@@ -3,24 +3,25 @@
 import { useState, useRef } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 
-const jobRoles = [
-    { label: "Director General", value: "DIRECTOR" },
-    { label: "Administrador / Productor Ejecutivo", value: "ADMIN" },
-    { label: "Arquitecto de Software Principal", value: "ADMIN" },
-    { label: "Gerente de Proyecto / Event Manager", value: "COORDINADOR" },
-    { label: "Stage Manager", value: "COORDINADOR" },
-    { label: "Coordinador de Área", value: "COORDINADOR" },
-    { label: "Desarrollador Frontend", value: "STAFF" },
-    { label: "Desarrollador Backend", value: "STAFF" },
-    { label: "Agente AI Ops / Prompt Engineer", value: "STAFF" },
-    { label: "Jefe de Seguridad", value: "COORDINADOR" },
-    { label: "Director Creativo", value: "ADMIN" },
-    { label: "Contabilidad y Finanzas", value: "ADMIN" },
-    { label: "Especialista Marketing y SEO", value: "STAFF" },
-    { label: "Soporte Técnico / Tareas Generales", value: "STAFF" },
-    { label: "Proveedor Externo", value: "PROVEEDOR" },
-    { label: "Sponsor / Patrocinador", value: "SPONSOR" },
-];
+const personTypesList = ["Socio", "Sponsor", "Proveedor", "Staff", "Artista", "Voluntario", "Contratista"];
+
+const areasAndRoles: Record<string, string[]> = {
+    "Dirección y Administración": ["Director General", "Socio", "Event Producer Ejecutivo", "Gerente de Proyecto", "Coordinador Administrativo", "Secretario Ejecutivo", "Asistente Ejecutivo", "Partner Co-Productor de Eventos", "Contratista"],
+    "Producción de Eventos (Escenario y Técnica)": ["Stage Manager", "Ingeniero de Sonido", "Ingeniero de Iluminación", "Diseñador 3D / WebGL", "Técnico de Rigging", "Técnico de Grúas", "Stagehand", "Técnico de Escenario"],
+    "Seguridad y Salud": ["Jefe de Seguridad", "Guardia de Seguridad", "Manager de Crowd / Control de Multitudes", "Jefe de Salud", "Médico de Emergencias", "Paramédico", "Personal de Primeros Auxilios"],
+    "Producción Digital / Tecnología": ["Frontend Developer", "Backend Developer", "DevOps Engineer", "Mobile Developer", "AI Ops Engineer", "Prompt Engineer", "LLM Safety Engineer", "Data Engineer", "ML Engineer", "QA Engineer", "QA Test Automation", "QA Live Ops", "Soporte Técnico"],
+    "Diseño y Creatividad": ["Director Creativo", "Productor Ejecutivo Artístico", "3D Artist", "Blender Artist", "Motion Designer", "UX Designer", "UI Designer", "Copywriter", "Content Manager", "Creative Designer", "Motion Graphics Designer"],
+    "Marketing y Comunicación": ["Gerente de Marketing", "Social Media Manager", "Paid Media Specialist", "SEO Specialist", "Digital Marketing Specialist", "CRM Specialist", "Email Marketing Specialist", "Community Manager"],
+    "Finanzas y Legal": ["Director Financiero", "Controller", "Contador", "Tesorero", "Especialista Fiscal", "Legal Counsel", "Oficial de Protección de Datos", "Compliance Officer"],
+    "Operaciones y Logística": ["Gerente de Operaciones", "Jefe de Compras", "Procurement Manager", "Contract Manager", "Payments Operations Manager", "Logistics Manager", "HR Manager", "People Operations Manager", "Training Manager"],
+    "Infraestructura y Mantenimiento": ["Facilities Manager", "Técnico de Mantenimiento", "Técnico Eléctrico", "Técnico de Plomería", "Técnico de Infraestructura", "Personal de Limpieza"],
+    "Hospitalidad y Atención": ["Hospitality Manager", "Coordinador de Voluntarios", "Voluntario", "Wardrobe Crew", "Makeup Artist", "Staff de Camerinos"],
+    "Sostenibilidad e Inclusión": ["Sustainability Officer", "Accessibility Officer"],
+    "Fotografía y Producción Audiovisual": ["Event Photographer", "Videographer", "Drone Operator"],
+    "Roles de IA / Automatización": ["AI Agent", "AI Scheduler", "AI Email Agent", "AI Task Agent", "Infraestructura IA Manager"]
+};
+
+const categoriesList = ["Socio", "Sponsor", "Proveedor", "Artista", "Staff Administrativo", "Staff Operativo", "Staff Técnico", "Staff Creativo", "Personal Contratado", "Voluntario", "Agencia Externa", "Consultor", "Empresa Aliada"];
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -34,7 +35,14 @@ export default function LoginPage() {
     const [masterPassword, setMasterPassword] = useState("");
     const [name, setName] = useState("");
     const [lastName, setLastName] = useState("");
-    const [selectedJob, setSelectedJob] = useState("");
+
+    // New structural state
+    const [personType, setPersonType] = useState(personTypesList[0]);
+    const [area, setArea] = useState(Object.keys(areasAndRoles)[0]);
+    const [jobTitle, setJobTitle] = useState(areasAndRoles[Object.keys(areasAndRoles)[0]][0]);
+    const [customJobTitle, setCustomJobTitle] = useState("");
+    const [category, setCategory] = useState(categoriesList[0]);
+
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,7 +88,11 @@ export default function LoginPage() {
         setError("");
         if (masterPassword === "Gabriel230386@") {
             setMode("register");
-            setSelectedJob(jobRoles[0].label);
+            setPersonType(personTypesList[0]);
+            setArea(Object.keys(areasAndRoles)[0]);
+            setJobTitle(areasAndRoles[Object.keys(areasAndRoles)[0]][0]);
+            setCategory(categoriesList[0]);
+            setCustomJobTitle("");
         } else {
             setError("Contraseña maestra incorrecta.");
         }
@@ -108,7 +120,10 @@ export default function LoginPage() {
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!name || !lastName || !selectedJob) {
+
+        const finalJobTitle = jobTitle === "Otro / Nuevo tipo de rol" ? customJobTitle.trim() : jobTitle;
+
+        if (!name || !lastName || !finalJobTitle) {
             setError("Completa todos los campos obligatorios");
             return;
         }
@@ -116,7 +131,6 @@ export default function LoginPage() {
         setLoading(true);
         setError("");
 
-        const roleValue = jobRoles.find(j => j.label === selectedJob)?.value || "STAFF";
         const fullName = `${name} ${lastName}`.trim();
 
         try {
@@ -127,8 +141,10 @@ export default function LoginPage() {
                     email,
                     password,
                     name: fullName,
-                    role: roleValue,
-                    jobTitle: selectedJob,
+                    personType,
+                    area,
+                    category,
+                    jobTitle: finalJobTitle,
                     avatarUrl
                 })
             });
@@ -139,7 +155,7 @@ export default function LoginPage() {
             setSuccess("Cuenta creada exitosamente. Ya puedes iniciar sesión.");
             setMode("login");
             // clear form
-            setName(""); setLastName(""); setEmail(""); setPassword(""); setAvatarUrl(null);
+            setName(""); setLastName(""); setEmail(""); setPassword(""); setAvatarUrl(null); setCustomJobTitle("");
         } catch (err: any) {
             setError(err?.message?.includes("registered") ? "El correo ya está registrado." : err?.message);
         } finally {
@@ -249,10 +265,44 @@ export default function LoginPage() {
                                     <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Ej: Apellido" required style={inputStyle} />
                                 </div>
                                 <div style={{ gridColumn: "1 / -1" }}>
-                                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Cargo Funcional</label>
-                                    <select value={selectedJob} onChange={(e) => setSelectedJob(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
-                                        {jobRoles.map((role, idx) => (
-                                            <option key={idx} value={role.label}>{role.label}</option>
+                                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Tipo de Persona</label>
+                                    <select value={personType} onChange={(e) => setPersonType(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
+                                        {personTypesList.map((tipo, idx) => (
+                                            <option key={idx} value={tipo}>{tipo}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div style={{ gridColumn: "1 / -1" }}>
+                                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Área</label>
+                                    <select value={area} onChange={(e) => {
+                                        setArea(e.target.value);
+                                        setJobTitle(areasAndRoles[e.target.value][0]);
+                                    }} required style={{ ...inputStyle, cursor: "pointer" }}>
+                                        {Object.keys(areasAndRoles).map((ar, idx) => (
+                                            <option key={idx} value={ar}>{ar}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div style={{ gridColumn: "1 / -1" }}>
+                                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Cargo Estructural</label>
+                                    <select value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
+                                        {areasAndRoles[area].map((rol, idx) => (
+                                            <option key={idx} value={rol}>{rol}</option>
+                                        ))}
+                                        <option value="Otro / Nuevo tipo de rol">Otro / Nuevo tipo de rol...</option>
+                                    </select>
+                                </div>
+                                {jobTitle === "Otro / Nuevo tipo de rol" && (
+                                    <div style={{ gridColumn: "1 / -1" }}>
+                                        <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Especificar nuevo rol</label>
+                                        <input type="text" value={customJobTitle} onChange={(e) => setCustomJobTitle(e.target.value)} placeholder="Escriba el nombre del rol" required style={inputStyle} />
+                                    </div>
+                                )}
+                                <div style={{ gridColumn: "1 / -1" }}>
+                                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Categoría de Permisos</label>
+                                    <select value={category} onChange={(e) => setCategory(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
+                                        {categoriesList.map((cat, idx) => (
+                                            <option key={idx} value={cat}>{cat}</option>
                                         ))}
                                     </select>
                                 </div>

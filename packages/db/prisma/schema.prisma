@@ -17,6 +17,10 @@ model User {
   phone         String?
   avatarUrl     String?
   role          UserRole       @default(STAFF)
+  personType    String?
+  area          String?
+  jobTitle      String?
+  category      String?
   active        Boolean        @default(true)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt

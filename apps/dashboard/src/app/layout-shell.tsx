@@ -48,6 +48,8 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
     // User state
     const [userName, setUserName] = useState("");
     const [userRole, setUserRole] = useState("");
+    const [userCategory, setUserCategory] = useState("");
+    const [userPersonType, setUserPersonType] = useState("");
     const [userAvatar, setUserAvatar] = useState("");
     const [pendingTasksCount, setPendingTasksCount] = useState(0);
 
@@ -74,6 +76,15 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                                 }
                                 if (data.dbUser.name) {
                                     setUserName(data.dbUser.name);
+                                }
+                                if (data.dbUser.personType) {
+                                    setUserPersonType(data.dbUser.personType);
+                                }
+                                if (data.dbUser.category) {
+                                    setUserCategory(data.dbUser.category);
+                                }
+                                if (data.dbUser.jobTitle) {
+                                    setUserRole(data.dbUser.jobTitle);
                                 }
                             }
                         })
@@ -167,6 +178,11 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                         <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--color-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: 2 }}>
                             {userName}
                         </h3>
+                        {(userPersonType || userCategory) && (
+                            <p style={{ fontSize: "var(--text-xs)", color: "var(--color-gold-400)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textTransform: "uppercase", marginBottom: 2 }}>
+                                {userPersonType} {userCategory && userCategory !== userPersonType ? `• ${userCategory}` : ""}
+                            </p>
+                        )}
                         <p style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             {userRole}
                         </p>

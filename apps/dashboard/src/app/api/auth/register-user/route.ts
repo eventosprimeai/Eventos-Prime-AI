@@ -5,7 +5,17 @@ import { createClient } from "@supabase/supabase-js";
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { email, password, name, role, jobTitle, avatarUrl } = body;
+        const { email, password, name, personType, area, category, jobTitle, avatarUrl } = body;
+
+        function mapCategoryToRole(cat: string) {
+            if (cat === "Socio") return "ADMIN";
+            if (cat === "Sponsor") return "SPONSOR";
+            if (["Proveedor", "Agencia Externa", "Empresa Aliada", "Consultor", "Artista"].includes(cat)) return "PROVEEDOR";
+            if (["Staff Administrativo"].includes(cat)) return "COORDINADOR";
+            return "STAFF";
+        }
+
+        const role = mapCategoryToRole(category);
 
         const adminSupabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,6 +31,9 @@ export async function POST(request: Request) {
             user_metadata: {
                 name,
                 role,
+                personType,
+                area,
+                category,
                 jobTitle
             }
         });
@@ -29,11 +42,15 @@ export async function POST(request: Request) {
 
         if (authData?.user) {
             // 2. Insert into Prisma DB directly with the base64 avatar
-            await prisma.user.upsert({
+            await (prisma as any).user.upsert({
                 where: { id: authData.user.id },
                 update: {
                     name,
                     role: role as any,
+                    personType: personType || null,
+                    area: area || null,
+                    category: category || null,
+                    jobTitle: jobTitle || null,
                     avatarUrl: avatarUrl || null
                 },
                 create: {
@@ -41,6 +58,10 @@ export async function POST(request: Request) {
                     email: authData.user.email!,
                     name,
                     role: role as any,
+                    personType: personType || null,
+                    area: area || null,
+                    category: category || null,
+                    jobTitle: jobTitle || null,
                     avatarUrl: avatarUrl || null
                 }
             });

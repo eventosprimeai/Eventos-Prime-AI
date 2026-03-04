@@ -567,7 +567,19 @@ export default function UserTareasPage() {
                                     </div>
                                 ) : null}
 
-                                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+                                <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+                                    {selectedTask.status !== "COMPLETADA" && selectedTask.status !== "REVISION" && (
+                                        <button onClick={() => {
+                                            handleSendMessage(undefined, "Perfecto, estoy revisando. Más tarde te doy novedades.");
+                                        }} disabled={sendingMsg} style={{
+                                            background: "var(--color-bg-elevated)",
+                                            color: "var(--color-info)",
+                                            border: `1px solid var(--color-border)`,
+                                            padding: "4px 12px", borderRadius: "16px", fontSize: "0.8rem", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: 4
+                                        }}>
+                                            🕵️ En Revisión
+                                        </button>
+                                    )}
                                     <button onClick={handleCompleteTaskClick} disabled={sendingMsg || selectedTask.status === "COMPLETADA"} style={{
                                         background: selectedTask.status === "COMPLETADA" ? "var(--color-bg-elevated)" : "var(--color-success)20",
                                         color: selectedTask.status === "COMPLETADA" ? "var(--color-text-muted)" : "var(--color-success)",

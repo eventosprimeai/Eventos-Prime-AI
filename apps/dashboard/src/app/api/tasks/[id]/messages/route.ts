@@ -89,25 +89,29 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
                     entity: "Task",
                     entityId: taskId,
                     userId: user.id,
-                    changes: { status: "COMPLETADA", note: "Auto-completada vía chat de IA" }
+                    changes: { status: "COMPLETADA", note: "Auto-completada vía chat" }
                 }
             });
             taskCompleted = true;
-            return NextResponse.json({ success: true, message, taskCompleted });
+            return NextResponse.json({ success: true, message, taskCompleted, newStatus: "COMPLETADA" });
         } else {
-            // Not a completion message. Update status dynamically:
-            if (task.status === "COMPLETADA") {
-                // If someone writes after it was completed -> Re-open to EN_PROGRESO
+            // Not a completion message. Check for Revision hotword.
+            const isRevisionMessage = text === "Perfecto, estoy revisando. Más tarde te doy novedades.";
+
+            if (isRevisionMessage) {
+                await prisma.task.update({
+                    where: { id: taskId },
+                    data: { status: "REVISION", completedAt: null }
+                });
+                task.status = "REVISION";
+            } else if (task.status === "COMPLETADA" || task.status === "PENDIENTE" || task.status === "REVISION") {
+                // If someone writes natively (and it's not the revision hotword nor completion),
+                // automatically wake the task up to EN_PROGRESO.
                 await prisma.task.update({
                     where: { id: taskId },
                     data: { status: "EN_PROGRESO", completedAt: null }
                 });
-            } else if (task.status === "PENDIENTE" && user.id === task.assignee?.id) {
-                // If the assignee replies natively, mark it as in progress
-                await prisma.task.update({
-                    where: { id: taskId },
-                    data: { status: "EN_PROGRESO" }
-                });
+                task.status = "EN_PROGRESO";
             }
         }
 
@@ -229,7 +233,8 @@ REGLAS DE ACTUACIÓN:
                 });
 
                 // Update task status because AI (Assignee) started working
-                if (task.status === "PENDIENTE") {
+                const currentDbTask = await prisma.task.findUnique({ where: { id: taskId } });
+                if (currentDbTask?.status === "PENDIENTE") {
                     await prisma.task.update({
                         where: { id: taskId },
                         data: { status: "EN_PROGRESO" }

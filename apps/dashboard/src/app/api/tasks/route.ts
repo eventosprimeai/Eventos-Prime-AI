@@ -40,6 +40,8 @@ export async function GET(request: Request) {
             where.isConsulta = false;
             if (assigneeId) where.assigneeId = assigneeId;
         } else {
+            // By default, do NOT show Consultas to avoid polluting the general dashboard tasks
+            where.isConsulta = false;
             if (assigneeId) where.assigneeId = assigneeId;
         }
 

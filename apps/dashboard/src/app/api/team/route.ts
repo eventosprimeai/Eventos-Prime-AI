@@ -12,7 +12,8 @@ export async function GET(request: Request) {
         const team = await prisma.user.findMany({
             where: {
                 active: true,
-                role: { in: ["DIRECTOR", "ADMIN", "COORDINADOR", "STAFF"] }
+                role: { in: ["DIRECTOR", "ADMIN", "COORDINADOR", "STAFF"] },
+                email: { not: "antigravity@eventosprimeai.com" } // Harold should not be displayed in team tasks
             },
             select: {
                 id: true,

@@ -259,19 +259,20 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 4 de marzo de 2026 (16:25 local)
+**Ultimo Punto de Restablecimiento:** 4 de marzo de 2026 (17:35 local)
 **Estatus Actual:**
 - **Contexto Principal (VPS):** Instalación profunda de OpenClaw y configuración de bots en n8n esperando tokens.
-- **Contexto Principal (Dashboard Local):** Estabilidad del sistema de Chat y Tareas Reforzada; Harold reubicado como IA Consultor.
-- **Logros Alcanzados (Dashboard Local):**
-  - **Aislamiento de Harold:** Se modificaron los hooks y APIs de la plataforma para excluir explícitamente a Harold ("Consultas") del panel de "Equipo" y de los contadores globales de notificaciones de tareas, limpiando alertas fantasma del dashboard.
-  - **Renderizado Markdown:** Todos los chats de la plataforma ahora soportan e interpretan formato básico de Markdown (`**`, `__`, etc.) para renderizar correctamente las negritas provistas por la IA.
-  - **Borrador Destructivo de Tareas:** Se habilitó un Endpoint DELETE (`/api/tasks/[id]`) y un icono de "Papelera" exclusivo para usarios con rol DIRECTOR o creadores de la tarea, permitiendo la limpieza manual de tareas obsoletas y sus hilos de mensajería completa en la base de datos.
-  - **Cámara de Evidencia (2 Pasos):** Se re-escribió totalmente el front-end de la cámara para completar tareas (UI Móvil Responsiva sin desbordamientos de flexbox). Ahora ofrece un flujo de Captura -> Previsualización -> Aprobar/Repetir.
-  - **Eficiencia y Compresión de Imagen:** Se añadió un algoritmo masivo de rescale y compresión WebP al `60%` con límite de `1000px` al capturar evidencia. Esto elimina por completo las caídas de RAM de Node.js ("Failed to fetch") originadas por Base64 crudos de 8-12MB.
-  - **Inspección de Imágenes (Lightbox):** Las evidencias subidas al chat ahora pueden ser clicadas ("Ampliar") para abrirse oscureciendo la pantalla para revisión detallada.
+- **Contexto Principal (Dashboard Local):** Estabilidad del sistema de Chat y Tareas Reforzada; Harold reubicado como IA Consultor. Reconstrucción masiva del modelo de registro de usuarios (Auth).
+
+**Logros Alcanzados (Dashboard Local):**
+  - **Identidad Modular Completa:** El registro de cuentas ya no depende de opciones estáticas para roles. Todo `User` de Prisma ahora alberga `personType`, `area`, `jobTitle` (más de 13 áreas y 100 perfiles estructurados) y `category` (permisos y reglas subyacentes mapeados inteligente a su respectivo `Role` en Prisma).
+  - **Condiciones de Contratación Inteligente:** Al crear un perfil internamente, se determina si es "Plantilla Permanente" o "Por Evento". Si es la segunda, la plataforma inyecta eventos no completados activos leyendo en tiempo real de la base de datos a través de `GET /api/events?public=true`.
+  - **Desterrado Fantasmas Auth/Database:** Se erradicó permanentemente el riesgo de desbalance entre Supabase Auth y Postgres, mediante un controlador de sanidad de limpieza total con TypeScript, eliminando en cascada dependencias de tareas y evidencias. A la par, el Core de Registro cuenta con validación antispam vía Regex (emails funcionales obligatorios `^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$`).
+  - **Motor Dispatching Correos:** Plantilla Dark Golden HTML embebida nativamente y lista para conectarse al servicio SMTP (Envío Temporal de credenciales automático y silencioso vía `sendWelcomeEmail()`).
+  - **Tarjeta de Identidad Magnética:** La Interfaz (Layout-Shell) interpreta e impone jerárquicamente esta información al visualizar la foto, inyectando el área, tipo de personal y categoría estricta desde un solo Hook global.
 
 **Siguiente Acción Pendiente:**
-1. Desarrollar la PWA (Progressive Web App) con Service Workers para habilitar notificaciones push y el conteo tipo burbuja (badge) en el icono (Home Screen) cuando se descargue de forma nativa en los celulares.
-2. Limpieza final de usuarios en Base de Datos (Supabase Auth vs Prisma) para remover accounts de prueba huérfanas o no sincronizadas.
-3. Avanzar con el sistema de Notificaciones externas (Eventos automáticos, Telegram o Webhooks tras creación de una tarea).
+1. Abastecer al sistema con un Volcado Inteligente y categorización de archivos y proveedores históricos del "Evento Anterior".
+2. Revisión de Políticas Supabase (RLS): Ajustar los SELECT/INSERT nativos para que usuarios "Por Evento" queden cegados por completo a Tareas y Proyectos a los que no pertenecen bajo clausula de seguridad (`user.contractEventId`).
+3. Desarrollar la PWA (Progressive Web App) con Service Workers para habilitar notificaciones push y el badge numérico.
+4. Integrar flujos de n8n para emails oficiales vía SendGrid.

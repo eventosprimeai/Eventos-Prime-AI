@@ -118,28 +118,10 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
             <aside className="sidebar" style={{ display: "flex", flexDirection: "column" }}>
 
                 {/* User Profile Card */}
-                <div style={{ marginBottom: "var(--space-6)", padding: "var(--space-4)", background: "var(--color-bg-card)", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-gold-400)", display: "flex", alignItems: "center", gap: "var(--space-3)", position: "relative" }}>
-                    <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--color-bg-elevated)", border: "1px solid var(--color-border)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-                        {userAvatar ? (
-                            <img src={userAvatar} alt="Perfil" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        ) : (
-                            <span style={{ fontSize: "var(--text-lg)", fontWeight: 700, color: "var(--color-gold-400)" }}>
-                                {userName.charAt(0).toUpperCase()}
-                            </span>
-                        )}
-                    </div>
-                    <div style={{ overflow: "hidden", flex: 1 }}>
-                        <h3 style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--color-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {userName}
-                        </h3>
-                        <p style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {userRole}
-                        </p>
-                    </div>
-
-                    {/* Notification Bell */}
+                <div style={{ marginBottom: "var(--space-6)", padding: "var(--space-4)", background: "var(--color-bg-card)", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-gold-400)", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-3)", position: "relative", textAlign: "center" }}>
+                    {/* Notification Bell (Top Right Corner) */}
                     {pendingTasksCount > 0 && (
-                        <a href="/tareas/estado/pendientes" style={{ position: "relative", cursor: "pointer", marginLeft: "auto", textDecoration: "none" }}>
+                        <a href="/tareas/estado/pendientes" style={{ position: "absolute", top: 12, right: 12, cursor: "pointer", textDecoration: "none" }}>
                             <span style={{ fontSize: "1.2rem", filter: "grayscale(0.2)" }}>🔔</span>
                             <div style={{
                                 position: "absolute",
@@ -162,6 +144,32 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                             </div>
                         </a>
                     )}
+
+                    {/* Avatar (Clickable to Dashboard) */}
+                    <a href="/" style={{ textDecoration: "none" }}>
+                        <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--color-bg-elevated)", border: "2px solid var(--color-gold-400)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0, margin: "0 auto", cursor: "pointer", transition: "transform 0.2s" }}
+                            onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+                            onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                        >
+                            {userAvatar ? (
+                                <img src={userAvatar} alt="Perfil" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            ) : (
+                                <span style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--color-gold-400)" }}>
+                                    {userName.charAt(0).toUpperCase()}
+                                </span>
+                            )}
+                        </div>
+                    </a>
+
+                    {/* Info */}
+                    <div style={{ overflow: "hidden", width: "100%" }}>
+                        <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--color-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: 2 }}>
+                            {userName}
+                        </h3>
+                        <p style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {userRole}
+                        </p>
+                    </div>
                 </div>
 
                 <div style={{ flex: 1, overflowY: "auto" }}>

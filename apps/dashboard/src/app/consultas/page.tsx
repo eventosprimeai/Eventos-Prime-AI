@@ -283,13 +283,19 @@ export default function ConsultasPage() {
                         {/* Modal Header */}
                         <div style={{ padding: "var(--space-4)", borderBottom: "1px solid var(--color-border)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--color-bg-elevated)", flexShrink: 0 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
-                                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--color-bg-elevated)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: "1px solid var(--color-gold-400)" }}>
-                                    <img src="/harold_avatar.png" alt="Harold" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--color-bg-elevated)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: "1px solid var(--color-gold-400)", fontSize: "1.2rem", fontWeight: "bold" }}>
+                                    {selectedTask.assignee?.avatarUrl && selectedTask.assignee.avatarUrl.trim() !== "" ? (
+                                        <img src={selectedTask.assignee.avatarUrl} alt={selectedTask.assignee.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                    ) : (
+                                        <span style={{ color: "var(--color-gold-400)" }}>{selectedTask.assignee?.name?.charAt(0) || "U"}</span>
+                                    )}
                                 </div>
                                 <div>
-                                    <h2 style={{ fontSize: "var(--text-lg)", fontWeight: 700, margin: 0 }}>{selectedTask.title.replace("[CONSULTA]", "").trim() || "Asistente Harold"}</h2>
-                                    <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
-                                        Consulta iniciada el {new Date(selectedTask.createdAt).toLocaleString()}
+                                    <h2 style={{ fontSize: "var(--text-lg)", fontWeight: 800, margin: 0, color: "var(--color-gold-400)" }}>
+                                        {selectedTask.assignee?.name || "Usuario Desconocido"} <span style={{ fontWeight: 400, fontSize: "var(--text-xs)", color: "var(--color-text-secondary)" }}>- {selectedTask.assignee?.role || "Cargo Desconocido"}</span>
+                                    </h2>
+                                    <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-primary)", fontWeight: 600, display: "block", marginTop: "2px" }}>
+                                        {selectedTask.title.replace("[CONSULTA]", "").trim() || "Consulta IA"}
                                     </span>
                                 </div>
                             </div>

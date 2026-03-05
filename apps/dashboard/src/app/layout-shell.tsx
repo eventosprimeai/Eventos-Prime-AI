@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import AIAssistantWidget from "@/components/AIAssistantWidget";
+
 
 // Sidebar navigation config
 const navItems = [
@@ -59,7 +59,7 @@ export default function LayoutShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isLoginPage = pathname === "/login";
+  const isFullScreenPage = pathname === "/login" || pathname === "/descarga";
 
   // User state
   const [userName, setUserName] = useState("");
@@ -77,7 +77,7 @@ export default function LayoutShell({
   );
 
   useEffect(() => {
-    if (!isLoginPage) {
+    if (!isFullScreenPage) {
       supabase.auth.getUser().then(({ data: { user } }) => {
         if (user) {
           setUserName(
@@ -144,10 +144,10 @@ export default function LayoutShell({
         }
       });
     }
-  }, [isLoginPage, pathname]); // Added pathname so it refreshes count on navigation
+  }, [isFullScreenPage, pathname]); // Added pathname so it refreshes count on navigation
 
   // Login page: full-screen, no sidebar
-  if (isLoginPage) {
+  if (isFullScreenPage) {
     return <>{children}</>;
   }
 
@@ -493,7 +493,7 @@ export default function LayoutShell({
           </div>
         </div>
       )}
-      <AIAssistantWidget />
+
     </div>
   );
 }

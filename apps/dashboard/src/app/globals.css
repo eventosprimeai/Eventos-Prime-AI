@@ -176,6 +176,19 @@ body {
   outline-offset: 2px;
 }
 
+/* Fix browser native icons color in dark mode */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  filter: invert(100%) sepia(100%) saturate(0%) hue-rotate(288deg) brightness(102%) contrast(102%);
+  opacity: 0.8;
+}
+
+input,
+select,
+textarea {
+  color-scheme: dark;
+}
+
 .glass-card {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
@@ -236,6 +249,24 @@ body {
 
 .animate-fade-in {
   animation: fade-in 0.3s ease-out forwards;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  /* Ensures it starts invisible */
 }
 
 /* ─── Coin Flip Animation ────────────────────────── */

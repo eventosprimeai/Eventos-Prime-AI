@@ -17,12 +17,14 @@
         "@supabase/ssr": "^0.6.0",
         "@supabase/supabase-js": "^2.49.0",
         "annyang": "^2.6.1",
+        "lucide-react": "^0.577.0",
         "next": "^15.3.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "react-speech-recognition": "^4.0.1",
         "recharts": "^3.7.0",
-        "regenerator-runtime": "^0.14.1"
+        "regenerator-runtime": "^0.14.1",
+        "resend": "^6.9.3"
     },
     "devDependencies": {
         "@types/node": "^22.0.0",

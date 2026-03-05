@@ -165,58 +165,73 @@ async function sendWelcomeEmail(userData: any) {
     const displayNameRole = userData.jobTitle || userData.personType || "Miembro de Equipo";
 
     const htmlTemplate = `
-        <div style="font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #0d0d14; color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #2a2a35; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            <div style="background: linear-gradient(135deg, #1e1e2e 0%, #11111a 100%); padding: 50px 30px; text-align: center; border-bottom: 3px solid #facc15;">
-                <h1 style="margin: 0; color: #facc15; font-size: 32px; font-weight: 800; letter-spacing: -1px; text-transform: uppercase;">EVENTOS<span style="color: #ffffff;">PRIME</span> AI</h1>
-                <p style="margin: 12px 0 0 0; color: #a1a1aa; font-size: 16px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase;">Sistema Operativo Central</p>
+        <div style="font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #0a0a0f; color: #ffffff; border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <div style="background: linear-gradient(135deg, #1e1e2e 0%, #0a0a0f 100%); padding: 50px 30px; text-align: center; border-bottom: 3px solid #00df81;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 6px 16px; border-radius: 999px; border: 1px solid rgba(0, 223, 129, 0.3); background: rgba(0, 223, 129, 0.05); margin-bottom: 24px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00df81" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                    <span style="font-size: 12px; font-weight: bold; letter-spacing: 1px; color: #00df81; text-transform: uppercase;">SISTEMA CENTRALIZADO</span>
+                </div>
+                <h1 style="margin: 0; color: #ffffff; font-size: 36px; font-weight: 800; letter-spacing: -1px; text-transform: none;">Bienvenido a<br><span style="color: #00df81;">EventosPrime AI</span></h1>
             </div>
             
             <div style="padding: 40px;">
-                <h2 style="margin-top: 0; color: #ffffff; font-size: 24px; font-weight: 700;">¡Bienvenido/a a bordo, ${userData.name}!</h2>
-                <p style="color: #d4d4d8; font-size: 16px; line-height: 1.6;">
+                <h2 style="margin-top: 0; color: #ffffff; font-size: 24px; font-weight: 700;">¡Hola, ${userData.name}!</h2>
+                <p style="color: #a1a1aa; font-size: 16px; line-height: 1.6;">
                     Nos complace oficializar tu acceso a la plataforma integral de <strong>Eventos Prime AI</strong>. Tu perfil ha sido registrado y activado exitosamente en nuestra estructura organizativa bajo el rol de <strong>${displayNameRole}</strong>.
                 </p>
                 
-                <div style="background-color: #181825; padding: 30px; border-radius: 12px; margin: 35px 0; border: 1px solid #2a2a35;">
-                    <h3 style="margin-top: 0; margin-bottom: 20px; color: #facc15; font-size: 15px; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #2a2a35; padding-bottom: 10px;">🛡️ Tus Credenciales de Acceso</h3>
+                <div style="background-color: #11111a; padding: 30px; border-radius: 16px; margin: 35px 0; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px;">
+                        <div style="background: rgba(0, 223, 129, 0.1); padding: 8px; border-radius: 8px; display: inline-flex;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00df81" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+                        </div>
+                        <h3 style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 700;">Tus Credenciales de Acceso</h3>
+                    </div>
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="padding: 12px 0; border-bottom: 1px solid #2a2a35; color: #a1a1aa; width: 40%;">Perfil Asignado:</td>
-                            <td style="padding: 12px 0; border-bottom: 1px solid #2a2a35; color: #ffffff; font-weight: 600;">${userData.personType} - ${displayNameRole}</td>
+                            <td style="padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: #8b8b99; width: 40%;">Perfil Asignado:</td>
+                            <td style="padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: #ffffff; font-weight: 600;">${userData.personType} - ${displayNameRole}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 12px 0; border-bottom: 1px solid #2a2a35; color: #a1a1aa;">Usuario (Email):</td>
-                            <td style="padding: 12px 0; border-bottom: 1px solid #2a2a35; color: #ffffff; font-weight: 600;">${userData.email}</td>
+                            <td style="padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: #8b8b99;">Usuario (Email):</td>
+                            <td style="padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: #ffffff; font-weight: 600;">${userData.email}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 12px 0; color: #a1a1aa;">Contraseña:</td>
-                            <td style="padding: 12px 0; color: #ffffff; font-family: monospace; font-size: 18px; font-weight: 600; letter-spacing: 2px; background: #2a2a35; border-radius: 4px; padding-left: 10px;">${userData.password}</td>
+                            <td style="padding: 12px 0; color: #8b8b99;">Contraseña:</td>
+                            <td style="padding: 12px 0;">
+                                <div style="display: inline-block; background: #1e1e2e; padding: 6px 12px; border-radius: 8px; color: #ffffff; font-family: monospace; font-size: 16px; font-weight: 600; letter-spacing: 1px; border: 1px solid rgba(255,255,255,0.05);">
+                                    ${userData.password}
+                                </div>
+                            </td>
                         </tr>
                     </table>
                 </div>
 
-                <div style="background-color: #1a1a24; padding: 30px; border-radius: 12px; margin: 35px 0; border: 1px solid #2a2a35; border-left: 4px solid #facc15;">
-                    <h3 style="margin-top: 0; margin-bottom: 15px; color: #ffffff; font-size: 18px;">🎯 Tus Funciones y Responsabilidades</h3>
-                    <p style="color: #a1a1aa; font-size: 14px; margin-bottom: 20px;">Como parte vital de nuestro ecosistema, estas son algunas de tus áreas clave de enfoque:</p>
-                    <ul style="list-style: none; padding: 0; margin: 0; color: #d4d4d8; font-size: 15px; line-height: 1.6;">
-                        ${getRoleResponsibilitiesHTML(userData.jobTitle, userData.category)}
+                <div style="background-color: #11111a; padding: 30px; border-radius: 16px; margin: 35px 0; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                        <div style="display: inline-flex; align-items: center; justify-content: center; width: 8px; height: 8px; background-color: #00df81; border-radius: 50%; box-shadow: 0 0 10px #00df81;"></div>
+                        <h3 style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 700;">Tus Funciones y Responsabilidades</h3>
+                    </div>
+                    <p style="color: #8b8b99; font-size: 14px; margin-bottom: 20px;">Como parte vital de nuestro ecosistema, estas son algunas de tus áreas clave de enfoque:</p>
+                    <ul style="list-style: none; padding: 0; margin: 0; color: #a1a1aa; font-size: 14px; line-height: 1.6;">
+                        ${getRoleResponsibilitiesHTML(userData.jobTitle, userData.category).replace(/#facc15/g, '#00df81')}
                     </ul>
                 </div>
                 
-                <div style="text-align: center; margin: 45px 0; display: flex; flex-direction: column; gap: 15px;">
-                    <p style="color: #a1a1aa; font-size: 16px; margin: 0;">Para comenzar a operar, descarga la app móvil ahora:</p>
-                    <a href="${downloadUrl}" style="background-color: #facc15; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px; display: inline-block; transition: background-color 0.3s; box-shadow: 0 4px 15px rgba(250, 204, 21, 0.3);">
-                        📥 Descargar App (iOS / Android)
+                <div style="text-align: center; margin: 45px 0; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                    <a href="${downloadUrl}" style="background-color: #00df81; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 16px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0, 223, 129, 0.2);">
+                        Descargar App
                     </a>
                     
-                    <a href="${loginUrl}/login" style="color: #a1a1aa; text-decoration: underline; font-size: 14px; margin-top: 10px;">
-                        O iniciar sesión desde la web
+                    <a href="${loginUrl}/login" style="color: #8b8b99; text-decoration: none; font-size: 14px; margin-top: 10px; display: inline-flex; align-items: center; gap: 6px;">
+                        <span>O prefiere la versión web</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                     </a>
                 </div>
                 
-                <p style="color: #a1a1aa; font-size: 14px; text-align: center; line-height: 1.6; margin-top: 40px; border-top: 1px solid #2a2a35; padding-top: 30px;">
+                <p style="color: #8b8b99; font-size: 14px; text-align: center; line-height: 1.6; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 30px;">
                     Te recomendamos iniciar sesión de inmediato y, si es necesario, completar tus datos en el perfil.<br><br>
-                    <strong>La Dirección General<br><span style="color: #facc15;">Eventos Prime AI</span></strong>
+                    <strong>La Dirección General<br><span style="color: #00df81;">Eventos Prime AI</span></strong>
                 </p>
             </div>
         </div>
@@ -230,7 +245,7 @@ async function sendWelcomeEmail(userData: any) {
             const data = await resend.emails.send({
                 from: 'Eventos Prime AI <noreply@eventosprimeai.com>',
                 to: userData.email,
-                subject: '🚀 ¡Bienvenido al equipo de Eventos Prime AI!',
+                subject: 'Sistema Centralizado - ¡Bienvenido a Eventos Prime AI!',
                 html: htmlTemplate,
             });
             console.log(`[EMAIL DISPATCH SYSTEM] Sent via Resend successfully to ${userData.email}`, data);

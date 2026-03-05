@@ -1004,30 +1004,36 @@ export default function EventDetailPage() {
       >
         {tabConfig.map((tab) => {
           const isActive = activeTab === tab.key;
+
+          let variant = "neutral";
+          if (tab.count > 0) {
+            if (tab.key === "incidencias") variant = "warning";
+            else if (tab.key === "tareas") variant = "info";
+            else if (tab.key === "sponsors" || tab.key === "tickets") variant = "success";
+            else if (tab.key === "checklists") variant = "prime";
+          }
+          if (isActive && tab.count === 0) variant = "prime"; // Give it some color when active even if 0
+
           return (
             <button
               key={tab.key}
               onClick={() => toggleTab(tab.key)}
-              className={`nav-dot-container ${isActive ? "active" : ""}`}
+              className={`stat-card stat-card--${variant}`}
               style={{
-                background: isActive
-                  ? "rgba(0, 214, 143, 0.08)"
-                  : "var(--color-bg-card)",
-                border: isActive
-                  ? "1px solid rgba(0, 214, 143, 0.15)"
-                  : "1px solid var(--color-border)",
-                borderRadius: "var(--radius-xl)",
+                cursor: "pointer",
                 padding: "var(--space-4)",
                 textAlign: "center",
-                cursor: "pointer",
-                transition: "var(--transition-fast)",
                 fontFamily: "var(--font-sans)",
-                color: "inherit",
+                display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
                 alignItems: "center",
+                background: isActive ? "rgba(20, 15, 30, 0.8)" : undefined,
+                borderColor: isActive ? "var(--color-gold-500)" : undefined,
+                boxShadow: isActive ? "0 0 15px rgba(0, 214, 143, 0.1)" : undefined,
               }}
             >
+              <div className="stat-card-glow"></div>
               <div
                 style={{
                   fontSize: "var(--text-lg)",
@@ -1036,32 +1042,33 @@ export default function EventDetailPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  position: "relative",
+                  zIndex: 1
                 }}
               >
                 {tab.icon}
               </div>
               <div
+                className="stat-label"
                 style={{
                   fontSize: "var(--text-xs)",
-                  color: isActive
-                    ? "var(--color-gold-400)"
-                    : "var(--color-text-muted)",
+                  color: isActive ? "var(--color-text-primary)" : "var(--color-text-muted)",
                   fontWeight: 600,
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
+                  marginBottom: "var(--space-1)",
+                  position: "relative",
+                  zIndex: 1
                 }}
               >
                 {tab.label}
               </div>
               <div
+                className="stat-value"
                 style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "var(--text-2xl)",
-                  fontWeight: 700,
-                  color: isActive
-                    ? "var(--color-gold-400)"
-                    : "var(--color-text-primary)",
-                  marginTop: "var(--space-1)",
+                  color: isActive ? "var(--color-gold-400)" : "var(--color-text-primary)",
+                  position: "relative",
+                  zIndex: 1
                 }}
               >
                 {tab.count}

@@ -28,13 +28,14 @@ async function purgeAllNonEssentialUsers() {
     }
 
     // Delete Prisma users not in idsToKeep
-    if (users.length > idsToKeep.length && idsToKeep.length > 0) {
-        await prisma.user.deleteMany({
-            where: {
-                id: { notIn: idsToKeep }
-            }
+    if (idsToKeep.length > 0) {
+        const result = await prisma.user.deleteMany({
+            where: { id: { notIn: idsToKeep } }
         });
-        console.log(`Deleted ${users.length - idsToKeep.length} non-essential users from Prisma DB.`);
+        console.log(`Deleted ${result.count} non-essential users from Prisma DB.`);
+    } else {
+        const result = await prisma.user.deleteMany();
+        console.log(`Deleted ${result.count} users from Prisma DB.`);
     }
 
     // Now deal with Supabase Auth users

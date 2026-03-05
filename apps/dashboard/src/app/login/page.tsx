@@ -259,7 +259,8 @@ export default function LoginPage() {
         password,
       });
       if (error) throw error;
-      window.location.href = "/";
+      const nextParam = new URLSearchParams(window.location.search).get("next");
+      window.location.href = nextParam || "/";
     } catch (err: any) {
       setError(
         err?.message?.includes("Invalid login")

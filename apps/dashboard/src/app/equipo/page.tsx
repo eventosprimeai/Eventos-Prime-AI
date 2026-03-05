@@ -13,6 +13,7 @@ interface TeamMember {
     personType?: string;
     category?: string;
     avatarUrl: string | null;
+    email?: string;
     _count?: { assignedTasks: number };
 }
 
@@ -33,7 +34,7 @@ export default function EquipoPage() {
 
     // Modal state
     const [editingUser, setEditingUser] = useState<TeamMember | null>(null);
-    const [editForm, setEditForm] = useState({ name: "", role: "", avatarUrl: "" as string | null });
+    const [editForm, setEditForm] = useState({ name: "", role: "", avatarUrl: "" as string | null, email: "", password: "" });
     const [saving, setSaving] = useState(false);
     const [rawImage, setRawImage] = useState<string | null>(null);
 
@@ -86,6 +87,8 @@ export default function EquipoPage() {
             name: member.name,
             role: member.role,
             avatarUrl: member.avatarUrl,
+            email: member.email || "",
+            password: "",
         });
     };
 
@@ -233,11 +236,30 @@ export default function EquipoPage() {
                             </div>
 
                             <div>
-                                <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Nombres</label>
+                                <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Nombres y Apellidos</label>
                                 <input
                                     type="text" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                                     style={{ width: "100%", padding: "var(--space-3)", background: "var(--color-bg-input)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", color: "var(--color-text-primary)", outline: "none" }}
                                     required
+                                />
+                            </div>
+
+                            <div>
+                                <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Correo Corporativo / Acceso</label>
+                                <input
+                                    type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                                    style={{ width: "100%", padding: "var(--space-3)", background: "var(--color-bg-input)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", color: "var(--color-text-primary)", outline: "none" }}
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "var(--space-1)" }}>Nueva Contraseña (Opcional)</label>
+                                <input
+                                    type="password" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                                    style={{ width: "100%", padding: "var(--space-3)", background: "var(--color-bg-input)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", color: "var(--color-text-primary)", outline: "none" }}
+                                    placeholder="Dejar en blanco para no cambiar..."
+                                    minLength={6}
                                 />
                             </div>
 

@@ -25,6 +25,7 @@ export async function GET(request: Request) {
             where: whereClause,
             select: {
                 id: true,
+                email: true,
                 name: true,
                 role: true,
                 active: true,

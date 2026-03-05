@@ -6,6 +6,7 @@ interface Message {
     role: "user" | "assistant";
     content: string;
     timestamp: Date;
+    wasRestricted?: boolean;
 }
 
 export default function AIAssistantWidget() {
@@ -13,11 +14,31 @@ export default function AIAssistantWidget() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
+    const [historyLoaded, setHistoryLoaded] = useState(false);
     const messagesEnd = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         messagesEnd.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
+
+    // Load history when widget opens first time
+    useEffect(() => {
+        if (open && !historyLoaded) {
+            fetch("/api/ai/assistant")
+                .then(r => r.json())
+                .then(data => {
+                    if (Array.isArray(data) && data.length > 0) {
+                        setMessages(data.map((m: any) => ({
+                            role: m.role, content: m.content,
+                            timestamp: new Date(m.createdAt),
+                            wasRestricted: m.wasRestricted,
+                        })));
+                    }
+                    setHistoryLoaded(true);
+                })
+                .catch(() => setHistoryLoaded(true));
+        }
+    }, [open, historyLoaded]);
 
     async function sendMessage() {
         if (!input.trim() || loading) return;
@@ -37,6 +58,7 @@ export default function AIAssistantWidget() {
                 role: "assistant",
                 content: data.response || data.error || "Error al obtener respuesta",
                 timestamp: new Date(),
+                wasRestricted: data.wasRestricted,
             }]);
         } catch {
             setMessages(m => [...m, { role: "assistant", content: "❌ Error de conexión", timestamp: new Date() }]);
@@ -133,8 +155,9 @@ export default function AIAssistantWidget() {
                                 }}>
                                     {msg.content}
                                 </div>
-                                <div style={{ fontSize: 10, color: "var(--color-text-muted)", marginTop: 2, textAlign: msg.role === "user" ? "right" : "left" }}>
+                                <div style={{ fontSize: 10, color: "var(--color-text-muted)", marginTop: 2, textAlign: msg.role === "user" ? "right" : "left", display: "flex", alignItems: "center", gap: 4, justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                                     {msg.timestamp.toLocaleTimeString("es-EC", { hour: "2-digit", minute: "2-digit" })}
+                                    {msg.wasRestricted && <span style={{ color: "#ffa726", fontSize: 9 }}>🔒 Acceso restringido</span>}
                                 </div>
                             </div>
                         ))}

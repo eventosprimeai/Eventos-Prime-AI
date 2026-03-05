@@ -40,6 +40,7 @@ model User {
   approvedTransactions   FinancialTransaction[] @relation("TransactionApprover")
   bankStatements         BankStatement[]
   generatedDocuments     GeneratedDocument[]
+  aiChats                AIChatMessage[]
 
   @@map("users")
 }
@@ -596,4 +597,23 @@ enum DocumentType {
   RECIBO
   RETENCION
   OTRO
+}
+
+// ═══════════════════════════════════════════════════════════
+// AI ASSISTANT CHAT HISTORY
+// ═══════════════════════════════════════════════════════════
+
+model AIChatMessage {
+  id           String   @id @default(uuid())
+  userId       String
+  role         String   // "user" | "assistant"
+  content      String
+  dataAccessed String?  // what data categories were accessed
+  wasRestricted Boolean @default(false) // true if data was denied due to permissions
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@map("ai_chat_messages")
 }

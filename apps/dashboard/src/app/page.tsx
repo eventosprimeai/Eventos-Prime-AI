@@ -523,7 +523,7 @@ export default function DashboardPage() {
       {/* Stats */}
       <div className="stats-grid">
         <div
-          className="stat-card stat-card--success"
+          className={`stat-card ${stats.tasksCompleted > 0 ? "stat-card--success" : "stat-card--neutral"}`}
           onClick={() => router.push("/tareas")}
           style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
         >

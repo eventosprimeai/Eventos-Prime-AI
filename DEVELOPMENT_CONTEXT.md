@@ -260,16 +260,17 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 4 de marzo de 2026 (18:16 local)
+**Ultimo Punto de Restablecimiento:** 4 de marzo de 2026 (19:24 local)
 **Estatus Actual:**
-- **Contexto Principal (Dashboard Local):** Estabilidad del sistema y blindaje de seguridad corporativo completado. Arquitectura de Inteligencias Artificiales integradas nativamente como empleados.
+- **Contexto Principal (Dashboard Local y Servidor VPS):** Sistema de gestión de perfiles de equipo completado (incluye edición total con Supabase Admin API). Interfaz de fotos interactiva perfeccionada. Problemas estructurales de red y certificados (Nginx) resueltos a nivel de servidor.
 
-**Logros Alcanzados (Dashboard Local):**
+**Logros Alcanzados:**
   - **Identidad Modular Completa:** El registro de cuentas ya no depende de opciones estáticas para roles. Todo `User` de Prisma ahora alberga `personType`, `area`, `jobTitle` y `category` (permisos y reglas subyacentes mapeados inteligente a su respectivo `Role` en Prisma).
   - **Arquitectura de Seguridad y Trazabilidad Extrema:** Implementación de Bóveda de Auditoría exclusiva para Directores (`/auditoria`), capturando intentos de acceso prohibidos y mutaciones en base de datos.
   - **Soft-Delete Corporativo:** Reemplazo de eliminación de cuentas por un sistema de suspensión ("Ex-empleados"). Revoca acceso nativamente usando Supabase Admin Auth (ban de duración), aplica estilo de deshabilitado en UI (`filter: grayscale`), e impide pérdida de registros e historiales en el sistema.
-  - **Onboarding de IAs Automatizado:** Creada lógica en el registro que auto-genera correos válidos y contraseñas ocultas para `personType: "Profesional IA"`, eludiendo envíos transaccionales reales que generarían métricas de "bounce" perjudiciales con la capa Anti-Robot.
-  - **Solicitud de Sub-perfiles:** Inyección en Layout bloqueada inteligentemente según rango y contrato (Director/Socio excluido) para invitar a delegación de terceros contactando al número oficial.
+  - **Onboarding de IAs Automatizado:** Creada lógica en el registro que auto-genera correos válidos y contraseñas ocultas para `personType: "Profesional IA"`, eludiendo envíos transaccionales reales que generarían métricas de "bounce" perjudiciales con la capa Anti-Robot. Documentados sub-agentes Jhon (OpenClaw) y Carter (n8n).
+  - **Edición Maestra de Perfiles y UX de Avatar (Estilo Facebook):** Se desarrolló y aplicó un componente interactivo de recorte (`AvatarCropper`) con zoom y arrastre tanto en registro como en edición de equipo. La vista de equipo ahora permite a Directores (y al propio usuario) editar todo su perfil: *Nombres, Rol, Contraseña y Correo*, gestionando los cambios silenciosamente mediante la *Supabase Service Role Key* (API Admin).
+  - **Restauración de Infraestructura VPS (Nginx & SSL):** Se purgaron las políticas mal configuradas de Autenticación Básica global (`.htpasswd`), reduciendo su alcance estrictamente al subdominio privado de la IA (`openclawos`), y liberando con éxito el dominio raíz y `n8n` devolviendo el tráfico a la normalidad.
 
 **Siguiente Acción Pendiente:**
 1. Cargar contexto orgánico, audios o reportes del "*Evento Anterior*" del usuario final para crear el primer volcado oficial de la Data y preparar a la Base de Datos para operaciones en vivo.

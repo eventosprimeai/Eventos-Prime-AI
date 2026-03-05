@@ -268,22 +268,21 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 5 de marzo de 2026 (14:35 local)
+**Ultimo Punto de Restablecimiento:** 5 de marzo de 2026 (16:19 local)
 **Estatus Actual:**
-- **Base de Datos:** Se ha realizado una limpieza profunda de registros de prueba (tareas, sponsors, eventos, checks) a través de un TRUNCATE en cascada, dejando el entorno de datos limpio y como nuevo, manteniendo intactas las configuraciones, plantillas y usuarios.
-- **Dashboard desplegado en producción:** `https://app.eventosprimeai.com` — Online con SSL, HTTP/2, PM2, y Nginx.
-- **API REST pública:** `https://api.eventosprimeai.com` — Gateway para webhooks y servicios externos.
+- **Base de Datos:** Se purgaron de raíz los usuarios de prueba fantasma que quedaron atrapados en la capa de autenticación de Supabase (Supabase Auth vs Prisma) mediante un script de limpieza (`wipe-users.ts`), arreglando el bug de "El correo ya está registrado".
+- **Sistema de Correos (Resend):** Totalmente integrado y configurado para Producción. Se verificaron los DNS (DKIM, SPF, DMARC) en Hostinger para el dominio `eventosprimeai.com`, garantizando envíos masivos como `noreply@eventosprimeai.com` sin caer en Spam.
+- **Estilos Globales & Diseño:** Interfaz ultra premium. Eliminación del widget flotante de IA (para priorizar a Harold en backend). Corrección global mediante CSS variables del color "oscuro" en íconos nativos del navegador (el ojito de contraseñas y los calendarios) forzando el `color-scheme: dark`.
+- **Dashboard desplegado en producción:** `https://app.eventosprimeai.com` — Online y actualizado con la última versión de correos y CSS.
 - **Desarrollo local activo en `localhost:3001`** — Se sigue desarrollando localmente.
-- **Vertex AI conectado:** $300 créditos GCP activos, service account con permisos `aiplatform.user`.
 
 **Logros Alcanzados (Sesión 5 de marzo 2026):**
-  - **Limpieza de Datos de Prueba:** Script `wipe.ts` ejecutado en base de datos PostgreSQL, dejando el sistema en estado "Recién Instalado" sin perder las funciones ni usuarios. Tablas truncadas: tareas, eventos, caja, chat IA, tickets, sponsors, checklist y más.
-  - **Módulo Financiero Completo (Fases 1-3):** 7 nuevos modelos Prisma + 6 enums. 5 API routes financieras. 8 páginas frontend (panel, transacciones, cuentas, presupuesto, conciliación, impuestos, documentos, reportes). Sidebar actualizado con sección Finanzas.
+  - **Correos Electrónicos Premium:** Integración de Resend. Se diseñó en HTML una plantilla de Bienvenida super premium con modo oscuro, tipografía acorde a la marca, resumen automático de responsabilidades (viñetas dinámicas según el cargo asignado) y botón brillante hacia la nueva página de Descarga App.
+  - **Landing Page de Descarga (`/descarga`):** Ruta a pantalla completa (sin sidebar) con animaciones CSS `fade-in-up`, diseño premium y accesos a tiendas de aplicaciones para el Staff.
+  - **Seguridad y Credenciales:** Llaves de Resend y VPS centralizadas y encriptadas de forma estricta en la Bóveda Maestra de `credentials/CREDENCIALES.txt`. Automatizaciones de reinicios con la skill `server-restart`.
+  - **Limpieza de Datos de Prueba:** Script en base de datos PostgreSQL, dejando el sistema en estado "Recién Instalado". Tablas truncadas: tareas, eventos, caja, chat IA, tickets, sponsors, checklist y más.
+  - **Módulo Financiero Completo (Fases 1-3):** 7 nuevos modelos Prisma + 6 enums. 5 API routes financieras. 8 páginas frontend.
   - **OCR Gemini Vision (Vertex AI):** Acepta imágenes y PDFs. Extrae tipo, monto, IVA, fecha, categoría, referencia, proveedor. Pre-llena formularios. Compresión de imágenes en cliente.
-  - **Ecosistema IA (7 Endpoints):** assistant, report-summary, analyze-image, generate-email, generate-document, smart-insights, finance/ocr. Todos vía Vertex AI con fallback a AI Studio.
-  - **Asistente IA con Permisos:** Widget flotante 🤖 en toda la app. PERMISSION_MAP por rol (Director=todo, Finanzas=finanzas+proveedores, Marketing=eventos+tareas, Staff=solo sus tareas). Historial persistido. Auditoría de restricciones.
-  - **Vertex AI Integrado:** JWT auth con service account, token caching, módulo compartido `src/lib/ai/vertex.ts`.
-  - Logros previos: Identidad Modular, Seguridad/Auditoría, Soft-Delete, Onboarding IAs, Avatar Editor, VPS, Subdominios, Build fixes.
 
 **Proceso de Despliegue (para futuras actualizaciones):**
 ```bash
@@ -298,10 +297,9 @@ pm2 restart eventos-prime-dashboard
 ```
 
 **Siguiente Acción Pendiente:**
-1. Empezar operaciones frescas en el sistema creando el evento, tareas y sponsors piloto.
-2. Probar scanner OCR con facturas reales (Vertex AI sin rate limits).
-3. Registrar cuentas bancarias corporativas en `/finanzas/cuentas`.
+1. Crear el registro del Director y Socios fundadores desde `app.eventosprimeai.com` y confirmar recepción del correo Resend premium.
+2. Empezar operaciones frescas en el sistema creando el evento, tareas y sponsors piloto.
+3. Probar scanner OCR financier con facturas reales (Vertex AI sin rate limits).
 4. Implementar Conciliación Bancaria (Fase 3): OCR estados de cuenta + match.
-5. Desarrollar PWA con Service Workers para notificaciones push.
-6. Configurar n8n workflows para automatización de reportes financieros.
+5. Setup de Telegram/WhatsApp Bot para control de Staff por PWA.
 

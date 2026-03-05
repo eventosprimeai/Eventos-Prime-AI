@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Download, Apple, Smartphone, LayoutDashboard, ChevronRight, ShieldCheck, Sparkles, ArrowRight } from "lucide-react";
+import { Apple, Smartphone, LayoutDashboard, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
 
 export default function DescargaPage() {
     const [mounted, setMounted] = useState(false);
@@ -12,98 +12,209 @@ export default function DescargaPage() {
 
     if (!mounted) return null;
 
+    const btnStyleDownload = {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "12px",
+        padding: "16px 32px",
+        background: "var(--gradient-gold)",
+        color: "var(--color-bg-primary)",
+        border: "none",
+        borderRadius: "var(--radius-xl)",
+        cursor: "pointer",
+        textDecoration: "none",
+        fontWeight: "bold",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        boxShadow: "0 0 15px rgba(250, 204, 21, 0.2)",
+    };
+
+    const btnStyleSecondary = {
+        ...btnStyleDownload,
+        background: "var(--color-bg-card)",
+        color: "var(--color-text-primary)",
+        border: "1px solid var(--color-border)",
+        boxShadow: "none",
+    };
+
     return (
-        <div className="min-h-screen relative flex items-center justify-center overflow-hidden"
-            style={{
-                backgroundColor: "#0a0a0f",
-                backgroundImage: "radial-gradient(ellipse at top, #1e1e2e 0%, #0a0a0f 70%)"
+        <div style={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "var(--color-bg-primary)",
+            backgroundImage: "radial-gradient(ellipse at top, #1e1e2e 0%, var(--color-bg-primary) 70%)",
+            position: "relative",
+            overflow: "hidden",
+            padding: "var(--space-4)"
+        }}>
+            {/* Background elements */}
+            <div style={{
+                position: "absolute", top: "-10%", left: "-10%", width: "40%", height: "40%",
+                borderRadius: "50%", opacity: 0.15, filter: "blur(100px)",
+                background: "radial-gradient(circle, var(--color-gold-400) 0%, transparent 70%)",
+                pointerEvents: "none"
+            }} />
+            <div style={{
+                position: "absolute", bottom: "-10%", right: "-10%", width: "50%", height: "50%",
+                borderRadius: "50%", opacity: 0.1, filter: "blur(120px)",
+                background: "radial-gradient(circle, var(--color-gold-400) 0%, transparent 70%)",
+                pointerEvents: "none"
+            }} />
+
+            <div style={{
+                position: "relative",
+                zIndex: 10,
+                width: "100%",
+                maxWidth: "1000px",
+                display: "flex",
+                flexDirection: "row",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: "var(--space-12)",
+                justifyContent: "center"
             }}>
-
-            {/* Animated Background Elements */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full opacity-20 filter blur-[100px]" style={{ background: "radial-gradient(circle, #facc15 0%, transparent 70%)" }}></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full opacity-10 filter blur-[120px]" style={{ background: "radial-gradient(circle, #facc15 0%, transparent 70%)" }}></div>
-                <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] rounded-full opacity-5 filter blur-[80px]" style={{ background: "radial-gradient(circle, #ffffff 0%, transparent 70%)" }}></div>
-            </div>
-
-            <div className="relative z-10 w-full max-w-5xl px-6 py-12 flex flex-col md:flex-row items-center gap-12 md:gap-20">
-
-                {/* Left Side: Copy & Info */}
-                <div className="flex-1 text-center md:text-left">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.05)] mb-6 animate-fade-in-up">
-                        <Sparkles size={14} className="text-gold-400" />
-                        <span className="text-xs font-bold tracking-wider text-gold-400 uppercase">Sistema Centralizado</span>
+                {/* Left content */}
+                <div style={{ flex: "1 1 400px", textAlign: "left" }}>
+                    <div style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "6px 16px",
+                        borderRadius: "999px",
+                        border: "1px solid rgba(250, 204, 21, 0.3)",
+                        background: "rgba(250, 204, 21, 0.05)",
+                        marginBottom: "var(--space-6)"
+                    }}>
+                        <Sparkles size={14} color="var(--color-gold-400)" />
+                        <span style={{ fontSize: "0.75rem", fontWeight: "bold", letterSpacing: "1px", color: "var(--color-gold-400)", textTransform: "uppercase" }}>
+                            Sistema Centralizado
+                        </span>
                     </div>
 
-                    <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight tracking-tight animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                    <h1 style={{
+                        fontSize: "clamp(2rem, 5vw, 3.5rem)",
+                        fontFamily: "var(--font-display)",
+                        fontWeight: 800,
+                        color: "var(--color-text-primary)",
+                        lineHeight: 1.1,
+                        marginBottom: "var(--space-6)"
+                    }}>
                         Bienvenido a <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-300 via-gold-400 to-gold-500">
+                        <span style={{ color: "var(--color-gold-400)" }}>
                             EventosPrime AI
                         </span>
                     </h1>
 
-                    <p className="text-lg md:text-xl text-gray-400 mb-8 max-w-xl mx-auto md:mx-0 leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                    <p style={{
+                        fontSize: "1.1rem",
+                        color: "var(--color-text-secondary)",
+                        lineHeight: 1.6,
+                        marginBottom: "var(--space-8)",
+                        maxWidth: "500px"
+                    }}>
                         Tu perfil ha sido creado exitosamente. Para comenzar a gestionar tus responsabilidades y coordinar operaciones en tiempo real, descarga nuestra aplicación móvil.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-                        <button className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-gold-400 to-gold-500 text-black font-bold rounded-xl transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(250,204,21,0.4)]">
-                            <Apple size={24} />
-                            <div className="flex flex-col items-start leading-none">
-                                <span className="text-[10px] uppercase opacity-80">Descargar en</span>
-                                <span className="text-lg">App Store</span>
+                    <div style={{
+                        display: "flex",
+                        gap: "var(--space-4)",
+                        flexWrap: "wrap",
+                        marginBottom: "var(--space-10)"
+                    }}>
+                        <a href="#" style={btnStyleDownload} className="btn-hover-scale" onClick={(e) => e.preventDefault()}>
+                            <Apple size={28} />
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
+                                <span style={{ fontSize: "0.65rem", textTransform: "uppercase", opacity: 0.8 }}>Descargar en</span>
+                                <span style={{ fontSize: "1.1rem" }}>App Store</span>
                             </div>
-                        </button>
-
-                        <button className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-[#1f1f2e] border border-[#2a2a35] text-white font-bold rounded-xl transition-all hover:bg-[#2a2a35] hover:scale-105">
-                            <Smartphone size={24} className="text-green-400" />
-                            <div className="flex flex-col items-start leading-none">
-                                <span className="text-[10px] uppercase text-gray-400">Descargar en</span>
-                                <span className="text-lg">Google Play</span>
+                        </a>
+                        <a href="#" style={btnStyleSecondary} className="btn-hover-scale" onClick={(e) => e.preventDefault()}>
+                            <Smartphone size={28} color="#4ade80" />
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
+                                <span style={{ fontSize: "0.65rem", textTransform: "uppercase", color: "var(--color-text-muted)" }}>Descargar en</span>
+                                <span style={{ fontSize: "1.1rem" }}>Google Play</span>
                             </div>
-                        </button>
+                        </a>
                     </div>
 
-                    <div className="mt-12 flex items-center gap-4 justify-center md:justify-start animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                        <div className="h-[1px] w-12 bg-gray-800"></div>
-                        <span className="text-sm text-gray-500 font-medium">O prefiere la versión web</span>
-                        <div className="h-[1px] w-12 bg-gray-800"></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "var(--space-6)" }}>
+                        <div style={{ height: "1px", width: "40px", background: "var(--color-border)" }} />
+                        <span style={{ fontSize: "0.875rem", color: "var(--color-text-muted)", fontWeight: 500 }}>O prefiere la versión web</span>
+                        <div style={{ height: "1px", width: "40px", background: "var(--color-border)" }} />
                     </div>
 
-                    <div className="mt-6 flex justify-center md:justify-start animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-                        <a href="/login" className="group flex items-center gap-2 px-6 py-3 rounded-lg text-gray-300 hover:text-white transition-colors">
-                            <LayoutDashboard size={18} className="text-gold-400" />
-                            <span className="font-semibold">Ir al Panel de Control Web</span>
-                            <ArrowRight size={16} className="opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all text-gold-400" />
+                    <div>
+                        <a href="/login?next=/" style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "12px 24px",
+                            color: "var(--color-text-secondary)",
+                            textDecoration: "none",
+                            borderRadius: "var(--radius-lg)",
+                            transition: "color 0.2s"
+                        }}>
+                            <LayoutDashboard size={18} color="var(--color-gold-400)" />
+                            <span style={{ fontWeight: 600 }}>Ir al Panel de Control Web</span>
+                            <ArrowRight size={16} color="var(--color-gold-400)" />
                         </a>
                     </div>
                 </div>
 
-                {/* Right Side: Visual Mockup / Feature List */}
-                <div className="flex-1 w-full max-w-md animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-                    <div className="relative rounded-2xl overflow-hidden p-1 bg-gradient-to-b from-[rgba(250,204,21,0.3)] to-[rgba(255,255,255,0.05)] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-                        <div className="bg-[#11111a] rounded-xl p-8 h-full flex flex-col relative z-20">
-
-                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1e1e2e] to-[#0a0a0f] border border-[#2a2a35] flex items-center justify-center mb-6 shadow-lg">
-                                <ShieldCheck size={32} className="text-gold-400" />
+                {/* Right side graphic */}
+                <div style={{ flex: "1 1 350px", maxWidth: "450px" }}>
+                    <div style={{
+                        padding: "1px",
+                        background: "linear-gradient(to bottom, rgba(250,204,21,0.3), rgba(255,255,255,0.05))",
+                        borderRadius: "24px",
+                        boxShadow: "0 20px 50px rgba(0,0,0,0.5)"
+                    }}>
+                        <div style={{
+                            background: "var(--color-bg-elevated)",
+                            borderRadius: "23px",
+                            padding: "var(--space-8)",
+                            height: "100%"
+                        }}>
+                            <div style={{
+                                width: "64px",
+                                height: "64px",
+                                borderRadius: "16px",
+                                background: "linear-gradient(135deg, var(--color-bg-card), var(--color-bg-primary))",
+                                border: "1px solid var(--color-border)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginBottom: "var(--space-6)",
+                                boxShadow: "0 10px 25px rgba(0,0,0,0.5)"
+                            }}>
+                                <ShieldCheck size={32} color="var(--color-gold-400)" />
                             </div>
 
-                            <h3 className="text-2xl font-bold text-white mb-2">Seguridad y Control</h3>
-                            <p className="text-gray-400 text-sm mb-8">
-                                Tu acceso ha sido encriptado. Utiliza las credenciales que enviamos a tu correo electrónico para iniciar sesión.
+                            <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "var(--space-2)" }}>Seguridad y Control</h3>
+                            <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)", marginBottom: "var(--space-8)", lineHeight: 1.6 }}>
+                                Tu acceso ha sido encriptado. Utiliza las credenciales que enviamos a tu correo electrónico para iniciar sesión de inmediato.
                             </p>
 
-                            <div className="space-y-4">
+                            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                                 {[
                                     { title: "Gestión en Tiempo Real", desc: "Supervisa tareas y operaciones al instante.", icon: "⚡" },
                                     { title: "Notificaciones Integradas", desc: "Alertas push directas para tu rol específico.", icon: "🔔" },
                                     { title: "Comunicación Segura", desc: "Módulo de chat interno con el equipo.", icon: "💬" }
                                 ].map((feature, i) => (
-                                    <div key={i} className="flex gap-4 p-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] transition-all hover:bg-[rgba(255,255,255,0.05)]">
-                                        <div className="text-2xl">{feature.icon}</div>
+                                    <div key={i} style={{
+                                        display: "flex",
+                                        gap: "16px",
+                                        padding: "16px",
+                                        borderRadius: "16px",
+                                        background: "rgba(255,255,255,0.02)",
+                                        border: "1px solid rgba(255,255,255,0.05)",
+                                    }}>
+                                        <div style={{ fontSize: "1.5rem" }}>{feature.icon}</div>
                                         <div>
-                                            <h4 className="text-white font-semibold text-sm">{feature.title}</h4>
-                                            <p className="text-gray-500 text-xs mt-1">{feature.desc}</p>
+                                            <h4 style={{ color: "var(--color-text-primary)", fontWeight: 600, fontSize: "0.875rem" }}>{feature.title}</h4>
+                                            <p style={{ color: "var(--color-text-muted)", fontSize: "0.75rem", marginTop: "4px" }}>{feature.desc}</p>
                                         </div>
                                     </div>
                                 ))}

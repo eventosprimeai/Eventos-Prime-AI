@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import AIAssistantWidget from "@/components/AIAssistantWidget";
 
 // Sidebar navigation config
 const navItems = [
@@ -31,8 +32,9 @@ const navItems = [
         section: "Finanzas", items: [
             { label: "Panel Financiero", href: "/finanzas", icon: "💰" },
             { label: "Transacciones", href: "/finanzas/transacciones", icon: "📒" },
+            { label: "Cuentas", href: "/finanzas/cuentas", icon: "🏦" },
             { label: "Presupuesto", href: "/finanzas/presupuesto", icon: "📊" },
-            { label: "Conciliación", href: "/finanzas/conciliacion", icon: "🏦" },
+            { label: "Conciliación", href: "/finanzas/conciliacion", icon: "🔄" },
             { label: "Impuestos", href: "/finanzas/impuestos", icon: "🧾" },
             { label: "Documentos", href: "/finanzas/documentos", icon: "📄" },
             { label: "Reportes", href: "/finanzas/reportes", icon: "📈" },
@@ -266,6 +268,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                     </div>
                 </div>
             )}
+            <AIAssistantWidget />
         </div>
     );
 }

@@ -98,14 +98,15 @@ export default function EventosPage() {
 
   const statusConfig: Record<string, { label: string; color: string }> = {
     BORRADOR: { label: "Borrador", color: "var(--color-text-muted)" },
-    PLANIFICADO: { label: "Planificado", color: "var(--color-info)" },
+    PLANIFICADO: { label: "Planificado (old)", color: "var(--color-info)" },
+    EN_PLANIFICACION: { label: "En Planificación", color: "var(--color-info)" },
     PRE_PRODUCCION: { label: "Pre-producción", color: "var(--color-gold-400)" },
-    EN_VIVO: { label: "En vivo", color: "var(--color-rag-red)" },
-    POST_PRODUCCION: {
-      label: "Post-producción",
-      color: "var(--color-prime-400)",
-    },
-    CERRADO: { label: "Cerrado", color: "var(--color-success)" },
+    EN_VIVO: { label: "En vivo (old)", color: "var(--color-rag-red)" },
+    EN_EJECUCION: { label: "En Ejecución", color: "var(--color-rag-red)" },
+    POST_PRODUCCION: { label: "Post-producción (old)", color: "var(--color-prime-400)" },
+    POST_EVENTO: { label: "Post-evento", color: "var(--color-prime-400)" },
+    CERRADO: { label: "Cerrado (old)", color: "var(--color-success)" },
+    FINALIZADO: { label: "Finalizado", color: "var(--color-success)" },
     CANCELADO: { label: "Cancelado", color: "var(--color-error)" },
   };
 

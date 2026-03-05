@@ -124,13 +124,14 @@ export default function DashboardPage() {
   const statusLabel: Record<string, { text: string; color: string }> = {
     BORRADOR: { text: "Borrador", color: "var(--color-text-muted)" },
     PLANIFICADO: { text: "Planificado", color: "var(--color-info)" },
+    EN_PLANIFICACION: { text: "En Planificación", color: "var(--color-info)" },
     PRE_PRODUCCION: { text: "Pre-producción", color: "var(--color-gold-400)" },
     EN_VIVO: { text: "En vivo", color: "var(--color-rag-red)" },
-    POST_PRODUCCION: {
-      text: "Post-producción",
-      color: "var(--color-prime-400)",
-    },
+    EN_EJECUCION: { text: "En Ejecución", color: "var(--color-rag-red)" },
+    POST_PRODUCCION: { text: "Post-producción", color: "var(--color-prime-400)" },
+    POST_EVENTO: { text: "Post-evento", color: "var(--color-prime-400)" },
     CERRADO: { text: "Cerrado", color: "var(--color-success)" },
+    FINALIZADO: { text: "Finalizado", color: "var(--color-success)" },
     CANCELADO: { text: "Cancelado", color: "var(--color-error)" },
   };
 

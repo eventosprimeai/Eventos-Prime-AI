@@ -55,17 +55,31 @@ export async function POST(request: Request) {
 
         const body = await request.json();
 
+        const sd = new Date(body.startDate);
+        const ed = new Date(body.endDate);
+        const now = new Date();
+
+        // Smart Initial Status
+        let initialStatus: any = "EN_PLANIFICACION";
+        if (ed < now) {
+            // Si la fecha de fin es menor a ahora, ya pasó
+            initialStatus = "FINALIZADO";
+        } else if (sd <= now && ed >= now) {
+            // Si estamos justo en el rango de fechas
+            initialStatus = "EN_EJECUCION";
+        }
+
         const event = await prisma.event.create({
             data: {
                 name: body.name,
                 description: body.description || null,
-                startDate: new Date(body.startDate),
-                endDate: new Date(body.endDate),
+                startDate: sd,
+                endDate: ed,
                 location: body.location || null,
                 venue: body.venue || null,
                 capacity: body.capacity || 0,
                 budget: body.budget || 0,
-                status: "PLANIFICADO",
+                status: initialStatus,
             },
         });
 

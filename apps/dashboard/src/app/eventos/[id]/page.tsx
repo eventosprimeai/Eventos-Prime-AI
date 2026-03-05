@@ -69,20 +69,24 @@ type ActiveTab =
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   BORRADOR: { label: "Borrador", color: "#71717a" },
-  PLANIFICADO: { label: "Planificado", color: "#38bdf8" },
+  PLANIFICADO: { label: "Planificado (old)", color: "#38bdf8" },
+  EN_PLANIFICACION: { label: "En Planificación", color: "#38bdf8" },
   PRE_PRODUCCION: { label: "Pre-producción", color: "#facc15" },
-  EN_VIVO: { label: "En vivo", color: "#ef4444" },
-  POST_PRODUCCION: { label: "Post-producción", color: "#7dd3fc" },
-  CERRADO: { label: "Cerrado", color: "#22c55e" },
+  EN_VIVO: { label: "En vivo (old)", color: "#ef4444" },
+  EN_EJECUCION: { label: "En Ejecución", color: "#ef4444" },
+  POST_PRODUCCION: { label: "Post-producción (old)", color: "#7dd3fc" },
+  POST_EVENTO: { label: "Post-evento", color: "#7dd3fc" },
+  CERRADO: { label: "Cerrado (old)", color: "#22c55e" },
+  FINALIZADO: { label: "Finalizado", color: "#22c55e" },
   CANCELADO: { label: "Cancelado", color: "#ef4444" },
 };
 const allStatuses = [
   "BORRADOR",
-  "PLANIFICADO",
+  "EN_PLANIFICACION",
   "PRE_PRODUCCION",
-  "EN_VIVO",
-  "POST_PRODUCCION",
-  "CERRADO",
+  "EN_EJECUCION",
+  "POST_EVENTO",
+  "FINALIZADO",
   "CANCELADO",
 ];
 const CHART_COLORS = [

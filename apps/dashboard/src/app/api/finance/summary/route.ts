@@ -76,7 +76,7 @@ export async function GET(request: Request) {
         });
 
         // Budget vs real (if event selected)
-        let budgetComparison = [];
+        let budgetComparison: { category: string; planned: number; executed: number; difference: number; percentage: number }[] = [];
         if (eventId) {
             const budgetLines = await prisma.budgetLine.findMany({
                 where: { eventId },

@@ -260,9 +260,11 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 4 de marzo de 2026 (19:24 local)
+**Ultimo Punto de Restablecimiento:** 4 de marzo de 2026 (23:25 local)
 **Estatus Actual:**
-- **Contexto Principal (Dashboard Local y Servidor VPS):** Sistema de gestión de perfiles de equipo completado (incluye edición total con Supabase Admin API). Interfaz de fotos interactiva perfeccionada. Problemas estructurales de red y certificados (Nginx) resueltos a nivel de servidor.
+- **Dashboard desplegado en producción:** `https://app.eventosprimeai.com` — Online con SSL, HTTP/2, PM2, y Nginx. Todo el equipo puede acceder desde cualquier dispositivo.
+- **API REST pública:** `https://api.eventosprimeai.com` — Gateway exclusiva para webhooks de DataFast, n8n y servicios externos. Solo acepta rutas `/api/*` y `/webhooks/*`.
+- **Desarrollo local activo en `localhost:3001`** — Se sigue desarrollando localmente y se despliega bajo demanda.
 
 **Logros Alcanzados:**
   - **Identidad Modular Completa:** El registro de cuentas ya no depende de opciones estáticas para roles. Todo `User` de Prisma ahora alberga `personType`, `area`, `jobTitle` y `category` (permisos y reglas subyacentes mapeados inteligente a su respectivo `Role` en Prisma).
@@ -271,8 +273,26 @@ cd apps/dashboard && npx next dev --port 3001
   - **Onboarding de IAs Automatizado:** Creada lógica en el registro que auto-genera correos válidos y contraseñas ocultas para `personType: "Profesional IA"`, eludiendo envíos transaccionales reales que generarían métricas de "bounce" perjudiciales con la capa Anti-Robot. Documentados sub-agentes Jhon (OpenClaw) y Carter (n8n).
   - **Edición Maestra de Perfiles y UX de Avatar (Estilo Facebook):** Se desarrolló y aplicó un componente interactivo de recorte (`AvatarCropper`) con zoom y arrastre tanto en registro como en edición de equipo. La vista de equipo ahora permite a Directores (y al propio usuario) editar todo su perfil: *Nombres, Rol, Contraseña y Correo*, gestionando los cambios silenciosamente mediante la *Supabase Service Role Key* (API Admin).
   - **Restauración de Infraestructura VPS (Nginx & SSL):** Se purgaron las políticas mal configuradas de Autenticación Básica global (`.htpasswd`), reduciendo su alcance estrictamente al subdominio privado de la IA (`openclawos`), y liberando con éxito el dominio raíz y `n8n` devolviendo el tráfico a la normalidad.
+  - **Despliegue a Producción Completado:** Dashboard Next.js compilado y desplegado en `app.eventosprimeai.com` (PM2 en puerto 3002, Nginx con SSL Let's Encrypt + HTTP/2 + gzip). API REST configurada en `api.eventosprimeai.com` como gateway exclusiva para servicios externos. Ruta del código en servidor: `/opt/eventos-prime-ai/`.
+  - **Plan Maestro de Subdominios:** Se auditó toda la infraestructura del VPS y se diseñó el ecosistema completo de 10 subdominios. Se crearon los registros DNS de `app`, `checkin` y `api`. Subdominios existentes mapeados: `festival` (landing), `tickets` (WooCommerce+DataFast), `marketing` (campañas). Flujo operativo completo documentado.
+  - **Fixes de Build para Producción:** Resueltos 4 errores de tipado estricto de TypeScript (params `Promise` wrapper para Next.js 15, `cookiesToSet` implicit-any en 3 archivos, `Suspense` boundary para `useSearchParams`).
+
+**Proceso de Despliegue (para futuras actualizaciones):**
+```bash
+# En local: push a GitHub
+git push origin main
+
+# En el servidor (ssh root@168.231.74.200):
+cd /opt/eventos-prime-ai
+git pull origin main
+npm run build -w apps/dashboard
+pm2 restart eventos-prime-dashboard
+```
 
 **Siguiente Acción Pendiente:**
 1. Cargar contexto orgánico, audios o reportes del "*Evento Anterior*" del usuario final para crear el primer volcado oficial de la Data y preparar a la Base de Datos para operaciones en vivo.
 2. Revisión de Políticas Supabase (RLS): Ajustar los SELECT/INSERT nativos para que usuarios "Por Evento" queden cegados por completo a Tareas y Proyectos a los que no pertenecen.
 3. Desarrollar la PWA (Progressive Web App) con Service Workers para habilitar notificaciones push y el badge numérico.
+4. Crear los usuarios Jhon y Carter como "Profesional IA" en el dashboard e integrar sus conexiones con OpenClaw y n8n.
+5. Configurar `tickets.eventosprimeai.com` (WordPress + WooCommerce + DataFast) cuando se defina la estructura de entradas.
+6. Desarrollar landing page de Prime Festival en `festival.eventosprimeai.com`.

@@ -76,6 +76,30 @@ export default function TransaccionesPage() {
         setLoading(false);
     }
 
+    // Compress image to reduce size before sending to Gemini
+    function compressImage(file: File, maxWidth = 1200): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onerror = () => reject("Error al leer la imagen");
+            reader.onload = () => {
+                const img = new Image();
+                img.onerror = () => reject("Error al cargar la imagen");
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    let w = img.width, h = img.height;
+                    if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext("2d");
+                    if (!ctx) { reject("Error de canvas"); return; }
+                    ctx.drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL("image/jpeg", 0.85));
+                };
+                img.src = reader.result as string;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
     async function handleOCR(file: File) {
         setScanning(true);
         setOcrConfidence(null);
@@ -83,57 +107,59 @@ export default function TransaccionesPage() {
         setOcrError("");
         setOcrFileName(file.name);
 
-        // Validate file size (max 10MB)
-        if (file.size > 10 * 1024 * 1024) {
-            setOcrError("Archivo demasiado grande (máx. 10MB)");
+        // Validate file size (max 15MB raw)
+        if (file.size > 15 * 1024 * 1024) {
+            setOcrError("Archivo demasiado grande (máx. 15MB)");
             setScanning(false);
             return;
         }
 
         try {
-            const reader = new FileReader();
-            reader.onerror = () => {
-                setOcrError("Error al leer el archivo");
-                setScanning(false);
-            };
-            reader.onload = async () => {
-                try {
-                    const base64 = reader.result as string;
-                    const res = await fetch("/api/finance/ocr", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ imageBase64: base64 }),
-                    });
-                    const data = await res.json();
+            let base64: string;
+            const isPDF = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
 
-                    if (data.success && data.extracted) {
-                        const e = data.extracted;
-                        setForm(f => ({
-                            ...f,
-                            type: e.tipo || f.type,
-                            category: CATEGORIES.includes(e.categoria) ? e.categoria : f.category,
-                            description: e.descripcion || f.description,
-                            amount: e.monto ? String(e.monto) : f.amount,
-                            taxRate: e.tasaIVA ? String(e.tasaIVA) : f.taxRate,
-                            date: e.fecha || f.date,
-                            reference: e.referencia || f.reference,
-                        }));
-                        setOcrConfidence(e.confianza || null);
-                        setOcrProvider(e.proveedor || "");
-                        setOcrError("");
-                    } else {
-                        setOcrError(data.error || "No se pudieron extraer datos del documento");
-                    }
-                } catch (fetchErr: any) {
-                    setOcrError(fetchErr.message || "Error de conexión con el servidor");
-                }
-                setScanning(false);
-            };
-            reader.readAsDataURL(file);
+            if (isPDF) {
+                // PDFs: read directly as base64
+                base64 = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onerror = () => reject("Error al leer el PDF");
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                // Images: compress before sending
+                base64 = await compressImage(file);
+            }
+
+            const res = await fetch("/api/finance/ocr", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ imageBase64: base64 }),
+            });
+            const data = await res.json();
+
+            if (data.success && data.extracted) {
+                const e = data.extracted;
+                setForm(f => ({
+                    ...f,
+                    type: e.tipo || f.type,
+                    category: CATEGORIES.includes(e.categoria) ? e.categoria : f.category,
+                    description: e.descripcion || f.description,
+                    amount: e.monto ? String(e.monto) : f.amount,
+                    taxRate: e.tasaIVA ? String(e.tasaIVA) : f.taxRate,
+                    date: e.fecha || f.date,
+                    reference: e.referencia || f.reference,
+                }));
+                setOcrConfidence(e.confianza || null);
+                setOcrProvider(e.proveedor || "");
+                setOcrError("");
+            } else {
+                setOcrError(data.error || "No se pudieron extraer datos del documento");
+            }
         } catch (err: any) {
-            setOcrError(err.message || "Error inesperado");
-            setScanning(false);
+            setOcrError(typeof err === "string" ? err : err.message || "Error inesperado");
         }
+        setScanning(false);
     }
 
     async function handleSubmit() {

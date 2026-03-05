@@ -41,6 +41,7 @@ export default function FinanzasPage() {
   >({});
   const [period, setPeriod] = useState("month");
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     loadSummary();
@@ -48,17 +49,24 @@ export default function FinanzasPage() {
 
   async function loadSummary() {
     setLoading(true);
+    setErrorMsg("");
     try {
       const res = await fetch(`/api/finance/summary?period=${period}`);
       const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data.error || "No tienes permisos para acceder a esta información");
+        return;
+      }
       setKpis(data.kpis);
       setRecentTransactions(data.recentTransactions || []);
       setAccounts(data.accounts || []);
       setGastosPorCategoria(data.gastosPorCategoria || {});
     } catch (e) {
       console.error(e);
+      setErrorMsg("Error de conexión");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   function formatCurrency(n: number) {
@@ -171,6 +179,11 @@ export default function FinanzasPage() {
             }}
           />
           Cargando datos financieros...
+        </div>
+      ) : errorMsg ? (
+        <div style={{ textAlign: "center", padding: "var(--space-12)" }}>
+          <h2 style={{ fontFamily: "var(--font-display)", color: "var(--color-error)", fontSize: "var(--text-xl)" }}>Acceso Denegado</h2>
+          <p style={{ color: "var(--color-text-muted)", marginTop: "var(--space-2)" }}>{errorMsg}</p>
         </div>
       ) : (
         <>

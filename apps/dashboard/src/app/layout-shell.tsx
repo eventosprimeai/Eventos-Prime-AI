@@ -337,7 +337,13 @@ export default function LayoutShell({
         </div>
 
         <div style={{ flex: 1, overflowY: "auto" }}>
-          {navItems.map((section) => (
+          {navItems.filter(section => {
+            // Regla de Negocio: Finanzas solo para DIRECTOR y ADMIN por defecto
+            if (section.section === "Finanzas") {
+              return userSystemRole === "DIRECTOR" || userSystemRole === "ADMIN";
+            }
+            return true;
+          }).map((section) => (
             <div key={section.section}>
               <div className="sidebar-section">{section.section}</div>
               {section.items.map((item) => (

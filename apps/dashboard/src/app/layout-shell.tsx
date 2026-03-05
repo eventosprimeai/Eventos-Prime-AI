@@ -29,8 +29,13 @@ const navItems = [
     },
     {
         section: "Finanzas", items: [
-            { label: "Presupuesto", href: "/presupuesto", icon: "💰" },
-            { label: "Pagos", href: "/pagos", icon: "💳" },
+            { label: "Panel Financiero", href: "/finanzas", icon: "💰" },
+            { label: "Transacciones", href: "/finanzas/transacciones", icon: "📒" },
+            { label: "Presupuesto", href: "/finanzas/presupuesto", icon: "📊" },
+            { label: "Conciliación", href: "/finanzas/conciliacion", icon: "🏦" },
+            { label: "Impuestos", href: "/finanzas/impuestos", icon: "🧾" },
+            { label: "Documentos", href: "/finanzas/documentos", icon: "📄" },
+            { label: "Reportes", href: "/finanzas/reportes", icon: "📈" },
         ]
     },
     {

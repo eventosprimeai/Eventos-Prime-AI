@@ -35,6 +35,11 @@ model User {
   createdTasks  Task[]         @relation("TaskCreator")
   contractEvent Event?         @relation("UserContractEvent", fields: [contractEventId], references: [id])
   voiceNotes    VoiceNote[]
+  // Finance relations
+  registeredTransactions FinancialTransaction[] @relation("TransactionRegistrar")
+  approvedTransactions   FinancialTransaction[] @relation("TransactionApprover")
+  bankStatements         BankStatement[]
+  generatedDocuments     GeneratedDocument[]
 
   @@map("users")
 }
@@ -59,6 +64,9 @@ model Event {
   tasks          Task[]
   tickets        Ticket[]
   contractedUsers User[]       @relation("UserContractEvent")
+  // Finance relations
+  budgetLines    BudgetLine[]
+  transactions   FinancialTransaction[]
 
   @@map("events")
 }
@@ -184,6 +192,7 @@ model Supplier {
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
   orders       SupplierOrder[]
+  transactions FinancialTransaction[]
 
   @@map("suppliers")
 }
@@ -418,4 +427,173 @@ enum IncidentSeverity {
   MEDIA
   ALTA
   CRITICA
+}
+
+// ═══════════════════════════════════════════════════════════
+// FINANCE & ACCOUNTING MODULE
+// ═══════════════════════════════════════════════════════════
+
+model FinancialAccount {
+  id           String        @id @default(uuid())
+  name         String
+  type         AccountType
+  bankName     String?
+  accountNum   String?
+  currency     String        @default("USD")
+  balance      Decimal       @default(0) @db.Decimal(14, 2)
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions FinancialTransaction[]
+  bankStatements BankStatement[]
+
+  @@map("financial_accounts")
+}
+
+model FinancialTransaction {
+  id              String            @id @default(uuid())
+  type            TransactionType
+  category        String
+  subcategory     String?
+  description     String
+  amount          Decimal           @db.Decimal(14, 2)
+  taxAmount       Decimal?          @db.Decimal(14, 2)
+  taxRate         Decimal?          @db.Decimal(5, 2)
+  date            DateTime
+  reference       String?
+  status          TransactionStatus @default(REGISTRADO)
+  attachmentUrl   String?
+  attachmentName  String?
+  ocrData         Json?
+  accountId       String?
+  eventId         String?
+  supplierId      String?
+  registeredById  String
+  approvedById    String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  account        FinancialAccount?  @relation(fields: [accountId], references: [id])
+  event          Event?             @relation(fields: [eventId], references: [id])
+  supplier       Supplier?          @relation(fields: [supplierId], references: [id])
+  registeredBy   User               @relation("TransactionRegistrar", fields: [registeredById], references: [id])
+  approvedBy     User?              @relation("TransactionApprover", fields: [approvedById], references: [id])
+
+  @@map("financial_transactions")
+}
+
+model BudgetLine {
+  id          String   @id @default(uuid())
+  category    String
+  subcategory String?
+  planned     Decimal  @db.Decimal(14, 2)
+  eventId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  event       Event    @relation(fields: [eventId], references: [id])
+
+  @@map("budget_lines")
+}
+
+model BankStatement {
+  id            String               @id @default(uuid())
+  accountId     String
+  fileName      String
+  fileUrl       String
+  period        String
+  totalCredits  Decimal?             @db.Decimal(14, 2)
+  totalDebits   Decimal?             @db.Decimal(14, 2)
+  status        ReconciliationStatus @default(PENDIENTE)
+  ocrRawData    Json?
+  uploadedById  String
+  createdAt     DateTime             @default(now())
+
+  account       FinancialAccount     @relation(fields: [accountId], references: [id])
+  uploadedBy    User                 @relation(fields: [uploadedById], references: [id])
+  entries       BankStatementEntry[]
+
+  @@map("bank_statements")
+}
+
+model BankStatementEntry {
+  id              String          @id @default(uuid())
+  date            DateTime
+  description     String
+  amount          Decimal         @db.Decimal(14, 2)
+  type            TransactionType
+  matched         Boolean         @default(false)
+  matchedTransId  String?
+  statementId     String
+  createdAt       DateTime        @default(now())
+
+  statement       BankStatement   @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  @@map("bank_statement_entries")
+}
+
+model DocumentTemplate {
+  id          String             @id @default(uuid())
+  name        String
+  type        DocumentType
+  htmlContent String             @db.Text
+  fields      Json
+  active      Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  generated   GeneratedDocument[]
+
+  @@map("document_templates")
+}
+
+model GeneratedDocument {
+  id            String           @id @default(uuid())
+  templateId    String
+  data          Json
+  pdfUrl        String?
+  sentTo        String?
+  sentAt        DateTime?
+  generatedById String
+  createdAt     DateTime         @default(now())
+
+  template      DocumentTemplate @relation(fields: [templateId], references: [id])
+  generatedBy   User             @relation(fields: [generatedById], references: [id])
+
+  @@map("generated_documents")
+}
+
+// Finance Enums
+
+enum AccountType {
+  BANCARIA
+  CAJA
+  DIGITAL
+}
+
+enum TransactionType {
+  INGRESO
+  GASTO
+  TRANSFERENCIA
+}
+
+enum TransactionStatus {
+  REGISTRADO
+  APROBADO
+  ANULADO
+}
+
+enum ReconciliationStatus {
+  PENDIENTE
+  EN_PROCESO
+  CONCILIADO
+  CON_DIFERENCIAS
+}
+
+enum DocumentType {
+  FACTURA
+  ORDEN_COMPRA
+  CONTRATO
+  RECIBO
+  RETENCION
+  OTRO
 }

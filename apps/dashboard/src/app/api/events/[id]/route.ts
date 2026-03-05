@@ -106,34 +106,66 @@ export async function DELETE(
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-        const { id } = await params;
-
-        // Check for related records
-        const counts = await prisma.event.findUnique({
-            where: { id },
-            include: {
-                _count: { select: { tasks: true, sponsorDeals: true, tickets: true } },
-            },
-        });
-
-        if (!counts) return NextResponse.json({ error: "Evento no encontrado" }, { status: 404 });
-
-        const total = counts._count.tasks + counts._count.sponsorDeals + counts._count.tickets;
-        if (total > 0) {
-            return NextResponse.json({
-                error: `No se puede eliminar: tiene ${counts._count.tasks} tareas, ${counts._count.sponsorDeals} sponsors y ${counts._count.tickets} tickets asociados. Elimina estos registros primero.`,
-            }, { status: 400 });
+        const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+        if (!dbUser || (dbUser.role !== "DIRECTOR" && dbUser.role !== "ADMIN")) {
+            return NextResponse.json({ error: "Solo Socios/Directores pueden eliminar eventos por completo" }, { status: 403 });
         }
 
-        await prisma.event.delete({ where: { id } });
+        const { id } = await params;
 
+        // Verify existance and get name for audit log
+        const eventData = await prisma.event.findUnique({ where: { id } });
+        if (!eventData) return NextResponse.json({ error: "Evento no encontrado" }, { status: 404 });
+
+        // User requested: "eliminarlo por completo, que no haya rastro"
+        // Since Prisma schema does not have onDelete: Cascade for everything, 
+        // we must manually delete child relations in correct order inside a transaction:
+
+        await prisma.$transaction(async (tx) => {
+            // Level 3 / Deep dependencies
+            await tx.taskMessage.deleteMany({ where: { task: { eventId: id } } });
+            await tx.evidence.deleteMany({ where: { task: { eventId: id } } });
+            await tx.voiceNote.deleteMany({ where: { task: { eventId: id } } });
+            await tx.checklistItem.deleteMany({ where: { checklist: { eventId: id } } });
+            await tx.checkIn.deleteMany({ where: { ticket: { eventId: id } } });
+            await tx.payment.deleteMany({ where: { ticket: { eventId: id } } });
+
+            // Level 2 / Direct Sub-children
+            // First we need to delete any Subtasks that depend on other tasks in this event
+            // Note: deleteMany doesn't handle self-relations recursively easily, but since they both 
+            // share eventId, if we delete them all, it might complain about foreign keys if it processes parents first.
+            // Prisma handles deleteMany in a single query usually, but occasionally self relations struggle. 
+            // To be safe we first detach parents:
+            await tx.task.updateMany({ where: { eventId: id }, data: { parentId: null } });
+
+            // Now delete Level 2 relations
+            await tx.task.deleteMany({ where: { eventId: id } });
+            await tx.sponsorDeal.deleteMany({ where: { eventId: id } });
+            await tx.ticket.deleteMany({ where: { eventId: id } });
+            await tx.checklist.deleteMany({ where: { eventId: id } });
+            await tx.incident.deleteMany({ where: { eventId: id } });
+            await tx.supplierOrder.deleteMany({ where: { eventId: id } });
+            await tx.budgetLine.deleteMany({ where: { eventId: id } });
+            await tx.financialTransaction.deleteMany({ where: { eventId: id } });
+
+            // Remove event linkage from any user's contractEventId
+            await tx.user.updateMany({ where: { contractEventId: id }, data: { contractEventId: null } });
+
+            // Remove logs
+            await tx.auditLog.deleteMany({ where: { entityId: id, entity: "Event" } });
+
+            // Finally, delete the Event itself
+            await tx.event.delete({ where: { id } });
+        });
+
+        // Add a log for the deletion on the user's generic logs
         await prisma.auditLog.create({
             data: {
                 action: "DELETE",
                 entity: "Event",
                 entityId: id,
                 userId: user.id,
-                changes: { name: counts.name },
+                changes: { name: eventData.name, message: "Eliminación forzada por completo" },
             },
         });
 

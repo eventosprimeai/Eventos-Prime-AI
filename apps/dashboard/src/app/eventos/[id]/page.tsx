@@ -154,6 +154,7 @@ export default function EventDetailPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDirector, setIsDirector] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>(null);
   const [form, setForm] = useState({
     name: "",
@@ -182,6 +183,14 @@ export default function EventDetailPage() {
       if (res.ok) {
         const data = await res.json();
         setTeam(data);
+      }
+
+      const authRes = await fetch("/api/auth/sync", { method: "POST" });
+      if (authRes.ok) {
+        const { dbUser } = await authRes.json();
+        if (dbUser?.role === "DIRECTOR" || dbUser?.role === "ADMIN") {
+          setIsDirector(true);
+        }
       }
     } catch { }
   };
@@ -507,21 +516,23 @@ export default function EventDetailPage() {
               >
                 Editar
               </button>
-              <button
-                onClick={() => setConfirmDelete(true)}
-                style={{
-                  padding: "var(--space-2) var(--space-4)",
-                  background: "rgba(239,68,68,0.1)",
-                  border: "1px solid rgba(239,68,68,0.3)",
-                  borderRadius: "var(--radius-lg)",
-                  color: "var(--color-error)",
-                  fontSize: "var(--text-sm)",
-                  cursor: "pointer",
-                  fontFamily: "var(--font-sans)",
-                }}
-              >
-                Eliminar
-              </button>
+              {isDirector && (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  style={{
+                    padding: "var(--space-2) var(--space-4)",
+                    background: "rgba(239,68,68,0.1)",
+                    border: "1px solid rgba(239,68,68,0.3)",
+                    borderRadius: "var(--radius-lg)",
+                    color: "var(--color-error)",
+                    fontSize: "var(--text-sm)",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-sans)",
+                  }}
+                >
+                  Eliminar
+                </button>
+              )}
             </>
           ) : (
             <>

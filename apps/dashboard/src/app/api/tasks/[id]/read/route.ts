@@ -3,7 +3,7 @@ import { prisma } from "@eventos-prime/db";
 import { NextResponse } from "next/server";
 
 // POST /api/tasks/[id]/read -- Mark all unread messages in this task as read by the user
-export async function POST(request: Request, context: { params: { id: string } }) {
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
     try {
         const supabase = await createServerSupabase();
         const { data: { user } } = await supabase.auth.getUser();

@@ -168,7 +168,7 @@ export default function EquipoPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "var(--space-6)" }}>
                 {team.map(member => (
                     <div key={member.id} className="glass-card" style={{ padding: "var(--space-6)", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", opacity: member.active === false ? 0.6 : 1, filter: member.active === false ? "grayscale(100%)" : "none" }}>
-                        <div style={{ width: 100, height: 100, borderRadius: "50%", background: "var(--color-bg-card)", border: `2px solid ${member.active === false ? 'gray' : 'var(--color-gold-400)'}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--text-3xl)", marginBottom: "var(--space-4)", overflow: "hidden" }}>
+                        <div className="coin-flip" style={{ width: 100, height: 100, borderRadius: "50%", background: "var(--color-bg-card)", border: `2px solid ${member.active === false ? 'gray' : 'var(--color-border-light)'}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--text-3xl)", marginBottom: "var(--space-4)", overflow: "hidden" }}>
                             {member.avatarUrl ? (
                                 <img src={member.avatarUrl} alt={member.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                             ) : (

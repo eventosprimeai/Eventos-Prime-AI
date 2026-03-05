@@ -111,7 +111,7 @@ export default function DashboardPage() {
         BORRADOR: { text: "Borrador", color: "var(--color-text-muted)" },
         PLANIFICADO: { text: "Planificado", color: "var(--color-info)" },
         PRE_PRODUCCION: { text: "Pre-producción", color: "var(--color-gold-400)" },
-        EN_VIVO: { text: "🔴 En vivo", color: "var(--color-rag-red)" },
+        EN_VIVO: { text: "En vivo", color: "var(--color-rag-red)" },
         POST_PRODUCCION: { text: "Post-producción", color: "var(--color-prime-400)" },
         CERRADO: { text: "Cerrado", color: "var(--color-success)" },
         CANCELADO: { text: "Cancelado", color: "var(--color-error)" },
@@ -337,7 +337,7 @@ export default function DashboardPage() {
 
             {events.length === 0 ? (
                 <div className="event-card" style={{ textAlign: "center", padding: "var(--space-12)" }}>
-                    <p style={{ fontSize: "var(--text-4xl)", marginBottom: "var(--space-3)" }}>🎪</p>
+                    <p style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-3)" }}><span className="nav-dot" style={{ width: 16, height: 16 }}></span></p>
                     <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-lg)" }}>
                         No hay eventos creados aún
                     </p>

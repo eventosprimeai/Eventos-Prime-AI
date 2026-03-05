@@ -238,6 +238,35 @@ body {
   animation: fade-in 0.3s ease-out forwards;
 }
 
+/* ─── Coin Flip Animation ────────────────────────── */
+
+@keyframes coin-flip-spin {
+  0% {
+    transform: perspective(600px) rotateY(0deg);
+    filter: brightness(1);
+  }
+
+  50% {
+    transform: perspective(600px) rotateY(180deg);
+    filter: brightness(1.7) drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+  }
+
+  100% {
+    transform: perspective(600px) rotateY(360deg);
+    filter: brightness(1);
+  }
+}
+
+.coin-flip {
+  transition: transform 0.5s ease;
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.coin-flip:hover {
+  animation: coin-flip-spin 1.2s ease-in-out infinite;
+}
+
 /* ─── Layout ─────────────────────────────────────── */
 
 .dashboard-layout {
@@ -296,9 +325,9 @@ body {
 }
 
 .sidebar-link.active {
-  background: rgba(234, 179, 8, 0.1);
+  background: rgba(0, 214, 143, 0.08);
   color: var(--color-gold-400);
-  border: 1px solid var(--color-border-gold);
+  border: 1px solid rgba(0, 214, 143, 0.15);
 }
 
 .main-content {
@@ -482,13 +511,15 @@ body {
   flex-shrink: 0;
 }
 
-.sidebar-link:hover .nav-dot {
+.sidebar-link:hover .nav-dot,
+.nav-dot-container:hover .nav-dot {
   background: rgba(0, 214, 143, 0.7);
   box-shadow: 0 0 10px rgba(0, 214, 143, 0.5), 0 0 20px rgba(0, 214, 143, 0.2);
   transform: scale(1.3);
 }
 
-.sidebar-link.active .nav-dot {
+.sidebar-link.active .nav-dot,
+.nav-dot-container.active .nav-dot {
   background: #00D68F;
   box-shadow: 0 0 8px rgba(0, 214, 143, 0.6), 0 0 16px rgba(0, 214, 143, 0.3);
   width: 10px;

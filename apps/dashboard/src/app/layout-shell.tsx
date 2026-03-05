@@ -142,7 +142,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
             <aside className="sidebar" style={{ display: "flex", flexDirection: "column" }}>
 
                 {/* User Profile Card */}
-                <div style={{ marginBottom: "var(--space-6)", padding: "26px var(--space-4)", background: "var(--color-bg-card)", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-gold-400)", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-3)", position: "relative", textAlign: "center" }}>
+                <div style={{ marginBottom: "var(--space-6)", padding: "26px var(--space-4)", background: "var(--color-bg-card)", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-border-light)", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-3)", position: "relative", textAlign: "center" }}>
                     {/* Notification Bell (Top Right Corner) */}
                     {pendingTasksCount > 0 && (
                         <a href="/tareas/estado/pendientes" style={{ position: "absolute", top: 12, right: 12, cursor: "pointer", textDecoration: "none" }}>
@@ -171,14 +171,14 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
                     {/* Avatar (Clickable to Dashboard) */}
                     <a href="/" style={{ textDecoration: "none" }}>
-                        <div style={{ width: 78, height: 78, borderRadius: "50%", background: "var(--color-bg-elevated)", border: "2px solid var(--color-gold-400)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0, margin: "0 auto", cursor: "pointer", transition: "transform 0.2s" }}
+                        <div style={{ width: 78, height: 78, borderRadius: "50%", background: "var(--color-bg-elevated)", border: "2px solid var(--color-border-light)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0, margin: "0 auto", cursor: "pointer", transition: "transform 0.2s" }}
                             onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
                             onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
                         >
                             {userAvatar ? (
-                                <img src={userAvatar} alt="Perfil" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                <img src={userAvatar} alt="Perfil" className="coin-flip" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                             ) : (
-                                <span style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--color-gold-400)" }}>
+                                <span className="coin-flip" style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--color-gold-400)", display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
                                     {userName.charAt(0).toUpperCase()}
                                 </span>
                             )}

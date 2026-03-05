@@ -216,12 +216,12 @@ export default function EventDetailPage() {
     const start = new Date(event.startDate);
     const daysUntil = Math.ceil((start.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 
-    const tabConfig: { key: ActiveTab; label: string; icon: string; count: number }[] = [
-        { key: "tareas", label: "Tareas", icon: "📋", count: event._count.tasks },
-        { key: "sponsors", label: "Sponsors", icon: "🏢", count: event._count.sponsorDeals },
-        { key: "tickets", label: "Tickets", icon: "🎟️", count: event._count.tickets },
-        { key: "checklists", label: "Checklists", icon: "✅", count: event._count.checklists },
-        { key: "incidencias", label: "Incidencias", icon: "⚠️", count: event._count.incidents },
+    const tabConfig: { key: ActiveTab; label: string; icon: React.ReactNode; count: number }[] = [
+        { key: "tareas", label: "Tareas", icon: <span className="nav-dot" style={{ display: "inline-block" }}></span>, count: event._count.tasks },
+        { key: "sponsors", label: "Sponsors", icon: <span className="nav-dot" style={{ display: "inline-block" }}></span>, count: event._count.sponsorDeals },
+        { key: "tickets", label: "Tickets", icon: <span className="nav-dot" style={{ display: "inline-block" }}></span>, count: event._count.tickets },
+        { key: "checklists", label: "Checklists", icon: <span className="nav-dot" style={{ display: "inline-block" }}></span>, count: event._count.checklists },
+        { key: "incidencias", label: "Incidencias", icon: <span className="nav-dot" style={{ display: "inline-block", background: event._count.incidents > 0 ? "var(--color-error)" : undefined, boxShadow: event._count.incidents > 0 ? "0 0 10px var(--color-error)" : undefined }}></span>, count: event._count.incidents },
     ];
 
     return (
@@ -238,11 +238,11 @@ export default function EventDetailPage() {
                             <button onClick={() => setEditing(true)} style={{
                                 padding: "var(--space-2) var(--space-4)", background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)",
                                 color: "var(--color-text-secondary)", fontSize: "var(--text-sm)", cursor: "pointer", fontFamily: "var(--font-sans)",
-                            }}>✏️ Editar</button>
+                            }}>Editar</button>
                             <button onClick={() => setConfirmDelete(true)} style={{
                                 padding: "var(--space-2) var(--space-4)", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "var(--radius-lg)",
                                 color: "var(--color-error)", fontSize: "var(--text-sm)", cursor: "pointer", fontFamily: "var(--font-sans)",
-                            }}>🗑️ Eliminar</button>
+                            }}>Eliminar</button>
                         </>
                     ) : (
                         <>
@@ -250,10 +250,9 @@ export default function EventDetailPage() {
                                 padding: "var(--space-2) var(--space-4)", background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)",
                                 color: "var(--color-text-secondary)", fontSize: "var(--text-sm)", cursor: "pointer", fontFamily: "var(--font-sans)",
                             }}>Cancelar</button>
-                            <button onClick={handleSave} disabled={saving} style={{
-                                padding: "var(--space-2) var(--space-5)", background: "var(--gradient-gold)", border: "none", borderRadius: "var(--radius-lg)",
-                                color: "var(--color-bg-primary)", fontSize: "var(--text-sm)", fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", fontFamily: "var(--font-sans)", opacity: saving ? 0.7 : 1,
-                            }}>{saving ? "Guardando..." : "💾 Guardar Cambios"}</button>
+                            <button onClick={handleSave} disabled={saving} className="glow-button" style={{
+                                padding: "var(--space-2) var(--space-5)", fontSize: "var(--text-sm)", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1,
+                            }}>{saving ? "Guardando..." : "Guardar Cambios"}</button>
                         </>
                     )}
                 </div>
@@ -262,7 +261,7 @@ export default function EventDetailPage() {
             {/* ── Delete Confirm ── */}
             {confirmDelete && (
                 <div className="glass-card" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)", borderColor: "rgba(239,68,68,0.3)" }}>
-                    <h3 style={{ color: "var(--color-error)", fontFamily: "var(--font-display)", fontWeight: 700, marginBottom: "var(--space-2)" }}>⚠️ ¿Eliminar este evento?</h3>
+                    <h3 style={{ color: "var(--color-error)", fontFamily: "var(--font-display)", fontWeight: 700, marginBottom: "var(--space-2)" }}>¿Eliminar este evento?</h3>
                     <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-sm)", marginBottom: "var(--space-4)" }}>
                         Esta acción no se puede deshacer. Se eliminará <strong>{event.name}</strong> permanentemente.
                     </p>
@@ -336,21 +335,21 @@ export default function EventDetailPage() {
                             <div>
                                 <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600, marginBottom: "var(--space-1)" }}>Fecha</div>
                                 <div style={{ fontSize: "var(--text-sm)" }}>
-                                    📅 {start.toLocaleDateString("es-EC", { day: "numeric", month: "long", year: "numeric" })}
+                                    {start.toLocaleDateString("es-EC", { day: "numeric", month: "long", year: "numeric" })}
                                     {daysUntil > 0 && <span style={{ color: "var(--color-gold-400)", display: "block", fontSize: "var(--text-xs)" }}>En {daysUntil} días</span>}
                                 </div>
                             </div>
                             <div>
                                 <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600, marginBottom: "var(--space-1)" }}>Ubicación</div>
-                                <div style={{ fontSize: "var(--text-sm)" }}>📍 {event.location || "Sin definir"}{event.venue && ` — ${event.venue}`}</div>
+                                <div style={{ fontSize: "var(--text-sm)" }}>{event.location || "Sin definir"}{event.venue && ` — ${event.venue}`}</div>
                             </div>
                             <div>
                                 <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600, marginBottom: "var(--space-1)" }}>Capacidad</div>
-                                <div style={{ fontSize: "var(--text-sm)" }}>👥 {event.capacity > 0 ? event.capacity.toLocaleString() + " personas" : "Sin definir"}</div>
+                                <div style={{ fontSize: "var(--text-sm)" }}>{event.capacity > 0 ? event.capacity.toLocaleString() + " personas" : "Sin definir"}</div>
                             </div>
                             <div>
                                 <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600, marginBottom: "var(--space-1)" }}>Presupuesto</div>
-                                <div style={{ fontSize: "var(--text-sm)", color: "var(--color-gold-400)", fontWeight: 600 }}>💰 ${parseFloat(event.budget).toLocaleString()} USD</div>
+                                <div style={{ fontSize: "var(--text-sm)", color: "var(--color-gold-400)", fontWeight: 600 }}>${parseFloat(event.budget).toLocaleString()} USD</div>
                             </div>
                         </div>
                     </>
@@ -362,14 +361,17 @@ export default function EventDetailPage() {
                 {tabConfig.map((tab) => {
                     const isActive = activeTab === tab.key;
                     return (
-                        <button key={tab.key} onClick={() => toggleTab(tab.key)} style={{
-                            background: isActive ? "rgba(234,179,8,0.12)" : "var(--color-bg-card)",
-                            border: isActive ? "1px solid var(--color-border-gold)" : "1px solid var(--color-border)",
+                        <button key={tab.key} onClick={() => toggleTab(tab.key)} className={`nav-dot-container ${isActive ? "active" : ""}`} style={{
+                            background: isActive ? "rgba(0, 214, 143, 0.08)" : "var(--color-bg-card)",
+                            border: isActive ? "1px solid rgba(0, 214, 143, 0.15)" : "1px solid var(--color-border)",
                             borderRadius: "var(--radius-xl)", padding: "var(--space-4)", textAlign: "center",
                             cursor: "pointer", transition: "var(--transition-fast)", fontFamily: "var(--font-sans)",
                             color: "inherit",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            alignItems: "center"
                         }}>
-                            <div style={{ fontSize: "var(--text-lg)", marginBottom: "var(--space-1)" }}>{tab.icon}</div>
+                            <div style={{ fontSize: "var(--text-lg)", marginBottom: "var(--space-2)", height: 24, display: "flex", alignItems: "center", justifyContent: "center" }}>{tab.icon}</div>
                             <div style={{ fontSize: "var(--text-xs)", color: isActive ? "var(--color-gold-400)" : "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>{tab.label}</div>
                             <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-2xl)", fontWeight: 700, color: isActive ? "var(--color-gold-400)" : "var(--color-text-primary)", marginTop: "var(--space-1)" }}>{tab.count}</div>
                         </button>
@@ -385,7 +387,7 @@ export default function EventDetailPage() {
             {activeTab === "tareas" && (
                 <div className="glass-card animate-fade-in" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)" }}>
                     <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-6)" }}>
-                        📋 Análisis de Tareas — {event.name}
+                        Análisis de Tareas — {event.name}
                     </h2>
                     {event.tasks.length === 0 ? (
                         <div style={{ textAlign: "center", padding: "var(--space-8)", color: "var(--color-text-muted)" }}>
@@ -451,7 +453,7 @@ export default function EventDetailPage() {
                 return (
                     <div className="glass-card animate-fade-in" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)" }}>
                         <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-6)" }}>
-                            🏢 Sponsors — {event.name}
+                            Sponsors — {event.name}
                         </h2>
                         {event.sponsorDeals.length === 0 ? (
                             <div style={{ textAlign: "center", padding: "var(--space-8)", color: "var(--color-text-muted)" }}>
@@ -504,7 +506,10 @@ export default function EventDetailPage() {
                                         {event.sponsorDeals.map(d => (
                                             <div key={d.id} className="task-item">
                                                 <div style={{ flex: 1 }}>
-                                                    <span style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>🏢 {d.sponsor.companyName}</span>
+                                                    <span style={{ fontWeight: 600, fontSize: "var(--text-sm)", display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+                                                        <span className="nav-dot" style={{ display: "inline-block" }}></span>
+                                                        {d.sponsor.companyName}
+                                                    </span>
                                                     {d.sponsor.industry && <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginLeft: "var(--space-2)" }}>{d.sponsor.industry}</span>}
                                                 </div>
                                                 <span style={{ fontSize: "var(--text-sm)", color: "var(--color-gold-400)", fontWeight: 600, marginRight: "var(--space-3)" }}>
@@ -525,18 +530,18 @@ export default function EventDetailPage() {
             {activeTab === "tickets" && (
                 <div className="glass-card animate-fade-in" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)" }}>
                     <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-6)" }}>
-                        🎟️ Tickets — {event.name}
+                        Tickets — {event.name}
                     </h2>
                     <div style={{ textAlign: "center", padding: "var(--space-8)" }}>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "var(--space-4)", marginBottom: "var(--space-6)" }}>
                             {[
-                                { label: "General", icon: "🎫", count: 0, color: "#38bdf8" },
-                                { label: "VIP", icon: "⭐", count: 0, color: "#facc15" },
-                                { label: "Socios", icon: "🤝", count: 0, color: "#22c55e" },
-                                { label: "Auspiciantes", icon: "🏢", count: 0, color: "#a855f7" },
+                                { label: "General", icon: <span className="nav-dot" style={{ display: "inline-block" }}></span>, count: 0, color: "#38bdf8" },
+                                { label: "VIP", icon: <span className="nav-dot" style={{ display: "inline-block" }}></span>, count: 0, color: "#facc15" },
+                                { label: "Socios", icon: <span className="nav-dot" style={{ display: "inline-block" }}></span>, count: 0, color: "#22c55e" },
+                                { label: "Auspiciantes", icon: <span className="nav-dot" style={{ display: "inline-block" }}></span>, count: 0, color: "#a855f7" },
                             ].map(t => (
-                                <div key={t.label} style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-4)" }}>
-                                    <div style={{ fontSize: "var(--text-2xl)" }}>{t.icon}</div>
+                                <div key={t.label} className="nav-dot-container" style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-4)" }}>
+                                    <div style={{ fontSize: "var(--text-2xl)", height: 24, display: "flex", alignItems: "center", justifyContent: "flex-start" }}>{t.icon}</div>
                                     <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 600, marginTop: "var(--space-1)" }}>{t.label}</div>
                                     <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-3xl)", fontWeight: 700, color: t.color }}>{t.count}</div>
                                 </div>
@@ -565,7 +570,7 @@ export default function EventDetailPage() {
             {activeTab === "checklists" && (
                 <div className="glass-card animate-fade-in" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)" }}>
                     <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-6)" }}>
-                        ✅ Checklists — {event.name}
+                        Checklists — {event.name}
                     </h2>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--space-4)", textAlign: "center" }}>
                         <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-5)" }}>
@@ -600,7 +605,7 @@ export default function EventDetailPage() {
                 return (
                     <div className="glass-card animate-fade-in" style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)" }}>
                         <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: "var(--space-6)" }}>
-                            ⚠️ Incidencias — {event.name}
+                            Incidencias — {event.name}
                         </h2>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--space-4)", textAlign: "center" }}>
                             <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-xl)", padding: "var(--space-5)" }}>
@@ -618,7 +623,7 @@ export default function EventDetailPage() {
                         </div>
                         {(!event.incidents || event.incidents.length === 0) ? (
                             <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)", textAlign: "center", marginTop: "var(--space-4)" }}>
-                                ✅ No hay incidencias reportadas — ¡excelente!
+                                No hay incidencias reportadas — ¡excelente!
                             </p>
                         ) : (
                             <div style={{ marginTop: "var(--space-6)" }}>

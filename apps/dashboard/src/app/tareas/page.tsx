@@ -239,7 +239,7 @@ export default function TeamTareasPage() {
                         onClick={() => router.push(`/tareas/${member.id}`)}
                         onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-4px)"}
                         onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}>
-                        <div style={{ width: 120, height: 120, borderRadius: "50%", background: "var(--color-bg-card)", border: "2px solid var(--color-gold-400)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--text-4xl)", marginBottom: "var(--space-4)", overflow: "hidden" }}>
+                        <div className="coin-flip" style={{ width: 120, height: 120, borderRadius: "50%", background: "var(--color-bg-card)", border: "2px solid var(--color-border-light)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--text-4xl)", marginBottom: "var(--space-4)", overflow: "hidden" }}>
                             {member.avatarUrl ? (
                                 <img src={member.avatarUrl} alt={member.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                             ) : (

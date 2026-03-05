@@ -9,41 +9,41 @@ import AIAssistantWidget from "@/components/AIAssistantWidget";
 const navItems = [
     {
         section: "Principal", items: [
-            { label: "Dashboard", href: "/", icon: "📊" },
-            { label: "Eventos", href: "/eventos", icon: "🎪" },
+            { label: "Dashboard", href: "/", icon: "" },
+            { label: "Eventos", href: "/eventos", icon: "" },
         ]
     },
     {
         section: "Operaciones", items: [
-            { label: "Tareas", href: "/tareas", icon: "✅" },
-            { label: "Consultas", href: "/consultas", icon: "🤖" },
-            { label: "Checklists", href: "/checklists", icon: "📋" },
-            { label: "Equipo", href: "/equipo", icon: "👥" },
+            { label: "Tareas", href: "/tareas", icon: "" },
+            { label: "Consultas", href: "/consultas", icon: "" },
+            { label: "Checklists", href: "/checklists", icon: "" },
+            { label: "Equipo", href: "/equipo", icon: "" },
         ]
     },
     {
         section: "Comercial", items: [
-            { label: "Sponsors", href: "/sponsors", icon: "🏢" },
-            { label: "Proveedores", href: "/proveedores", icon: "🔧" },
-            { label: "Tickets", href: "/tickets", icon: "🎫" },
+            { label: "Sponsors", href: "/sponsors", icon: "" },
+            { label: "Proveedores", href: "/proveedores", icon: "" },
+            { label: "Tickets", href: "/tickets", icon: "" },
         ]
     },
     {
         section: "Finanzas", items: [
-            { label: "Panel Financiero", href: "/finanzas", icon: "💰" },
-            { label: "Transacciones", href: "/finanzas/transacciones", icon: "📒" },
-            { label: "Cuentas", href: "/finanzas/cuentas", icon: "🏦" },
-            { label: "Presupuesto", href: "/finanzas/presupuesto", icon: "📊" },
-            { label: "Conciliación", href: "/finanzas/conciliacion", icon: "🔄" },
-            { label: "Impuestos", href: "/finanzas/impuestos", icon: "🧾" },
-            { label: "Documentos", href: "/finanzas/documentos", icon: "📄" },
-            { label: "Reportes", href: "/finanzas/reportes", icon: "📈" },
+            { label: "Panel Financiero", href: "/finanzas", icon: "" },
+            { label: "Transacciones", href: "/finanzas/transacciones", icon: "" },
+            { label: "Cuentas", href: "/finanzas/cuentas", icon: "" },
+            { label: "Presupuesto", href: "/finanzas/presupuesto", icon: "" },
+            { label: "Conciliación", href: "/finanzas/conciliacion", icon: "" },
+            { label: "Impuestos", href: "/finanzas/impuestos", icon: "" },
+            { label: "Documentos", href: "/finanzas/documentos", icon: "" },
+            { label: "Reportes", href: "/finanzas/reportes", icon: "" },
         ]
     },
     {
         section: "Sistema", items: [
-            { label: "Auditoría", href: "/auditoria", icon: "📜" },
-            { label: "Configuración", href: "/config", icon: "⚙️" },
+            { label: "Auditoría", href: "/auditoria", icon: "" },
+            { label: "Configuración", href: "/config", icon: "" },
         ]
     },
 ];
@@ -226,7 +226,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                                     href={item.href}
                                     className={`sidebar-link${pathname === item.href ? " active" : ""}`}
                                 >
-                                    <span>{item.icon}</span>
+                                    <span className="nav-dot"></span>
                                     <span>{item.label}</span>
                                 </a>
                             ))}

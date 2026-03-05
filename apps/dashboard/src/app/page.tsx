@@ -233,20 +233,7 @@ export default function DashboardPage() {
                     </p>
                 </div>
                 <div style={{ display: "flex", gap: "var(--space-2)" }}>
-                    <button onClick={() => setShowConsulta(!showConsulta)} style={{
-                        padding: "var(--space-2) var(--space-4)",
-                        background: "var(--color-bg-elevated)",
-                        border: "1px solid var(--color-gold-400)",
-                        borderRadius: "var(--radius-lg)",
-                        color: "var(--color-gold-400)",
-                        fontSize: "var(--text-sm)",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        fontFamily: "var(--font-sans)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "var(--space-2)"
-                    }}>
+                    <button onClick={() => setShowConsulta(!showConsulta)} className="glow-button">
                         {showConsulta ? "Cancelar" : "+ Nueva Consulta"}
                     </button>
                     <button onClick={handleLogout} style={{
@@ -392,9 +379,9 @@ export default function DashboardPage() {
                                     {daysUntil > 0 ? ` — en ${daysUntil} días` : daysUntil === 0 ? " — ¡Hoy!" : ` — hace ${Math.abs(daysUntil)} días`}
                                 </p>
                                 <div style={{ display: "flex", gap: "var(--space-4)", fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
-                                    <span>📋 {event._count.tasks} tareas</span>
-                                    <span>🏢 {event._count.sponsorDeals} sponsors</span>
-                                    <span>🎟️ {event._count.tickets} tickets</span>
+                                    <span>{event._count.tasks} tareas</span>
+                                    <span>{event._count.sponsorDeals} sponsors</span>
+                                    <span>{event._count.tickets} tickets</span>
                                 </div>
                             </div>
                         );

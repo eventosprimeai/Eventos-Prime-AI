@@ -126,6 +126,14 @@ El schema está en `packages/db/prisma/schema.prisma`. Tablas creadas:
 | Incident | `incidents` | Incidencias durante evento |
 | Notification | `notifications` | Push / Telegram / Email |
 | AuditLog | `audit_logs` | Auditoría completa |
+| FinancialAccount | `financial_accounts` | Cuentas bancarias, caja, billeteras digitales |
+| FinancialTransaction | `financial_transactions` | Ingresos/gastos con IVA, categoría, OCR |
+| BudgetLine | `budget_lines` | Líneas presupuestarias por evento |
+| BankStatement | `bank_statements` | Estados de cuenta bancarios |
+| BankStatementEntry | `bank_statement_entries` | Líneas de estados de cuenta |
+| DocumentTemplate | `document_templates` | Plantillas de documentos |
+| GeneratedDocument | `generated_documents` | Documentos generados (contratos, OC) |
+| AIChatMessage | `ai_chat_messages` | Historial de chat IA + auditoría permisos |
 
 ---
 
@@ -260,22 +268,20 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 4 de marzo de 2026 (23:25 local)
+**Ultimo Punto de Restablecimiento:** 5 de marzo de 2026 (02:22 local)
 **Estatus Actual:**
-- **Dashboard desplegado en producción:** `https://app.eventosprimeai.com` — Online con SSL, HTTP/2, PM2, y Nginx. Todo el equipo puede acceder desde cualquier dispositivo.
-- **API REST pública:** `https://api.eventosprimeai.com` — Gateway exclusiva para webhooks de DataFast, n8n y servicios externos. Solo acepta rutas `/api/*` y `/webhooks/*`.
-- **Desarrollo local activo en `localhost:3001`** — Se sigue desarrollando localmente y se despliega bajo demanda.
+- **Dashboard desplegado en producción:** `https://app.eventosprimeai.com` — Online con SSL, HTTP/2, PM2, y Nginx.
+- **API REST pública:** `https://api.eventosprimeai.com` — Gateway para webhooks y servicios externos.
+- **Desarrollo local activo en `localhost:3001`** — Se sigue desarrollando localmente.
+- **Vertex AI conectado:** $300 créditos GCP activos, service account con permisos `aiplatform.user`.
 
-**Logros Alcanzados:**
-  - **Identidad Modular Completa:** El registro de cuentas ya no depende de opciones estáticas para roles. Todo `User` de Prisma ahora alberga `personType`, `area`, `jobTitle` y `category` (permisos y reglas subyacentes mapeados inteligente a su respectivo `Role` en Prisma).
-  - **Arquitectura de Seguridad y Trazabilidad Extrema:** Implementación de Bóveda de Auditoría exclusiva para Directores (`/auditoria`), capturando intentos de acceso prohibidos y mutaciones en base de datos.
-  - **Soft-Delete Corporativo:** Reemplazo de eliminación de cuentas por un sistema de suspensión ("Ex-empleados"). Revoca acceso nativamente usando Supabase Admin Auth (ban de duración), aplica estilo de deshabilitado en UI (`filter: grayscale`), e impide pérdida de registros e historiales en el sistema.
-  - **Onboarding de IAs Automatizado:** Creada lógica en el registro que auto-genera correos válidos y contraseñas ocultas para `personType: "Profesional IA"`, eludiendo envíos transaccionales reales que generarían métricas de "bounce" perjudiciales con la capa Anti-Robot. Documentados sub-agentes Jhon (OpenClaw) y Carter (n8n).
-  - **Edición Maestra de Perfiles y UX de Avatar (Estilo Facebook):** Se desarrolló y aplicó un componente interactivo de recorte (`AvatarCropper`) con zoom y arrastre tanto en registro como en edición de equipo. La vista de equipo ahora permite a Directores (y al propio usuario) editar todo su perfil: *Nombres, Rol, Contraseña y Correo*, gestionando los cambios silenciosamente mediante la *Supabase Service Role Key* (API Admin).
-  - **Restauración de Infraestructura VPS (Nginx & SSL):** Se purgaron las políticas mal configuradas de Autenticación Básica global (`.htpasswd`), reduciendo su alcance estrictamente al subdominio privado de la IA (`openclawos`), y liberando con éxito el dominio raíz y `n8n` devolviendo el tráfico a la normalidad.
-  - **Despliegue a Producción Completado:** Dashboard Next.js compilado y desplegado en `app.eventosprimeai.com` (PM2 en puerto 3002, Nginx con SSL Let's Encrypt + HTTP/2 + gzip). API REST configurada en `api.eventosprimeai.com` como gateway exclusiva para servicios externos. Ruta del código en servidor: `/opt/eventos-prime-ai/`.
-  - **Plan Maestro de Subdominios:** Se auditó toda la infraestructura del VPS y se diseñó el ecosistema completo de 10 subdominios. Se crearon los registros DNS de `app`, `checkin` y `api`. Subdominios existentes mapeados: `festival` (landing), `tickets` (WooCommerce+DataFast), `marketing` (campañas). Flujo operativo completo documentado.
-  - **Fixes de Build para Producción:** Resueltos 4 errores de tipado estricto de TypeScript (params `Promise` wrapper para Next.js 15, `cookiesToSet` implicit-any en 3 archivos, `Suspense` boundary para `useSearchParams`).
+**Logros Alcanzados (Sesión 5 de marzo 2026):**
+  - **Módulo Financiero Completo (Fases 1-3):** 7 nuevos modelos Prisma + 6 enums. 5 API routes financieras. 8 páginas frontend (panel, transacciones, cuentas, presupuesto, conciliación, impuestos, documentos, reportes). Sidebar actualizado con sección Finanzas.
+  - **OCR Gemini Vision (Vertex AI):** Acepta imágenes y PDFs. Extrae tipo, monto, IVA, fecha, categoría, referencia, proveedor. Pre-llena formularios. Compresión de imágenes en cliente.
+  - **Ecosistema IA (7 Endpoints):** assistant, report-summary, analyze-image, generate-email, generate-document, smart-insights, finance/ocr. Todos vía Vertex AI con fallback a AI Studio.
+  - **Asistente IA con Permisos:** Widget flotante 🤖 en toda la app. PERMISSION_MAP por rol (Director=todo, Finanzas=finanzas+proveedores, Marketing=eventos+tareas, Staff=solo sus tareas). Historial persistido. Auditoría de restricciones.
+  - **Vertex AI Integrado:** JWT auth con service account, token caching, módulo compartido `src/lib/ai/vertex.ts`.
+  - Logros previos: Identidad Modular, Seguridad/Auditoría, Soft-Delete, Onboarding IAs, Avatar Editor, VPS, Subdominios, Build fixes.
 
 **Proceso de Despliegue (para futuras actualizaciones):**
 ```bash
@@ -290,9 +296,10 @@ pm2 restart eventos-prime-dashboard
 ```
 
 **Siguiente Acción Pendiente:**
-1. Cargar contexto orgánico, audios o reportes del "*Evento Anterior*" del usuario final para crear el primer volcado oficial de la Data y preparar a la Base de Datos para operaciones en vivo.
-2. Revisión de Políticas Supabase (RLS): Ajustar los SELECT/INSERT nativos para que usuarios "Por Evento" queden cegados por completo a Tareas y Proyectos a los que no pertenecen.
-3. Desarrollar la PWA (Progressive Web App) con Service Workers para habilitar notificaciones push y el badge numérico.
-4. Crear los usuarios Jhon y Carter como "Profesional IA" en el dashboard e integrar sus conexiones con OpenClaw y n8n.
-5. Configurar `tickets.eventosprimeai.com` (WordPress + WooCommerce + DataFast) cuando se defina la estructura de entradas.
-6. Desarrollar landing page de Prime Festival en `festival.eventosprimeai.com`.
+1. Probar scanner OCR con facturas reales (Vertex AI sin rate limits).
+2. Registrar cuentas bancarias corporativas en `/finanzas/cuentas`.
+3. Implementar Conciliación Bancaria (Fase 3): OCR estados de cuenta + match.
+4. Implementar Generación de Documentos (Fase 4): Contratos y propuestas con IA.
+5. Desarrollar PWA con Service Workers para notificaciones push.
+6. Configurar n8n workflows para automatización de reportes financieros.
+

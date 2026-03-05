@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { createBrowserClient } from "@supabase/ssr";
+import AvatarCropper from "@/app/components/AvatarCropper";
 
 interface TeamMember {
     id: string;
@@ -34,6 +35,7 @@ export default function EquipoPage() {
     const [editingUser, setEditingUser] = useState<TeamMember | null>(null);
     const [editForm, setEditForm] = useState({ name: "", role: "", avatarUrl: "" as string | null });
     const [saving, setSaving] = useState(false);
+    const [rawImage, setRawImage] = useState<string | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -72,27 +74,10 @@ export default function EquipoPage() {
 
         const reader = new FileReader();
         reader.onload = (event) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement("canvas");
-                const MAX_SIZE = 400;
-                const minDim = Math.min(img.width, img.height);
-                const sx = (img.width - minDim) / 2;
-                const sy = (img.height - minDim) / 2;
-
-                canvas.width = MAX_SIZE;
-                canvas.height = MAX_SIZE;
-
-                const ctx = canvas.getContext("2d");
-                if (ctx) {
-                    ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, MAX_SIZE, MAX_SIZE);
-                    const base64 = canvas.toDataURL("image/jpeg", 0.85);
-                    setEditForm(prev => ({ ...prev, avatarUrl: base64 }));
-                }
-            };
-            img.src = event.target?.result as string;
+            setRawImage(event.target?.result as string);
         };
         reader.readAsDataURL(file);
+        e.target.value = "";
     };
 
     const openEditModal = (member: TeamMember) => {
@@ -290,6 +275,18 @@ export default function EquipoPage() {
                         </form>
                     </div>
                 </div>
+            )}
+
+            {/* Avatar Cropper Modal */}
+            {rawImage && (
+                <AvatarCropper
+                    imageSrc={rawImage}
+                    onConfirm={(croppedBase64) => {
+                        setEditForm(prev => ({ ...prev, avatarUrl: croppedBase64 }));
+                        setRawImage(null);
+                    }}
+                    onCancel={() => setRawImage(null)}
+                />
             )}
         </div>
     );

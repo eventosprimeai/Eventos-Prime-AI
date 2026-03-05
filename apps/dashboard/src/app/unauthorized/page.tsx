@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function UnauthorizedPage() {
+function UnauthorizedContent() {
     const searchParams = useSearchParams();
     const target = searchParams.get("target") || "Información Protegida";
 
@@ -37,5 +37,13 @@ export default function UnauthorizedPage() {
                 </a>
             </div>
         </div>
+    );
+}
+
+export default function UnauthorizedPage() {
+    return (
+        <Suspense>
+            <UnauthorizedContent />
+        </Suspense>
     );
 }

@@ -71,7 +71,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   BORRADOR: { label: "Borrador", color: "#71717a" },
   PLANIFICADO: { label: "Planificado", color: "#38bdf8" },
   PRE_PRODUCCION: { label: "Pre-producción", color: "#facc15" },
-  EN_VIVO: { label: "🔴 En vivo", color: "#ef4444" },
+  EN_VIVO: { label: "En vivo", color: "#ef4444" },
   POST_PRODUCCION: { label: "Post-producción", color: "#7dd3fc" },
   CERRADO: { label: "Cerrado", color: "#22c55e" },
   CANCELADO: { label: "Cancelado", color: "#ef4444" },
@@ -179,7 +179,7 @@ export default function EventDetailPage() {
         const data = await res.json();
         setTeam(data);
       }
-    } catch {}
+    } catch { }
   };
 
   const fetchEvent = async () => {
@@ -405,58 +405,58 @@ export default function EventDetailPage() {
     icon: React.ReactNode;
     count: number;
   }[] = [
-    {
-      key: "tareas",
-      label: "Tareas",
-      icon: (
-        <span className="nav-dot" style={{ display: "inline-block" }}></span>
-      ),
-      count: event._count.tasks,
-    },
-    {
-      key: "sponsors",
-      label: "Sponsors",
-      icon: (
-        <span className="nav-dot" style={{ display: "inline-block" }}></span>
-      ),
-      count: event._count.sponsorDeals,
-    },
-    {
-      key: "tickets",
-      label: "Tickets",
-      icon: (
-        <span className="nav-dot" style={{ display: "inline-block" }}></span>
-      ),
-      count: event._count.tickets,
-    },
-    {
-      key: "checklists",
-      label: "Checklists",
-      icon: (
-        <span className="nav-dot" style={{ display: "inline-block" }}></span>
-      ),
-      count: event._count.checklists,
-    },
-    {
-      key: "incidencias",
-      label: "Incidencias",
-      icon: (
-        <span
-          className="nav-dot"
-          style={{
-            display: "inline-block",
-            background:
-              event._count.incidents > 0 ? "var(--color-error)" : undefined,
-            boxShadow:
-              event._count.incidents > 0
-                ? "0 0 10px var(--color-error)"
-                : undefined,
-          }}
-        ></span>
-      ),
-      count: event._count.incidents,
-    },
-  ];
+      {
+        key: "tareas",
+        label: "Tareas",
+        icon: (
+          <span className="nav-dot" style={{ display: "inline-block" }}></span>
+        ),
+        count: event._count.tasks,
+      },
+      {
+        key: "sponsors",
+        label: "Sponsors",
+        icon: (
+          <span className="nav-dot" style={{ display: "inline-block" }}></span>
+        ),
+        count: event._count.sponsorDeals,
+      },
+      {
+        key: "tickets",
+        label: "Tickets",
+        icon: (
+          <span className="nav-dot" style={{ display: "inline-block" }}></span>
+        ),
+        count: event._count.tickets,
+      },
+      {
+        key: "checklists",
+        label: "Checklists",
+        icon: (
+          <span className="nav-dot" style={{ display: "inline-block" }}></span>
+        ),
+        count: event._count.checklists,
+      },
+      {
+        key: "incidencias",
+        label: "Incidencias",
+        icon: (
+          <span
+            className="nav-dot"
+            style={{
+              display: "inline-block",
+              background:
+                event._count.incidents > 0 ? "var(--color-error)" : undefined,
+              boxShadow:
+                event._count.incidents > 0
+                  ? "0 0 10px var(--color-error)"
+                  : undefined,
+            }}
+          ></span>
+        ),
+        count: event._count.incidents,
+      },
+    ];
 
   return (
     <div className="animate-fade-in">

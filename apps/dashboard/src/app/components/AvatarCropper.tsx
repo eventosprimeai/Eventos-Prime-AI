@@ -304,7 +304,7 @@ export default function AvatarCropper({
               cursor: "pointer",
             }}
           >
-            ✅ Confirmar Recorte
+            Confirmar Recorte
           </button>
         </div>
       </div>

@@ -13,7 +13,7 @@ function UnauthorizedContent() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ target }),
-    }).catch(() => {});
+    }).catch(() => { });
   }, [target]);
 
   return (
@@ -36,8 +36,8 @@ function UnauthorizedContent() {
           border: "2px solid #ff4444",
         }}
       >
-        <div style={{ fontSize: "60px", marginBottom: "var(--space-4)" }}>
-          ⛔
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-4)" }}>
+          <span className="nav-dot" style={{ width: 32, height: 32, display: "inline-block", background: "#ff4444", boxShadow: "0 0 20px #ff4444" }}></span>
         </div>
         <h1
           style={{
@@ -115,7 +115,7 @@ function UnauthorizedContent() {
             (e.currentTarget.style.background = "var(--color-bg-input)")
           }
         >
-          🔙 Volver al Inicio
+          Volver al Inicio
         </a>
       </div>
     </div>

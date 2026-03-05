@@ -103,7 +103,7 @@ export default function ConsultasPage() {
     try {
       const res = await fetch(`/api/tasks/${taskId}/messages`);
       if (res.ok) setMessages(await res.json());
-    } catch {}
+    } catch { }
   };
 
   const openTaskChat = async (task: Task) => {
@@ -121,7 +121,7 @@ export default function ConsultasPage() {
               : t,
           ),
         );
-      } catch {}
+      } catch { }
     }
   };
 
@@ -299,7 +299,9 @@ export default function ConsultasPage() {
               border: "1px dashed var(--color-border)",
             }}
           >
-            <span style={{ fontSize: "2rem", opacity: 0.5 }}>🤖</span>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-2)" }}>
+              <span className="nav-dot" style={{ width: 24, height: 24, display: "inline-block", background: "var(--color-bg-elevated)", boxShadow: "0 0 10px var(--color-bg-elevated)" }}></span>
+            </div>
             <p
               style={{
                 color: "var(--color-text-muted)",
@@ -433,10 +435,10 @@ export default function ConsultasPage() {
                           color: "var(--color-text-muted)",
                         }}
                       >
-                        <span>📅 {dateStr}</span>
-                        <span>🎪 {task.event.name}</span>
+                        <span style={{ display: "flex", alignItems: "center", gap: "var(--space-1)" }}><span className="nav-dot" style={{ display: "inline-block" }}></span> {dateStr}</span>
+                        <span style={{ display: "flex", alignItems: "center", gap: "var(--space-1)" }}><span className="nav-dot" style={{ display: "inline-block" }}></span> {task.event.name}</span>
                         <span style={{ position: "relative" }}>
-                          💬 Abrir Conversación
+                          Abrir Conversación
                           {task._count?.messages ? (
                             <span
                               style={{
@@ -533,7 +535,7 @@ export default function ConsultasPage() {
                   }}
                 >
                   {selectedTask.assignee?.avatarUrl &&
-                  selectedTask.assignee.avatarUrl.trim() !== "" ? (
+                    selectedTask.assignee.avatarUrl.trim() !== "" ? (
                     <img
                       src={selectedTask.assignee.avatarUrl}
                       alt={selectedTask.assignee.name}
@@ -596,7 +598,7 @@ export default function ConsultasPage() {
                   cursor: "pointer",
                 }}
               >
-                ✕
+                Cerrar
               </button>
             </div>
 

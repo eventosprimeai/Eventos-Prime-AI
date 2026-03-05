@@ -175,11 +175,12 @@ export default function EstadoTareasPage() {
         >
           <p
             style={{
-              fontSize: "var(--text-4xl)",
+              display: "flex",
+              justifyContent: "center",
               marginBottom: "var(--space-3)",
             }}
           >
-            🎉
+            <span className="nav-dot" style={{ width: 16, height: 16 }}></span>
           </p>
           <p
             style={{

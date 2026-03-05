@@ -51,7 +51,7 @@ export default function AuditoriaPage() {
             setLogs(data.logs || []);
             setSecurityAlerts(data.alerts || []);
           }
-        } catch (e) {}
+        } catch (e) { }
       } else {
         window.location.href = "/unauthorized?target=Panel%20de%20Auditoría";
       }
@@ -63,7 +63,7 @@ export default function AuditoriaPage() {
   const markAsRead = async (id: string) => {
     setSecurityAlerts((prev) => prev.filter((al) => al.id !== id));
     fetch(`/api/auditoria/alerts/${id}/read`, { method: "PATCH" }).catch(
-      () => {},
+      () => { },
     );
   };
 
@@ -200,12 +200,12 @@ export default function AuditoriaPage() {
             >
               <div
                 style={{
-                  fontSize: "40px",
+                  display: "flex",
+                  justifyContent: "center",
                   marginBottom: "var(--space-2)",
-                  filter: "grayscale(100%) opacity(0.5)",
                 }}
               >
-                🛡️
+                <span className="nav-dot" style={{ width: 24, height: 24, display: "inline-block", background: "var(--color-text-muted)", boxShadow: "0 0 10px var(--color-text-muted)" }}></span>
               </div>
               Todo despejado. No hay accesos indebidos registrados.
             </div>
@@ -307,8 +307,8 @@ export default function AuditoriaPage() {
                     transition: "background 0.2s",
                   }}
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.background =
-                      "rgba(255,255,255,0.02)")
+                  (e.currentTarget.style.background =
+                    "rgba(255,255,255,0.02)")
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.background = "transparent")

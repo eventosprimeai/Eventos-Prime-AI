@@ -98,7 +98,7 @@ export default function UserTareasPage() {
     try {
       const res = await fetch(`/api/tasks/${taskId}/messages`);
       if (res.ok) setMessages(await res.json());
-    } catch {}
+    } catch { }
   };
 
   const openTaskChat = async (task: Task) => {
@@ -118,7 +118,7 @@ export default function UserTareasPage() {
               : t,
           ),
         );
-      } catch {}
+      } catch { }
     }
   };
 
@@ -309,7 +309,7 @@ export default function UserTareasPage() {
                 pointerEvents: "none",
               }}
             >
-              🔍 Ampliar
+              Ampliar
             </div>
           </div>
           {cleanText && <span>{formatText(cleanText)}</span>}
@@ -386,7 +386,7 @@ export default function UserTareasPage() {
         body: JSON.stringify({ id: taskId, status: newStatus }),
       });
       if (res.ok) fetchData();
-    } catch {}
+    } catch { }
   };
 
   const inputStyle = {
@@ -605,7 +605,7 @@ export default function UserTareasPage() {
                         if (recognitionFormRef.current) {
                           try {
                             recognitionFormRef.current.start();
-                          } catch (e) {}
+                          } catch (e) { }
                         } else {
                           setIsRecordingForm(false);
                         }
@@ -956,7 +956,7 @@ export default function UserTareasPage() {
                           : "transparent",
                       cursor:
                         currentUserRole === "DIRECTOR" ||
-                        currentUserId === task.assignee?.id
+                          currentUserId === task.assignee?.id
                           ? "pointer"
                           : "not-allowed",
                       flexShrink: 0,
@@ -1193,47 +1193,47 @@ export default function UserTareasPage() {
               >
                 {(currentUserRole === "DIRECTOR" ||
                   selectedTask.creatorId === currentUserId) && (
-                  <button
-                    onClick={async () => {
-                      if (
-                        confirm(
-                          "¿Estás súper seguro de que quieres eliminar esta tarea permanentemente y todo su historial de mensajes? Esta acción no se puede deshacer.",
-                        )
-                      ) {
-                        try {
-                          const res = await fetch(
-                            `/api/tasks/${selectedTask.id}`,
-                            { method: "DELETE" },
-                          );
-                          if (res.ok) {
-                            setSelectedTask(null);
-                            fetchData();
-                          } else {
-                            const data = await res.json();
-                            alert(data.error || "Error al eliminar");
+                    <button
+                      onClick={async () => {
+                        if (
+                          confirm(
+                            "¿Estás súper seguro de que quieres eliminar esta tarea permanentemente y todo su historial de mensajes? Esta acción no se puede deshacer.",
+                          )
+                        ) {
+                          try {
+                            const res = await fetch(
+                              `/api/tasks/${selectedTask.id}`,
+                              { method: "DELETE" },
+                            );
+                            if (res.ok) {
+                              setSelectedTask(null);
+                              fetchData();
+                            } else {
+                              const data = await res.json();
+                              alert(data.error || "Error al eliminar");
+                            }
+                          } catch (e) {
+                            alert("Fallo de conexión al eliminar.");
                           }
-                        } catch (e) {
-                          alert("Fallo de conexión al eliminar.");
                         }
-                      }
-                    }}
-                    style={{
-                      background: "rgba(255,50,50,0.1)",
-                      border: "1px solid rgba(255,50,50,0.3)",
-                      color: "var(--color-error)",
-                      padding: "var(--space-2)",
-                      borderRadius: "var(--radius-md)",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      transition: "var(--transition-fast)",
-                    }}
-                    title="Eliminar Tarea"
-                  >
-                    🗑️
-                  </button>
-                )}
+                      }}
+                      style={{
+                        background: "rgba(255,50,50,0.1)",
+                        border: "1px solid rgba(255,50,50,0.3)",
+                        color: "var(--color-error)",
+                        padding: "var(--space-2)",
+                        borderRadius: "var(--radius-md)",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transition: "var(--transition-fast)",
+                      }}
+                      title="Eliminar Tarea"
+                    >
+                      🗑️
+                    </button>
+                  )}
                 <button
                   onClick={() => setSelectedTask(null)}
                   style={{
@@ -1382,7 +1382,7 @@ export default function UserTareasPage() {
                           }}
                         >
                           {msg.author.name}{" "}
-                          {msg.author.role === "STAFF" ? "🤖 (IA)" : ""}
+                          {msg.author.role === "STAFF" ? "(IA)" : ""}
                         </div>
                         <div
                           style={{
@@ -1602,67 +1602,67 @@ export default function UserTareasPage() {
               >
                 {(currentUserRole === "DIRECTOR" ||
                   currentUserId === selectedTask.assignee?.id) && (
-                  <>
-                    {selectedTask.status !== "COMPLETADA" &&
-                      selectedTask.status !== "REVISION" && (
-                        <button
-                          onClick={() => {
-                            handleSendMessage(
-                              undefined,
-                              "Perfecto, estoy revisando. Más tarde te doy novedades.",
-                            );
-                          }}
-                          disabled={sendingMsg}
-                          style={{
-                            background: "var(--color-bg-elevated)",
-                            color: "var(--color-info)",
-                            border: `1px solid var(--color-border)`,
-                            padding: "4px 12px",
-                            borderRadius: "16px",
-                            fontSize: "0.8rem",
-                            fontWeight: "bold",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 4,
-                          }}
-                        >
-                          En Revisión
-                        </button>
-                      )}
-                    <button
-                      onClick={handleCompleteTaskClick}
-                      disabled={
-                        sendingMsg || selectedTask.status === "COMPLETADA"
-                      }
-                      style={{
-                        background:
-                          selectedTask.status === "COMPLETADA"
-                            ? "var(--color-bg-elevated)"
-                            : "var(--color-success)20",
-                        color:
-                          selectedTask.status === "COMPLETADA"
-                            ? "var(--color-text-muted)"
-                            : "var(--color-success)",
-                        border: `1px solid ${selectedTask.status === "COMPLETADA" ? "var(--color-border)" : "var(--color-success)"}`,
-                        padding: "4px 12px",
-                        borderRadius: "16px",
-                        fontSize: "0.8rem",
-                        fontWeight: "bold",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 4,
-                      }}
-                    >
-                      {selectedTask.status === "COMPLETADA"
-                        ? "Tarea Completada"
-                        : selectedTask.evidenceRequired
-                          ? "Completar con evidencia 📸"
-                          : "Completar Tarea"}
-                    </button>
-                  </>
-                )}
+                    <>
+                      {selectedTask.status !== "COMPLETADA" &&
+                        selectedTask.status !== "REVISION" && (
+                          <button
+                            onClick={() => {
+                              handleSendMessage(
+                                undefined,
+                                "Perfecto, estoy revisando. Más tarde te doy novedades.",
+                              );
+                            }}
+                            disabled={sendingMsg}
+                            style={{
+                              background: "var(--color-bg-elevated)",
+                              color: "var(--color-info)",
+                              border: `1px solid var(--color-border)`,
+                              padding: "4px 12px",
+                              borderRadius: "16px",
+                              fontSize: "0.8rem",
+                              fontWeight: "bold",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                          >
+                            En Revisión
+                          </button>
+                        )}
+                      <button
+                        onClick={handleCompleteTaskClick}
+                        disabled={
+                          sendingMsg || selectedTask.status === "COMPLETADA"
+                        }
+                        style={{
+                          background:
+                            selectedTask.status === "COMPLETADA"
+                              ? "var(--color-bg-elevated)"
+                              : "var(--color-success)20",
+                          color:
+                            selectedTask.status === "COMPLETADA"
+                              ? "var(--color-text-muted)"
+                              : "var(--color-success)",
+                          border: `1px solid ${selectedTask.status === "COMPLETADA" ? "var(--color-border)" : "var(--color-success)"}`,
+                          padding: "4px 12px",
+                          borderRadius: "16px",
+                          fontSize: "0.8rem",
+                          fontWeight: "bold",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                      >
+                        {selectedTask.status === "COMPLETADA"
+                          ? "Tarea Completada"
+                          : selectedTask.evidenceRequired
+                            ? "Completar con evidencia 📸"
+                            : "Completar Tarea"}
+                      </button>
+                    </>
+                  )}
               </div>
               <form
                 onSubmit={(e) => handleSendMessage(e)}
@@ -1705,7 +1705,7 @@ export default function UserTareasPage() {
                       if (recognitionChatRef.current) {
                         try {
                           recognitionChatRef.current.start();
-                        } catch (e) {}
+                        } catch (e) { }
                       } else {
                         setIsRecordingChat(false);
                       }

@@ -68,11 +68,11 @@ export default function CuentasPage() {
 
   const typeConfig: Record<
     string,
-    { icon: string; color: string; bg: string }
+    { icon: React.ReactNode; color: string; bg: string }
   > = {
-    BANCARIA: { icon: "🏦", color: "#00e676", bg: "rgba(0,230,118,0.12)" },
-    CAJA: { icon: "💵", color: "#ffa726", bg: "rgba(255,167,38,0.12)" },
-    DIGITAL: { icon: "💳", color: "#7c4dff", bg: "rgba(124,77,255,0.12)" },
+    BANCARIA: { icon: <span className="nav-dot" style={{ width: 12, height: 12, display: "inline-block", background: "#00e676", boxShadow: "0 0 10px #00e676" }}></span>, color: "#00e676", bg: "rgba(0,230,118,0.12)" },
+    CAJA: { icon: <span className="nav-dot" style={{ width: 12, height: 12, display: "inline-block", background: "#ffa726", boxShadow: "0 0 10px #ffa726" }}></span>, color: "#ffa726", bg: "rgba(255,167,38,0.12)" },
+    DIGITAL: { icon: <span className="nav-dot" style={{ width: 12, height: 12, display: "inline-block", background: "#7c4dff", boxShadow: "0 0 10px #7c4dff" }}></span>, color: "#7c4dff", bg: "rgba(124,77,255,0.12)" },
   };
 
   const totalBalance = accounts.reduce((s, a) => s + Number(a.balance), 0);
@@ -96,9 +96,12 @@ export default function CuentasPage() {
               fontWeight: 800,
               fontSize: "var(--text-3xl)",
               color: "var(--color-text-primary)",
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-3)",
             }}
           >
-            🏦 Cuentas Financieras
+            <span className="nav-dot" style={{ width: 12, height: 12, display: "inline-block" }}></span> Cuentas Financieras
           </h1>
           <p
             style={{
@@ -174,7 +177,9 @@ export default function CuentasPage() {
           className="glass-card"
           style={{ padding: "var(--space-12)", textAlign: "center" }}
         >
-          <div style={{ fontSize: 64, marginBottom: "var(--space-4)" }}>🏦</div>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-4)" }}>
+            <span className="nav-dot" style={{ width: 32, height: 32, display: "inline-block" }}></span>
+          </div>
           <p
             style={{
               color: "var(--color-text-muted)",
@@ -227,7 +232,7 @@ export default function CuentasPage() {
                     marginBottom: "var(--space-3)",
                   }}
                 >
-                  <span style={{ fontSize: 28 }}>{cfg.icon}</span>
+                  <span style={{ display: "flex", alignItems: "center" }}>{cfg.icon}</span>
                   <span
                     style={{
                       padding: "2px 10px",
@@ -328,7 +333,7 @@ export default function CuentasPage() {
                 marginBottom: "var(--space-4)",
               }}
             >
-              🏦 Nueva Cuenta
+              Nueva Cuenta
             </h2>
             <div
               style={{
@@ -365,7 +370,7 @@ export default function CuentasPage() {
                         textAlign: "center",
                       }}
                     >
-                      {cfg.icon} {t}
+                      <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-2)" }}>{cfg.icon} {t}</span>
                     </button>
                   );
                 })}

@@ -85,8 +85,8 @@ export default function LayoutShell({
           );
           setUserRole(
             user.user_metadata?.jobTitle ||
-              user.user_metadata?.role ||
-              "Personal Externo",
+            user.user_metadata?.role ||
+            "Personal Externo",
           );
           setUserAvatar("");
 
@@ -115,7 +115,7 @@ export default function LayoutShell({
                 }
               }
             })
-            .catch(() => {});
+            .catch(() => { });
 
           // Fetch aggregated unread messages + pending tasks count
           fetch(`/api/notifications/sidebar`)
@@ -125,7 +125,7 @@ export default function LayoutShell({
                 setPendingTasksCount(data.count);
               }
             })
-            .catch(() => {});
+            .catch(() => { });
 
           // We can set up an interval to refresh this, doing it every 15 seconds to simulate real-time notification
           const interval = setInterval(() => {
@@ -136,7 +136,7 @@ export default function LayoutShell({
                   setPendingTasksCount(data.count);
                 }
               })
-              .catch(() => {});
+              .catch(() => { });
           }, 15000);
           return () => clearInterval(interval);
         } else {
@@ -187,9 +187,10 @@ export default function LayoutShell({
                 textDecoration: "none",
               }}
             >
-              <span style={{ fontSize: "1.2rem", filter: "grayscale(0.2)" }}>
-                🔔
-              </span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--color-text-muted)" }}>
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
               <div
                 style={{
                   position: "absolute",

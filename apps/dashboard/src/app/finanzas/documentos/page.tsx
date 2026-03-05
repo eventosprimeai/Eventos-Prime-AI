@@ -14,7 +14,9 @@ export default function DocumentosPage() {
           marginBottom: "var(--space-2)",
         }}
       >
-        📄 Documentos
+        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "var(--text-3xl)", color: "var(--color-text-primary)", display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+          <span className="nav-dot" style={{ width: 12, height: 12, display: "inline-block" }}></span> Documentos
+        </h1>
       </h1>
       <p
         style={{
@@ -29,7 +31,9 @@ export default function DocumentosPage() {
         className="glass-card"
         style={{ padding: "var(--space-12)", textAlign: "center" }}
       >
-        <div style={{ fontSize: 64, marginBottom: "var(--space-4)" }}>🏗️</div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-4)" }}>
+          <span className="nav-dot" style={{ width: 32, height: 32, display: "inline-block", background: "var(--color-text-muted)", boxShadow: "0 0 10px var(--color-text-muted)" }}></span>
+        </div>
         <h2
           style={{
             fontWeight: 700,

@@ -199,22 +199,22 @@ export default function FinanzasPage() {
             <KPICard
               label="Ingresos"
               value={formatCurrency(kpis?.totalIngresos || 0)}
-              color="#00e676"
+              variant="success"
             />
             <KPICard
               label="Gastos"
               value={formatCurrency(kpis?.totalGastos || 0)}
-              color="#ff5252"
+              variant="warning"
             />
             <KPICard
               label="Balance Neto"
               value={formatCurrency(kpis?.balanceNeto || 0)}
-              color={(kpis?.balanceNeto || 0) >= 0 ? "#00e676" : "#ff5252"}
+              variant={(kpis?.balanceNeto || 0) >= 0 ? "success" : "warning"}
             />
             <KPICard
               label="Saldo en Cuentas"
               value={formatCurrency(kpis?.totalBalance || 0)}
-              color="var(--color-accent)"
+              variant="prime"
             />
           </div>
 
@@ -631,24 +631,25 @@ export default function FinanzasPage() {
 function KPICard({
   label,
   value,
-  color,
+  variant,
 }: {
   label: string;
   value: string;
-  color: string;
+  variant: "success" | "warning" | "info" | "prime" | "neutral";
 }) {
   return (
     <div
-      className="glass-card"
+      className={`stat-card stat-card--${variant}`}
       style={{
-        padding: "var(--space-5)",
         display: "flex",
         flexDirection: "column",
         gap: "var(--space-2)",
       }}
     >
+      <div className="stat-card-glow"></div>
       <div
-        style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}
+        className="stat-label"
+        style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: 0 }}
       >
         <span
           className="nav-dot"
@@ -656,14 +657,11 @@ function KPICard({
             display: "inline-block",
             width: 10,
             height: 10,
-            background: color,
-            boxShadow: `0 0 10px ${color}`,
+            background: "none", // El bg se asigna via CSS ::before o es redundante
           }}
         ></span>
         <span
           style={{
-            fontSize: "var(--text-xs)",
-            color: "var(--color-text-muted)",
             textTransform: "uppercase",
             letterSpacing: "0.05em",
             fontWeight: 600,
@@ -672,14 +670,7 @@ function KPICard({
           {label}
         </span>
       </div>
-      <span
-        style={{
-          fontSize: "var(--text-2xl)",
-          fontWeight: 800,
-          color,
-          fontFamily: "var(--font-display)",
-        }}
-      >
+      <span className="stat-value" style={{ color: "var(--color-text-primary)", position: "relative", zIndex: 1 }}>
         {value}
       </span>
     </div>

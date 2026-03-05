@@ -74,7 +74,7 @@ export default function DashboardPage() {
             events: activeEvents.length,
           }));
         }
-      } catch {}
+      } catch { }
 
       // Fetch tasks breakdown
       try {
@@ -107,7 +107,7 @@ export default function DashboardPage() {
           inProgress: inProgressCount,
           tasksCompleted: completedCount,
         }));
-      } catch {}
+      } catch { }
 
       setLoading(false);
     }
@@ -169,7 +169,7 @@ export default function DashboardPage() {
       if (recognitionRef.current) {
         try {
           recognitionRef.current.start();
-        } catch (e) {}
+        } catch (e) { }
       } else {
         setIsRecording(false);
       }
@@ -523,10 +523,11 @@ export default function DashboardPage() {
       {/* Stats */}
       <div className="stats-grid">
         <div
-          className="stat-card"
+          className="stat-card stat-card--success"
           onClick={() => router.push("/tareas")}
           style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
         >
+          <div className="stat-card-glow"></div>
           <div className="stat-label">Tareas Completadas</div>
           <div
             className="stat-value"
@@ -536,48 +537,43 @@ export default function DashboardPage() {
           </div>
         </div>
         <div
-          className="stat-card"
+          className={`stat-card ${stats.pending > 0 ? "stat-card--warning" : "stat-card--neutral"}`}
           onClick={() => router.push("/tareas/estado/pendientes")}
           style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
         >
+          <div className="stat-card-glow"></div>
           <div className="stat-label">Tareas Pendientes</div>
           <div
             className="stat-value"
-            style={{
-              color:
-                stats.pending > 0
-                  ? "var(--color-rag-red)"
-                  : "var(--color-success)",
-            }}
+            style={{ color: "var(--color-text-primary)" }}
           >
             {stats.pending}
           </div>
         </div>
         <div
-          className="stat-card"
+          className={`stat-card ${stats.inProgress > 0 ? "stat-card--info" : "stat-card--neutral"}`}
           onClick={() => router.push("/tareas/estado/en-progreso")}
           style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
         >
+          <div className="stat-card-glow"></div>
           <div className="stat-label">Tareas en Progreso</div>
           <div
             className="stat-value"
-            style={{
-              color:
-                stats.inProgress > 0
-                  ? "var(--color-info)"
-                  : "var(--color-text-muted)",
-            }}
+            style={{ color: "var(--color-text-primary)" }}
           >
             {stats.inProgress}
           </div>
         </div>
         <div
-          className="stat-card"
+          className={`stat-card ${stats.events > 0 ? "stat-card--prime" : "stat-card--neutral"}`}
           onClick={() => router.push("/eventos")}
           style={{ cursor: "pointer", transition: "var(--transition-fast)" }}
         >
+          <div className="stat-card-glow"></div>
           <div className="stat-label">Eventos Activos</div>
-          <div className="stat-value">{stats.events}</div>
+          <div className="stat-value" style={{ color: "var(--color-text-primary)" }}>
+            {stats.events}
+          </div>
         </div>
       </div>
 

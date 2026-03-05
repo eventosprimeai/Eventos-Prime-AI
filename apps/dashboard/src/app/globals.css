@@ -379,15 +379,153 @@ textarea {
 
 .stat-card {
   background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   padding: var(--space-5);
-  transition: var(--transition-fast);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
 }
 
+/* Base top glowing line */
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: transparent;
+  transition: all var(--transition-base);
+}
+
+/* Ambient glow element (must be placed inside .stat-card) */
+.stat-card-glow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 25px;
+  background: transparent;
+  filter: blur(25px);
+  opacity: 0.4;
+  transition: all var(--transition-base);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* HOVER EFFECT GLOBALS */
 .stat-card:hover {
-  border-color: var(--color-border-light);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+.stat-card:hover .stat-card-glow {
+  opacity: 0.8;
+  height: 35px;
+}
+
+/* ─────────────────────────────────────────────────────────
+ * STATE VARIANTS FOR STAT CARDS
+ * ───────────────────────────────────────────────────────── */
+
+/* 1. SUCCESS (Green) */
+.stat-card--success {
+  border-color: rgba(34, 197, 94, 0.2);
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.03) 0%, rgba(20, 15, 30, 0.4) 100%);
+}
+
+.stat-card--success::before {
+  background: var(--color-success);
+  box-shadow: 0 0 10px var(--color-success);
+}
+
+.stat-card--success .stat-card-glow {
+  background: var(--color-success);
+}
+
+.stat-card--success:hover {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+/* 2. WARNING (Red/Amber) */
+.stat-card--warning {
+  border-color: rgba(239, 68, 68, 0.2);
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.03) 0%, rgba(20, 15, 30, 0.4) 100%);
+}
+
+.stat-card--warning::before {
+  background: var(--color-rag-red);
+  box-shadow: 0 0 10px var(--color-rag-red);
+}
+
+.stat-card--warning .stat-card-glow {
+  background: var(--color-rag-red);
+}
+
+.stat-card--warning:hover {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* 3. INFO (Blue/Purple) */
+.stat-card--info {
+  border-color: rgba(139, 92, 246, 0.2);
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.03) 0%, rgba(20, 15, 30, 0.4) 100%);
+}
+
+.stat-card--info::before {
+  background: var(--color-prime-500);
+  box-shadow: 0 0 10px var(--color-prime-500);
+}
+
+.stat-card--info .stat-card-glow {
+  background: var(--color-prime-500);
+}
+
+.stat-card--info:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+/* 4. PRIME (Gold Brand) */
+.stat-card--prime {
+  border-color: var(--color-border-gold);
+  background: linear-gradient(180deg, rgba(0, 214, 143, 0.03) 0%, rgba(20, 15, 30, 0.4) 100%);
+}
+
+.stat-card--prime::before {
+  background: var(--color-gold-400);
+  box-shadow: 0 0 10px var(--color-gold-400);
+}
+
+.stat-card--prime .stat-card-glow {
+  background: var(--color-gold-400);
+}
+
+.stat-card--prime:hover {
+  border-color: rgba(0, 214, 143, 0.4);
+}
+
+/* 5. NEUTRAL (Gray) */
+.stat-card--neutral {
+  border-color: var(--color-border-light);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(20, 15, 30, 0.4) 100%);
+}
+
+.stat-card--neutral::before {
+  background: var(--color-text-muted);
+}
+
+.stat-card--neutral .stat-card-glow {
+  background: var(--color-text-muted);
+  opacity: 0.15;
+}
+
+.stat-card--neutral:hover {
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .stat-label {

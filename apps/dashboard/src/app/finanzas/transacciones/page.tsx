@@ -53,6 +53,8 @@ export default function TransaccionesPage() {
     const [scanning, setScanning] = useState(false);
     const [ocrConfidence, setOcrConfidence] = useState<number | null>(null);
     const [ocrProvider, setOcrProvider] = useState("");
+    const [ocrError, setOcrError] = useState("");
+    const [ocrFileName, setOcrFileName] = useState("");
 
     useEffect(() => { loadData(); }, []);
 
@@ -64,10 +66,12 @@ export default function TransaccionesPage() {
                 fetch("/api/events"),
                 fetch("/api/finance/accounts"),
             ]);
-            setTransactions(await txRes.json());
+            const txData = await txRes.json();
+            setTransactions(Array.isArray(txData) ? txData : []);
             const evData = await evRes.json();
             setEvents(Array.isArray(evData) ? evData : []);
-            setAccounts(await accRes.json());
+            const accData = await accRes.json();
+            setAccounts(Array.isArray(accData) ? accData : []);
         } catch (e) { console.error(e); }
         setLoading(false);
     }
@@ -76,36 +80,58 @@ export default function TransaccionesPage() {
         setScanning(true);
         setOcrConfidence(null);
         setOcrProvider("");
+        setOcrError("");
+        setOcrFileName(file.name);
+
+        // Validate file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            setOcrError("Archivo demasiado grande (máx. 10MB)");
+            setScanning(false);
+            return;
+        }
+
         try {
             const reader = new FileReader();
+            reader.onerror = () => {
+                setOcrError("Error al leer el archivo");
+                setScanning(false);
+            };
             reader.onload = async () => {
-                const base64 = reader.result as string;
-                const res = await fetch("/api/finance/ocr", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ imageBase64: base64 }),
-                });
-                const data = await res.json();
-                if (data.success && data.extracted) {
-                    const e = data.extracted;
-                    setForm(f => ({
-                        ...f,
-                        type: e.tipo || f.type,
-                        category: CATEGORIES.includes(e.categoria) ? e.categoria : f.category,
-                        description: e.descripcion || f.description,
-                        amount: e.monto ? String(e.monto) : f.amount,
-                        taxRate: e.tasaIVA ? String(e.tasaIVA) : f.taxRate,
-                        date: e.fecha || f.date,
-                        reference: e.referencia || f.reference,
-                    }));
-                    setOcrConfidence(e.confianza || null);
-                    setOcrProvider(e.proveedor || "");
+                try {
+                    const base64 = reader.result as string;
+                    const res = await fetch("/api/finance/ocr", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ imageBase64: base64 }),
+                    });
+                    const data = await res.json();
+
+                    if (data.success && data.extracted) {
+                        const e = data.extracted;
+                        setForm(f => ({
+                            ...f,
+                            type: e.tipo || f.type,
+                            category: CATEGORIES.includes(e.categoria) ? e.categoria : f.category,
+                            description: e.descripcion || f.description,
+                            amount: e.monto ? String(e.monto) : f.amount,
+                            taxRate: e.tasaIVA ? String(e.tasaIVA) : f.taxRate,
+                            date: e.fecha || f.date,
+                            reference: e.referencia || f.reference,
+                        }));
+                        setOcrConfidence(e.confianza || null);
+                        setOcrProvider(e.proveedor || "");
+                        setOcrError("");
+                    } else {
+                        setOcrError(data.error || "No se pudieron extraer datos del documento");
+                    }
+                } catch (fetchErr: any) {
+                    setOcrError(fetchErr.message || "Error de conexión con el servidor");
                 }
                 setScanning(false);
             };
             reader.readAsDataURL(file);
-        } catch (err) {
-            console.error(err);
+        } catch (err: any) {
+            setOcrError(err.message || "Error inesperado");
             setScanning(false);
         }
     }
@@ -295,29 +321,56 @@ export default function TransaccionesPage() {
                             {/* OCR Scanner */}
                             <div style={{
                                 padding: "var(--space-3)", borderRadius: "var(--radius-lg)",
-                                border: "2px dashed var(--color-border)", textAlign: "center",
-                                background: scanning ? "rgba(124,77,255,0.08)" : "var(--color-bg-input)",
+                                border: ocrError ? "2px dashed #ff5252" : ocrConfidence !== null ? "2px solid #00e676" : "2px dashed var(--color-border)",
+                                textAlign: "center",
+                                background: scanning ? "rgba(124,77,255,0.08)" : ocrConfidence !== null ? "rgba(0,230,118,0.05)" : ocrError ? "rgba(255,82,82,0.05)" : "var(--color-bg-input)",
                                 transition: "var(--transition-fast)",
                             }}>
                                 {scanning ? (
-                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-2)", padding: "var(--space-2)" }}>
-                                        <span style={{ fontSize: 20, animation: "spin 1s linear infinite" }}>🔄</span>
+                                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-2)", padding: "var(--space-3)" }}>
+                                        <div style={{ width: 28, height: 28, border: "3px solid var(--color-accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
                                         <span style={{ color: "var(--color-accent)", fontWeight: 600, fontSize: "var(--text-sm)" }}>Gemini AI analizando comprobante...</span>
+                                        {ocrFileName && <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>📎 {ocrFileName}</span>}
                                     </div>
                                 ) : (
-                                    <label style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-2)", padding: "var(--space-1)" }}>
-                                        <span style={{ fontSize: 20 }}>📷</span>
-                                        <span style={{ color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "var(--text-sm)" }}>Escanear Comprobante (IA)</span>
-                                        <input type="file" accept="image/*" capture="environment" style={{ display: "none" }}
+                                    <label style={{ cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-1)", padding: "var(--space-2)" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+                                            <span style={{ fontSize: 20 }}>📷</span>
+                                            <span style={{ color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "var(--text-sm)" }}>
+                                                {ocrFileName ? "Escanear otro comprobante" : "Escanear Comprobante (IA)"}
+                                            </span>
+                                        </div>
+                                        <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
+                                            Sube imagen o PDF de factura, recibo o depósito
+                                        </span>
+                                        <input type="file" accept="image/*,.pdf,application/pdf" style={{ display: "none" }}
                                             onChange={e => { if (e.target.files?.[0]) handleOCR(e.target.files[0]); }} />
                                     </label>
                                 )}
+                                {ocrFileName && !scanning && ocrConfidence === null && !ocrError && (
+                                    <div style={{ marginTop: "var(--space-1)", fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>📎 {ocrFileName}</div>
+                                )}
                                 {ocrConfidence !== null && (
-                                    <div style={{ marginTop: "var(--space-2)", display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-2)" }}>
-                                        <span style={{ fontSize: "var(--text-xs)", color: ocrConfidence > 70 ? "#00e676" : "#ffa726", fontWeight: 700 }}>
-                                            ✓ Datos extraídos • Confianza: {ocrConfidence}%
-                                        </span>
-                                        {ocrProvider && <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>• {ocrProvider}</span>}
+                                    <div style={{ marginTop: "var(--space-2)", padding: "var(--space-2)", borderRadius: "var(--radius-md)", background: "rgba(0,230,118,0.08)" }}>
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-2)" }}>
+                                            <span style={{ fontSize: "var(--text-sm)", color: "#00e676", fontWeight: 700 }}>
+                                                ✅ Datos extraídos automáticamente
+                                            </span>
+                                        </div>
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-3)", marginTop: 4 }}>
+                                            <span style={{ fontSize: "var(--text-xs)", color: ocrConfidence > 70 ? "#00e676" : "#ffa726", fontWeight: 600 }}>
+                                                Confianza: {ocrConfidence}%
+                                            </span>
+                                            {ocrProvider && <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>Proveedor: {ocrProvider}</span>}
+                                            {ocrFileName && <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>📎 {ocrFileName}</span>}
+                                        </div>
+                                        <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginTop: 4 }}>Verifica los datos abajo y ajusta si es necesario</div>
+                                    </div>
+                                )}
+                                {ocrError && (
+                                    <div style={{ marginTop: "var(--space-2)", padding: "var(--space-2)", borderRadius: "var(--radius-md)", background: "rgba(255,82,82,0.08)" }}>
+                                        <span style={{ fontSize: "var(--text-xs)", color: "#ff5252", fontWeight: 600 }}>❌ {ocrError}</span>
+                                        {ocrFileName && <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginLeft: 8 }}>({ocrFileName})</span>}
                                     </div>
                                 )}
                             </div>

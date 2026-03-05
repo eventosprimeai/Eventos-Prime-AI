@@ -20,6 +20,7 @@ export default function EventosPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isDirector, setIsDirector] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -39,6 +40,15 @@ export default function EventosPage() {
     try {
       const res = await fetch("/api/events");
       if (res.ok) setEvents(await res.json());
+
+      const authRes = await fetch("/api/auth/sync", { method: "POST" });
+      if (authRes.ok) {
+        const { dbUser } = await authRes.json();
+        // Allow ONLY DIRECTOR or ADMIN to create events mapping the business logic
+        if (dbUser?.role === "DIRECTOR" || dbUser?.role === "ADMIN") {
+          setIsDirector(true);
+        }
+      }
     } catch {
     } finally {
       setLoading(false);
@@ -131,30 +141,32 @@ export default function EventosPage() {
             {events.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          style={{
-            padding: "var(--space-2) var(--space-5)",
-            background: showForm
-              ? "var(--color-bg-card)"
-              : "var(--gradient-gold)",
-            color: showForm
-              ? "var(--color-text-secondary)"
-              : "var(--color-bg-primary)",
-            border: showForm ? "1px solid var(--color-border)" : "none",
-            borderRadius: "var(--radius-lg)",
-            fontSize: "var(--text-sm)",
-            fontWeight: 700,
-            cursor: "pointer",
-            fontFamily: "var(--font-sans)",
-          }}
-        >
-          {showForm ? "Cancelar" : "+ Crear Evento"}
-        </button>
+        {isDirector && (
+          <button
+            onClick={() => setShowForm(!showForm)}
+            style={{
+              padding: "var(--space-2) var(--space-5)",
+              background: showForm
+                ? "var(--color-bg-card)"
+                : "var(--gradient-gold)",
+              color: showForm
+                ? "var(--color-text-secondary)"
+                : "var(--color-bg-primary)",
+              border: showForm ? "1px solid var(--color-border)" : "none",
+              borderRadius: "var(--radius-lg)",
+              fontSize: "var(--text-sm)",
+              fontWeight: 700,
+              cursor: "pointer",
+              fontFamily: "var(--font-sans)",
+            }}
+          >
+            {showForm ? "Cancelar" : "+ Crear Evento"}
+          </button>
+        )}
       </div>
 
       {/* Create Form */}
-      {showForm && (
+      {showForm && isDirector && (
         <form
           onSubmit={handleSubmit}
           className="glass-card"
@@ -444,15 +456,17 @@ export default function EventosPage() {
           >
             No hay eventos creados aún
           </p>
-          <p
-            style={{
-              color: "var(--color-text-muted)",
-              fontSize: "var(--text-sm)",
-              marginTop: "var(--space-2)",
-            }}
-          >
-            Haz click en &quot;+ Crear Evento&quot; para empezar
-          </p>
+          {isDirector && (
+            <p
+              style={{
+                color: "var(--color-text-muted)",
+                fontSize: "var(--text-sm)",
+                marginTop: "var(--space-2)",
+              }}
+            >
+              Haz click en &quot;+ Crear Evento&quot; para empezar
+            </p>
+          )}
         </div>
       ) : (
         <div className="event-grid">

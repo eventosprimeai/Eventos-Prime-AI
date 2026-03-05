@@ -48,6 +48,11 @@ export async function POST(request: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
+        const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+        if (!dbUser || (dbUser.role !== "DIRECTOR" && dbUser.role !== "ADMIN")) {
+            return NextResponse.json({ error: "Solo los Directores o Socios pueden crear eventos" }, { status: 403 });
+        }
+
         const body = await request.json();
 
         const event = await prisma.event.create({

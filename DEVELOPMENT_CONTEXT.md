@@ -268,14 +268,16 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 5 de marzo de 2026 (02:22 local)
+**Ultimo Punto de Restablecimiento:** 5 de marzo de 2026 (14:35 local)
 **Estatus Actual:**
+- **Base de Datos:** Se ha realizado una limpieza profunda de registros de prueba (tareas, sponsors, eventos, checks) a través de un TRUNCATE en cascada, dejando el entorno de datos limpio y como nuevo, manteniendo intactas las configuraciones, plantillas y usuarios.
 - **Dashboard desplegado en producción:** `https://app.eventosprimeai.com` — Online con SSL, HTTP/2, PM2, y Nginx.
 - **API REST pública:** `https://api.eventosprimeai.com` — Gateway para webhooks y servicios externos.
 - **Desarrollo local activo en `localhost:3001`** — Se sigue desarrollando localmente.
 - **Vertex AI conectado:** $300 créditos GCP activos, service account con permisos `aiplatform.user`.
 
 **Logros Alcanzados (Sesión 5 de marzo 2026):**
+  - **Limpieza de Datos de Prueba:** Script `wipe.ts` ejecutado en base de datos PostgreSQL, dejando el sistema en estado "Recién Instalado" sin perder las funciones ni usuarios. Tablas truncadas: tareas, eventos, caja, chat IA, tickets, sponsors, checklist y más.
   - **Módulo Financiero Completo (Fases 1-3):** 7 nuevos modelos Prisma + 6 enums. 5 API routes financieras. 8 páginas frontend (panel, transacciones, cuentas, presupuesto, conciliación, impuestos, documentos, reportes). Sidebar actualizado con sección Finanzas.
   - **OCR Gemini Vision (Vertex AI):** Acepta imágenes y PDFs. Extrae tipo, monto, IVA, fecha, categoría, referencia, proveedor. Pre-llena formularios. Compresión de imágenes en cliente.
   - **Ecosistema IA (7 Endpoints):** assistant, report-summary, analyze-image, generate-email, generate-document, smart-insights, finance/ocr. Todos vía Vertex AI con fallback a AI Studio.
@@ -296,10 +298,10 @@ pm2 restart eventos-prime-dashboard
 ```
 
 **Siguiente Acción Pendiente:**
-1. Probar scanner OCR con facturas reales (Vertex AI sin rate limits).
-2. Registrar cuentas bancarias corporativas en `/finanzas/cuentas`.
-3. Implementar Conciliación Bancaria (Fase 3): OCR estados de cuenta + match.
-4. Implementar Generación de Documentos (Fase 4): Contratos y propuestas con IA.
+1. Empezar operaciones frescas en el sistema creando el evento, tareas y sponsors piloto.
+2. Probar scanner OCR con facturas reales (Vertex AI sin rate limits).
+3. Registrar cuentas bancarias corporativas en `/finanzas/cuentas`.
+4. Implementar Conciliación Bancaria (Fase 3): OCR estados de cuenta + match.
 5. Desarrollar PWA con Service Workers para notificaciones push.
 6. Configurar n8n workflows para automatización de reportes financieros.
 

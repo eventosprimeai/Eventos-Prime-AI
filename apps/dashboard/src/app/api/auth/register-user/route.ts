@@ -181,11 +181,11 @@ async function sendWelcomeEmail(userData: any) {
                 </p>
                 
                 <div style="background-color: #11111a; padding: 30px; border-radius: 16px; margin: 35px 0; border: 1px solid rgba(255,255,255,0.05);">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px;">
-                        <div style="background: rgba(0, 223, 129, 0.1); padding: 8px; border-radius: 8px; display: inline-flex;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00df81" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px;">
+                        <div style="background: rgba(0, 223, 129, 0.1); padding: 8px; border-radius: 8px; display: inline-block; vertical-align: middle; margin-right: 12px;">
+                            <svg style="display: block;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00df81" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
                         </div>
-                        <h3 style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 700;">Tus Credenciales de Acceso</h3>
+                        <h3 style="display: inline-block; vertical-align: middle; margin: 0; color: #ffffff; font-size: 16px; font-weight: 700;">Tus Credenciales de Acceso</h3>
                     </div>
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
@@ -208,9 +208,9 @@ async function sendWelcomeEmail(userData: any) {
                 </div>
 
                 <div style="background-color: #11111a; padding: 30px; border-radius: 16px; margin: 35px 0; border: 1px solid rgba(255,255,255,0.05);">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
-                        <div style="display: inline-flex; align-items: center; justify-content: center; width: 8px; height: 8px; background-color: #00df81; border-radius: 50%; box-shadow: 0 0 10px #00df81;"></div>
-                        <h3 style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 700;">Tus Funciones y Responsabilidades</h3>
+                    <div style="margin-bottom: 15px;">
+                        <span style="display: inline-block; vertical-align: middle; width: 8px; height: 8px; background-color: #00df81; border-radius: 50%; box-shadow: 0 0 10px #00df81; margin-right: 12px;"></span>
+                        <h3 style="display: inline-block; vertical-align: middle; margin: 0; color: #ffffff; font-size: 16px; font-weight: 700;">Tus Funciones y Responsabilidades</h3>
                     </div>
                     <p style="color: #8b8b99; font-size: 14px; margin-bottom: 20px;">Como parte vital de nuestro ecosistema, estas son algunas de tus áreas clave de enfoque:</p>
                     <ul style="list-style: none; padding: 0; margin: 0; color: #a1a1aa; font-size: 14px; line-height: 1.6;">
@@ -218,15 +218,19 @@ async function sendWelcomeEmail(userData: any) {
                     </ul>
                 </div>
                 
-                <div style="text-align: center; margin: 45px 0; display: flex; flex-direction: column; align-items: center; gap: 15px;">
-                    <a href="${downloadUrl}" style="background-color: #00df81; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 16px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0, 223, 129, 0.2);">
-                        Descargar App
-                    </a>
+                <div style="text-align: center; margin: 45px 0;">
+                    <div style="margin-bottom: 20px;">
+                        <a href="${downloadUrl}" style="background-color: #00df81; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 15px rgba(0, 223, 129, 0.2);">
+                            Descargar App
+                        </a>
+                    </div>
                     
-                    <a href="${loginUrl}/login" style="color: #8b8b99; text-decoration: none; font-size: 14px; margin-top: 10px; display: inline-flex; align-items: center; gap: 6px;">
-                        <span>O prefiere la versión web</span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                    </a>
+                    <div>
+                        <a href="${loginUrl}/login" style="color: #8b8b99; text-decoration: none; font-size: 14px; display: inline-block;">
+                            <span style="vertical-align: middle;">O prefiere la versión web </span>
+                            <svg style="vertical-align: middle; margin-left: 4px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        </a>
+                    </div>
                 </div>
                 
                 <p style="color: #8b8b99; font-size: 14px; text-align: center; line-height: 1.6; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 30px;">

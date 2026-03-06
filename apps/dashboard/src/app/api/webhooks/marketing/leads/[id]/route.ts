@@ -5,15 +5,16 @@ const WEBHOOK_SECRET = process.env.MARKETING_WEBHOOK_SECRET || "prime-marketing-
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { params } = context;
+        const { id } = await params;
         const authHeader = request.headers.get("authorization");
         if (authHeader !== `Bearer ${WEBHOOK_SECRET}`) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { id } = params;
         if (!id) {
             return NextResponse.json({ error: "Missing lead ID" }, { status: 400 });
         }

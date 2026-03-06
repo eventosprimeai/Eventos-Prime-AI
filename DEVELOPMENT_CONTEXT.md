@@ -268,28 +268,32 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 5 de marzo de 2026 (19:25 local)
+**Ultimo Punto de Restablecimiento:** 5 de marzo de 2026 (21:05 local)
 **Estatus Actual:**
-- **Manejo de Transacciones Obligatorio:** Se auditó y corrigió el Módulo Financiero. Las transacciones (Ingreso/Gasto) requieren estrictamente asignación de **Evento** (`eventId`) en frontend y backend, evitando transacciones huérfanas en el reporte financiero del proyecto.
-- **Participantes Kanban Independiente:** Desarrollé una página completa (`/participantes`) que utiliza el diseño *Glow/Glassmorphism* para gestionar el CRM Institucional en formato Pipeline.
-- **Hotfix (Supabase Schema Sync):** Se corrigió un error 500 y redirección indeseada (`router.push`) al visualizar los *detalles del evento* forzando sincronización entre el modelo `Participant` recién creado en Prisma y la máquina en la nube Supabase usando `npx prisma db push` y reiniciando el binario Next.js en el Host.
+- **Módulo de Marketing Leads (Tríada):** Se diseñó el módulo de "Leads / Participantes" bajo un esquema de la "Tríada de Automatización" (App Central + n8n + OpenClaw).
+- **Webhooks Recepción:** Se habilitaron webhooks protegidos (`POST /api/webhooks/marketing/leads` y `PUT /.../[id]`) para que n8n pueda insertar y mutar (actualizar etapa) entidades "Participant" al encontrar talentos.
+- **Prisma Schema Update:** El modelo `Participant` ha sido vitaminado con campos como `source`, `city`, `website`, y `socialUrl`. El estado `PROSPECTO` es el nuevo punto de entrada.
+- **Frontend Dashboard:** Nueva pantalla de Marketing en la barra lateral para visualizar de forma reactiva (con tarjetas) a los prospectos descubiertos.
+- **Simulación Exitosa:** Se verificó de extremo a extremo que el sistema está listo para recibir el JSON payload desde configuraciones de herramientas externas (n8n node request), con un test local de academias ecuatorianas insertado.
 
-**Logros Alcanzados (Sesión 5 de marzo 2026 - Tarde/Noche):**
-  - **Reestructuración de UI Premium:** Página completa Kanban y Lista de Instituciones y Personas VIP vinculada a la DB real.
-  - **Aislamiento de Datos por Evento:** Auditoría profunda de Módulo Financiero asegurando blindaje del presupuesto mediante dependencias obligatorias de Evento.
+**Logros Alcanzados (Sesión 5 de marzo 2026 - Noche):**
+  - **Reestructuración de UI Premium:** Módulo de Leads en `/marketing/leads` operando eficientemente.
+  - **Integración Arquitectónica AI Agent:** App Central lista para dialogar de forma asíncrona pero directa con herramientas AI de scraping y voz (Vapi / OpenClaw) administradas por n8n.
 
 **Proceso de Despliegue (para futuras actualizaciones):**
 ```bash
 # En local: push a GitHub (asegura correr db push local si hay cambios de base de datos)
-npx prisma db push
+npx prisma db push --schema=packages/db/prisma/schema.prisma
+git add .
+git commit -m "chore: deploy updates"
 git push origin main
 
 # En el servidor (ssh root@168.231.74.200):
-cd /opt/eventos-prime-ai && npm ci && cd packages/db && npx prisma generate && cd ../../apps/dashboard && rm -rf .next && npm run build && pm2 restart eventos-prime-dashboard
+cd /opt/eventos-prime-ai && git pull origin main && npm install && npx prisma generate --schema=packages/db/prisma/schema.prisma && npm run build -w apps/dashboard && pm2 restart eventos-prime-dashboard
 ```
 
 **Siguiente Acción Pendiente:**
-1. Probar el "Escáner Inteligente" (Integración OCR con Vertex AI) creando un Gasto subiendo la foto de una factura y analizando el reconocimiento.
-2. Explorar y vincular módulos complementarios de Notificaciones Push (PWA Service Workers) o bots (Telegram).
-3. Confirmar que en los KPIs de Estadísticas Generales en `Dashboard` y `Finanzas`, todo converja perfectamente por Evento.
+1. Desplegar los últimos cambios de webhooks y Schema a Producción (Hostinger) para que las URLs públicas puedan ser consumidas por el entorno n8n de producción.
+2. Explorar y vincular módulos complementarios de Notificaciones (alertas a Telegram / sistema Push interno) al recibir Leads nuevos para la gerencia operativa.
+3. Avanzar con el análisis de otras automatizaciones (ej. Finanzas o CRM Avanzado).
 

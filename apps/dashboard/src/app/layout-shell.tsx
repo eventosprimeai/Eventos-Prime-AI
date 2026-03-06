@@ -32,6 +32,12 @@ const navItems = [
     ],
   },
   {
+    section: "Marketing",
+    items: [
+      { label: "Leads (Prospectos)", href: "/marketing/leads", icon: "" },
+    ],
+  },
+  {
     section: "Finanzas",
     items: [
       { label: "Panel Financiero", href: "/finanzas", icon: "" },

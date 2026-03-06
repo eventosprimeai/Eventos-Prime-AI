@@ -436,11 +436,13 @@ enum IncidentSeverity {
 }
 
 enum ParticipantStage {
+  PROSPECTO
   CONTACTADO
   RESPONDIDO
   REUNION_PROGRAMADA
   CONFIRMADO
   CANCELADO
+  DESCARTADO
 }
 
 model Participant {
@@ -450,8 +452,12 @@ model Participant {
   contactName   String?
   contactEmail  String?
   contactPhone  String?
-  stage         ParticipantStage @default(CONTACTADO)
+  stage         ParticipantStage @default(PROSPECTO)
   notes         String?
+  source        String?          // "OpenClaw", "n8n", "Web"
+  city          String?
+  website       String?
+  socialUrl     String?
   eventId       String
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt

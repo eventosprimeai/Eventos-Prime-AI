@@ -268,20 +268,18 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 5 de marzo de 2026 (17:00 local)
+**Ultimo Punto de Restablecimiento:** 5 de marzo de 2026 (19:10 local)
 **Estatus Actual:**
-- **Sistema de Correos (Resend):** Perfectamente funcional en Producción (`noreply@eventosprimeai.com`). Logramos 100% de éxito de entrega (Bandeja de Entrada, Cero Spam) tras inyectar la llave en el `.env.local` del VPS y purgar fantasmas en Supabase.
-- **Rutas Inteligentes y UX:** Se mejoró el **Middleware y Login** agregando paso de estado en URI (`?next=`). Si un usuario sin sesión intenta abrir una ruta directa, el Guardian lo frena, pide login y luego lo teletransporta automáticamente a su destino original (ej. `/descarga`).
-- **Landing Page de Descarga (`/descarga`):** Reescribí toda la interfaz que estaba rota por depender de Tailwind, diseñándola en CSS manual con el verde corporativo neón de la marca. Flujo de Onboarding súper visual y ultra-premium logrado. 
-- **Base de Datos y Seguridad:** Script dinámico de borrado `wipe-users.ts` ajustado y funcionando perfectamente en la nube de Supabase.
-- **Dashboard desplegado en producción:** `https://app.eventosprimeai.com` — Online, Nginx+PM2, estable y veloz.
+- **Esquema de Datos Reestructurado:** Se eliminó la dependencia visual de "Checklists" e "Incidencias" en las tarjetas principales del Detalle de Evento (`/eventos/[id]`). 
+- **Nuevos Módulos Core por Evento:**
+  - Se implementó la vista de **Proveedores** nutriéndose directamente de `SupplierOrders`.
+  - Se creó el nuevo modelo en Prisma `Participant` con 5 etapas tipo embudo comercial: `CONTACTADO → RESPONDIDO → REUNION_PROGRAMADA → CONFIRMADO → CANCELADO`.
+- **API y Despliegue:** API Routes completas (`/api/participants`) construidas y desplegadas en la base de datos de producción (Supabase AWS us-east-2) y VPS hostinger (`eventosprimeai.com`). Todo funcional.
 
-**Logros Alcanzados (Sesión 5 de marzo 2026):**
-  - **Correos Electrónicos Premium:** Plantilla HTML Resend exitosamente probada en cuentas corporativas, llegando limpio al Inbox con diseño responsivo.
-  - **Experiencia de Usuario Fluida:** Redireccionamientos seguros sin frustraciones en el Login de Next.js.
-  - **UI/UX Custom:** `DescargaPage` maquetada en puro React Inline-Styles rescatando la visión de EventosPrime AI sin depender de frameworks ajenos.
-  - **Seguridad Garantizada:** Contraseñas manejadas y bóvedas encriptadas en VPS ocultas al repositorio público.
-  - **Módulo Financiero (Fases 1-3):** Operacional, con OCR de Vertex AI preparado para pruebas.
+**Logros Alcanzados (Sesión 5 de marzo 2026 - Tarde):**
+  - **Aislamiento de Datos por Evento:** Auditoría profunda confirmó que Tareas, Sponsors, Tickets, Proveedores, Presupuesto e Incidencias se vinculan nativa y obligatoriamente mediante `eventId`.
+  - **Reestructuración de UI Premium:** Las tarjetas superiores de Eventos ahora usan "Glow Cards" con variantes semánticas según su estado numérico e importancia.
+  - **Despliegue Full-Stack Exitoso:** Seedeo en Prisma y reestructuración completa del binario de Next.js en el VPS Hostinger.
 
 **Proceso de Despliegue (para futuras actualizaciones):**
 ```bash
@@ -289,16 +287,11 @@ cd apps/dashboard && npx next dev --port 3001
 git push origin main
 
 # En el servidor (ssh root@168.231.74.200):
-cd /opt/eventos-prime-ai
-git pull origin main
-npm run build -w apps/dashboard
-pm2 restart eventos-prime-dashboard
+cd /opt/eventos-prime-ai && npm ci && cd packages/db && npx prisma generate && cd ../../apps/dashboard && rm -rf .next && npm run build && pm2 restart eventos-prime-dashboard
 ```
 
 **Siguiente Acción Pendiente:**
-1. Crear el registro Principal del Director General de la empresa (tu cuenta principal) desde `app.eventosprimeai.com`.
-2. Empezar operaciones reales creando el Evento Base (ej. "Prime Festival") en la web.
+1. Crear la página completa e independiente de **Participantes** (`/participantes`) usando el formato visual Kanban de arrastrar y soltar, similar al de Sponsors.
+2. Auditar y corregir el Módulo Financiero, específicamente las transacciones que están globales y deberían filtrarse/forzarse por **Evento** (`eventId`).
 3. Probar escáner financiero (OCR facturas) usando tu motor Vertex AI conectado en el Módulo de Finanzas.
-4. Desarrollar un sistema automatizado Bot en Telegram/WhatsApp conectado al backend.
-5. PWA Support (Service Workers para notificaciones push en móviles).
 

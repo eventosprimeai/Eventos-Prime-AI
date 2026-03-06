@@ -61,8 +61,8 @@ export async function POST(request: Request) {
             accountId, eventId, supplierId,
         } = body;
 
-        if (!type || !category || !description || !amount || !date) {
-            return NextResponse.json({ error: "Campos requeridos: type, category, description, amount, date" }, { status: 400 });
+        if (!type || !category || !description || !amount || !date || !eventId) {
+            return NextResponse.json({ error: "Campos requeridos: type, category, description, amount, date, eventId" }, { status: 400 });
         }
 
         const transaction = await prisma.financialTransaction.create({

@@ -210,7 +210,7 @@ export default function TransaccionesPage() {
   }
 
   async function handleSubmit() {
-    if (!form.category || !form.description || !form.amount || !form.date)
+    if (!form.category || !form.description || !form.amount || !form.date || !form.eventId)
       return;
     setSaving(true);
     try {
@@ -1240,7 +1240,7 @@ export default function TransaccionesPage() {
                       marginBottom: 4,
                     }}
                   >
-                    Evento
+                    Evento *
                   </label>
                   <select
                     value={form.eventId}
@@ -1347,7 +1347,7 @@ export default function TransaccionesPage() {
                     >
                       {formatCurrency(
                         (parseFloat(form.amount) * parseFloat(form.taxRate)) /
-                          100,
+                        100,
                       )}
                     </span>
                   </div>
@@ -1374,7 +1374,7 @@ export default function TransaccionesPage() {
                     >
                       {formatCurrency(
                         parseFloat(form.amount) *
-                          (1 + parseFloat(form.taxRate) / 100),
+                        (1 + parseFloat(form.taxRate) / 100),
                       )}
                     </span>
                   </div>
@@ -1410,7 +1410,8 @@ export default function TransaccionesPage() {
                     saving ||
                     !form.category ||
                     !form.description ||
-                    !form.amount
+                    !form.amount ||
+                    !form.eventId
                   }
                   style={{
                     flex: 1,
@@ -1425,7 +1426,7 @@ export default function TransaccionesPage() {
                     fontWeight: 700,
                     cursor: saving ? "wait" : "pointer",
                     opacity:
-                      !form.category || !form.description || !form.amount
+                      !form.category || !form.description || !form.amount || !form.eventId
                         ? 0.5
                         : 1,
                   }}

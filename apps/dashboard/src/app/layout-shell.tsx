@@ -19,7 +19,6 @@ const navItems = [
     items: [
       { label: "Tareas", href: "/tareas", icon: "" },
       { label: "Consultas", href: "/consultas", icon: "" },
-      { label: "Checklists", href: "/checklists", icon: "" },
       { label: "Equipo", href: "/equipo", icon: "" },
     ],
   },
@@ -27,6 +26,7 @@ const navItems = [
     section: "Comercial",
     items: [
       { label: "Sponsors", href: "/sponsors", icon: "" },
+      { label: "Participantes", href: "/participantes", icon: "" },
       { label: "Proveedores", href: "/proveedores", icon: "" },
       { label: "Tickets", href: "/tickets", icon: "" },
     ],

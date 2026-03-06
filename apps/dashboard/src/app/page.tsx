@@ -31,6 +31,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("Director");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [dashboardEventId, setDashboardEventId] = useState("");
   const [showConsulta, setShowConsulta] = useState(false);
   const [consultaQuery, setConsultaQuery] = useState("");
   const [consultaEventId, setConsultaEventId] = useState("");
@@ -75,13 +76,12 @@ export default function DashboardPage() {
           }));
         }
       } catch { }
-
-      // Fetch tasks breakdown
       try {
+        const filterStr = dashboardEventId ? `&eventId=${dashboardEventId}` : "";
         const [resPending, resInProgress, resCompleted] = await Promise.all([
-          fetch("/api/tasks?status=PENDIENTE"),
-          fetch("/api/tasks?status=EN_PROGRESO,REVISION"),
-          fetch("/api/tasks?status=COMPLETADA"),
+          fetch(`/api/tasks?status=PENDIENTE${filterStr}`),
+          fetch(`/api/tasks?status=EN_PROGRESO,REVISION${filterStr}`),
+          fetch(`/api/tasks?status=COMPLETADA${filterStr}`),
         ]);
 
         let pendingCount = 0;
@@ -112,7 +112,7 @@ export default function DashboardPage() {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [dashboardEventId]);
 
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -294,7 +294,27 @@ export default function DashboardPage() {
             Panel de control — Eventos Prime AI
           </p>
         </div>
-        <div style={{ display: "flex", gap: "var(--space-2)" }}>
+        <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+          <select
+            value={dashboardEventId}
+            onChange={(e) => setDashboardEventId(e.target.value)}
+            style={{
+              padding: "var(--space-2) var(--space-3)",
+              background: "var(--color-bg-input)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "var(--radius-lg)",
+              color: "var(--color-text-primary)",
+              fontSize: "var(--text-sm)",
+              fontFamily: "var(--font-sans)",
+            }}
+          >
+            <option value="">Todos los eventos</option>
+            {events.map((ev) => (
+              <option key={ev.id} value={ev.id}>
+                {ev.name}
+              </option>
+            ))}
+          </select>
           <button
             onClick={() => setShowConsulta(!showConsulta)}
             className="glow-button"
@@ -587,129 +607,132 @@ export default function DashboardPage() {
           marginBottom: "var(--space-4)",
         }}
       >
-        Próximos Eventos
+        {dashboardEventId ? "Evento Seleccionado" : "Próximos Eventos"}
       </h2>
 
-      {events.length === 0 ? (
-        <div
-          className="event-card"
-          style={{ textAlign: "center", padding: "var(--space-12)" }}
-        >
-          <p
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginBottom: "var(--space-3)",
-            }}
+      {(() => {
+        const displayedEvents = dashboardEventId ? events.filter(e => e.id === dashboardEventId) : events;
+        return displayedEvents.length === 0 ? (
+          <div
+            className="event-card"
+            style={{ textAlign: "center", padding: "var(--space-12)" }}
           >
-            <span className="nav-dot" style={{ width: 16, height: 16 }}></span>
-          </p>
-          <p
-            style={{
-              color: "var(--color-text-secondary)",
-              fontSize: "var(--text-lg)",
-            }}
-          >
-            No hay eventos creados aún
-          </p>
-          <p
-            style={{
-              color: "var(--color-text-muted)",
-              fontSize: "var(--text-sm)",
-              marginTop: "var(--space-2)",
-            }}
-          >
-            Ve a{" "}
-            <a href="/eventos" style={{ color: "var(--color-gold-400)" }}>
-              Eventos
-            </a>{" "}
-            para crear el primero
-          </p>
-        </div>
-      ) : (
-        <div className="event-grid">
-          {events.map((event) => {
-            const status = statusLabel[event.status] || {
-              text: event.status,
-              color: "var(--color-text-muted)",
-            };
-            const start = new Date(event.startDate);
-            const daysUntil = Math.ceil(
-              (start.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-            );
+            <p
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "var(--space-3)",
+              }}
+            >
+              <span className="nav-dot" style={{ width: 16, height: 16 }}></span>
+            </p>
+            <p
+              style={{
+                color: "var(--color-text-secondary)",
+                fontSize: "var(--text-lg)",
+              }}
+            >
+              No hay eventos creados aún
+            </p>
+            <p
+              style={{
+                color: "var(--color-text-muted)",
+                fontSize: "var(--text-sm)",
+                marginTop: "var(--space-2)",
+              }}
+            >
+              Ve a{" "}
+              <a href="/eventos" style={{ color: "var(--color-gold-400)" }}>
+                Eventos
+              </a>{" "}
+              para crear el primero
+            </p>
+          </div>
+        ) : (
+          <div className="event-grid">
+            {displayedEvents.map((event) => {
+              const status = statusLabel[event.status] || {
+                text: event.status,
+                color: "var(--color-text-muted)",
+              };
+              const start = new Date(event.startDate);
+              const daysUntil = Math.ceil(
+                (start.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+              );
 
-            return (
-              <div
-                key={event.id}
-                className="event-card hoverable"
-                onClick={() => router.push(`/eventos/${event.id}`)}
-                style={{ cursor: "pointer", transition: "transform 0.2s" }}
-              >
+              return (
                 <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "start",
-                    marginBottom: "var(--space-3)",
-                  }}
+                  key={event.id}
+                  className="event-card hoverable"
+                  onClick={() => router.push(`/eventos/${event.id}`)}
+                  style={{ cursor: "pointer", transition: "transform 0.2s" }}
                 >
-                  <h3
+                  <div
                     style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: "var(--text-lg)",
-                      fontWeight: 700,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "start",
+                      marginBottom: "var(--space-3)",
                     }}
                   >
-                    {event.name}
-                  </h3>
-                  <span
+                    <h3
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontSize: "var(--text-lg)",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {event.name}
+                    </h3>
+                    <span
+                      style={{
+                        fontSize: "var(--text-xs)",
+                        padding: "var(--space-1) var(--space-2)",
+                        borderRadius: "var(--radius-full)",
+                        background: `${status.color}20`,
+                        color: status.color,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {status.text}
+                    </span>
+                  </div>
+                  <p
                     style={{
+                      color: "var(--color-text-muted)",
+                      fontSize: "var(--text-sm)",
+                      marginBottom: "var(--space-3)",
+                    }}
+                  >
+                    {start.toLocaleDateString("es-EC", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                    {daysUntil > 0
+                      ? ` — en ${daysUntil} días`
+                      : daysUntil === 0
+                        ? " — ¡Hoy!"
+                        : ` — hace ${Math.abs(daysUntil)} días`}
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "var(--space-4)",
                       fontSize: "var(--text-xs)",
-                      padding: "var(--space-1) var(--space-2)",
-                      borderRadius: "var(--radius-full)",
-                      background: `${status.color}20`,
-                      color: status.color,
-                      fontWeight: 600,
+                      color: "var(--color-text-muted)",
                     }}
                   >
-                    {status.text}
-                  </span>
+                    <span>{event._count.tasks} tareas</span>
+                    <span>{event._count.sponsorDeals} sponsors</span>
+                    <span>{event._count.tickets} tickets</span>
+                  </div>
                 </div>
-                <p
-                  style={{
-                    color: "var(--color-text-muted)",
-                    fontSize: "var(--text-sm)",
-                    marginBottom: "var(--space-3)",
-                  }}
-                >
-                  {start.toLocaleDateString("es-EC", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                  {daysUntil > 0
-                    ? ` — en ${daysUntil} días`
-                    : daysUntil === 0
-                      ? " — ¡Hoy!"
-                      : ` — hace ${Math.abs(daysUntil)} días`}
-                </p>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "var(--space-4)",
-                    fontSize: "var(--text-xs)",
-                    color: "var(--color-text-muted)",
-                  }}
-                >
-                  <span>{event._count.tasks} tareas</span>
-                  <span>{event._count.sponsorDeals} sponsors</span>
-                  <span>{event._count.tickets} tickets</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        );
+      })()}
     </div>
   );
 }

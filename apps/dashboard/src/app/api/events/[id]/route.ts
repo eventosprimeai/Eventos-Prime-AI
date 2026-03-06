@@ -28,6 +28,15 @@ export async function GET(
                         sponsor: { select: { id: true, companyName: true, industry: true } },
                     },
                 },
+                supplierOrders: {
+                    orderBy: { createdAt: "desc" },
+                    include: {
+                        supplier: { select: { id: true, companyName: true, category: true, contactName: true } },
+                    },
+                },
+                participants: {
+                    orderBy: { createdAt: "desc" },
+                },
                 incidents: {
                     orderBy: { createdAt: "desc" }
                 },
@@ -36,8 +45,8 @@ export async function GET(
                         tasks: { where: { status: { notIn: ["COMPLETADA", "CANCELADA"] } } },
                         sponsorDeals: true,
                         tickets: true,
-                        checklists: true,
-                        incidents: true
+                        supplierOrders: true,
+                        participants: true,
                     }
                 },
             },
@@ -145,6 +154,7 @@ export async function DELETE(
             await tx.checklist.deleteMany({ where: { eventId: id } });
             await tx.incident.deleteMany({ where: { eventId: id } });
             await tx.supplierOrder.deleteMany({ where: { eventId: id } });
+            await tx.participant.deleteMany({ where: { eventId: id } });
             await tx.budgetLine.deleteMany({ where: { eventId: id } });
             await tx.financialTransaction.deleteMany({ where: { eventId: id } });
 

@@ -43,6 +43,24 @@ interface EventDetail {
     dealValue: string | null;
     sponsor: { companyName: string; industry: string | null };
   }[];
+  supplierOrders: {
+    id: string;
+    description: string;
+    status: string;
+    amount: string | null;
+    dueDate: string | null;
+    supplier: { id: string; companyName: string; category: string | null; contactName: string | null };
+  }[];
+  participants: {
+    id: string;
+    name: string;
+    type: string | null;
+    contactName: string | null;
+    contactEmail: string | null;
+    contactPhone: string | null;
+    stage: string;
+    notes: string | null;
+  }[];
   incidents: {
     id: string;
     title: string;
@@ -54,8 +72,8 @@ interface EventDetail {
     tasks: number;
     sponsorDeals: number;
     tickets: number;
-    checklists: number;
-    incidents: number;
+    supplierOrders: number;
+    participants: number;
   };
 }
 
@@ -63,8 +81,8 @@ type ActiveTab =
   | "tareas"
   | "sponsors"
   | "tickets"
-  | "checklists"
-  | "incidencias"
+  | "proveedores"
+  | "participantes"
   | null;
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -443,31 +461,20 @@ export default function EventDetailPage() {
         count: event._count.tickets,
       },
       {
-        key: "checklists",
-        label: "Checklists",
+        key: "proveedores",
+        label: "Proveedores",
         icon: (
           <span className="nav-dot" style={{ display: "inline-block" }}></span>
         ),
-        count: event._count.checklists,
+        count: event._count.supplierOrders,
       },
       {
-        key: "incidencias",
-        label: "Incidencias",
+        key: "participantes",
+        label: "Participantes",
         icon: (
-          <span
-            className="nav-dot"
-            style={{
-              display: "inline-block",
-              background:
-                event._count.incidents > 0 ? "var(--color-error)" : undefined,
-              boxShadow:
-                event._count.incidents > 0
-                  ? "0 0 10px var(--color-error)"
-                  : undefined,
-            }}
-          ></span>
+          <span className="nav-dot" style={{ display: "inline-block" }}></span>
         ),
-        count: event._count.incidents,
+        count: event._count.participants,
       },
     ];
 
@@ -1007,10 +1014,10 @@ export default function EventDetailPage() {
 
           let variant = "neutral";
           if (tab.count > 0) {
-            if (tab.key === "incidencias") variant = "warning";
+            if (tab.key === "proveedores") variant = "warning";
             else if (tab.key === "tareas") variant = "info";
             else if (tab.key === "sponsors" || tab.key === "tickets") variant = "success";
-            else if (tab.key === "checklists") variant = "prime";
+            else if (tab.key === "participantes") variant = "prime";
           }
           if (isActive && tab.count === 0) variant = "prime"; // Give it some color when active even if 0
 
@@ -1715,165 +1722,91 @@ export default function EventDetailPage() {
         </div>
       )}
 
-      {/* ── CHECKLISTS Section ── */}
-      {activeTab === "checklists" && (
+      {/* ── PROVEEDORES Section ── */}
+      {activeTab === "proveedores" && (
         <div
           className="glass-card animate-fade-in"
           style={{ padding: "var(--space-6)", marginBottom: "var(--space-6)" }}
         >
-          <h2
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "var(--text-xl)",
-              fontWeight: 700,
-              marginBottom: "var(--space-6)",
-            }}
-          >
-            Checklists — {event.name}
-          </h2>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "var(--space-4)",
-              textAlign: "center",
-            }}
-          >
-            <div
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-6)" }}>
+            <h2
               style={{
-                background: "var(--color-bg-card)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "var(--radius-xl)",
-                padding: "var(--space-5)",
+                fontFamily: "var(--font-display)",
+                fontSize: "var(--text-xl)",
+                fontWeight: 700,
               }}
             >
-              <div
-                style={{
-                  fontSize: "var(--text-xs)",
-                  color: "var(--color-text-muted)",
-                  textTransform: "uppercase",
-                  fontWeight: 600,
-                }}
-              >
-                Total Checklists
-              </div>
-              <div
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "var(--text-4xl)",
-                  fontWeight: 800,
-                }}
-              >
-                {event._count.checklists}
-              </div>
-            </div>
-            <div
-              style={{
-                background: "var(--color-bg-card)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "var(--radius-xl)",
-                padding: "var(--space-5)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "var(--text-xs)",
-                  color: "var(--color-text-muted)",
-                  textTransform: "uppercase",
-                  fontWeight: 600,
-                }}
-              >
-                Items Completados
-              </div>
-              <div
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "var(--text-4xl)",
-                  fontWeight: 800,
-                  color: "var(--color-success)",
-                }}
-              >
-                0
-              </div>
-            </div>
-            <div
-              style={{
-                background: "var(--color-bg-card)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "var(--radius-xl)",
-                padding: "var(--space-5)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "var(--text-xs)",
-                  color: "var(--color-text-muted)",
-                  textTransform: "uppercase",
-                  fontWeight: 600,
-                }}
-              >
-                Progreso Global
-              </div>
-              <div
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "var(--text-4xl)",
-                  fontWeight: 800,
-                  color: "var(--color-gold-400)",
-                }}
-              >
-                0%
-              </div>
-            </div>
+              Proveedores — {event.name}
+            </h2>
           </div>
-          {/* Progress bar */}
-          <div
-            style={{
-              marginTop: "var(--space-4)",
-              background: "var(--color-bg-card)",
-              borderRadius: "var(--radius-full)",
-              height: 12,
-              overflow: "hidden",
-            }}
-          >
+
+          {!event.supplierOrders || event.supplierOrders.length === 0 ? (
             <div
               style={{
-                width: "0%",
-                height: "100%",
-                background: "var(--gradient-gold)",
-                borderRadius: "var(--radius-full)",
-                transition: "width 0.5s",
-              }}
-            />
-          </div>
-          {event._count.checklists === 0 && (
-            <p
-              style={{
-                color: "var(--color-text-muted)",
-                fontSize: "var(--text-sm)",
                 textAlign: "center",
-                marginTop: "var(--space-4)",
+                padding: "var(--space-8)",
+                color: "var(--color-text-muted)",
               }}
             >
-              Ve a{" "}
-              <a href="/checklists" style={{ color: "var(--color-gold-400)" }}>
-                Checklists
-              </a>{" "}
-              para crear plantillas de verificación
-            </p>
+              No hay proveedores vinculados a este evento aún.
+            </div>
+          ) : (
+            <div style={{ display: "grid", gap: "var(--space-3)" }}>
+              {event.supplierOrders.map((order) => (
+                <div
+                  key={order.id}
+                  style={{
+                    background: "var(--color-bg-elevated)",
+                    border: "1px solid var(--color-border)",
+                    borderRadius: "var(--radius-lg)",
+                    padding: "var(--space-4)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: "var(--text-base)", marginBottom: "var(--space-1)" }}>
+                      {order.supplier.companyName}
+                    </div>
+                    <div style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)" }}>
+                      {order.description} {order.supplier.category && `• ${order.supplier.category}`}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontWeight: 700, color: "var(--color-gold-400)", marginBottom: "var(--space-1)" }}>
+                      ${order.amount ? parseFloat(order.amount).toLocaleString() : "0"}
+                    </div>
+                    <span
+                      style={{
+                        fontSize: "var(--text-xs)",
+                        padding: "2px 8px",
+                        borderRadius: "var(--radius-full)",
+                        background: order.status === "CONFIRMADO" || order.status === "ENTREGADO" || order.status === "VERIFICADO"
+                          ? "rgba(34,197,94,0.1)"
+                          : "rgba(234,179,8,0.1)",
+                        color: order.status === "CONFIRMADO" || order.status === "ENTREGADO" || order.status === "VERIFICADO"
+                          ? "var(--color-success)"
+                          : "var(--color-gold-400)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {order.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       )}
 
-      {/* ── INCIDENCIAS Section ── */}
-      {activeTab === "incidencias" &&
+      {/* ── PARTICIPANTES Section ── */}
+      {activeTab === "participantes" &&
         (() => {
-          const resolvedIncidents = event.incidents
-            ? event.incidents.filter((i) => i.resolved).length
-            : 0;
-          const pendingIncidents = event.incidents
-            ? event.incidents.length - resolvedIncidents
-            : 0;
+          const contacted = event.participants?.filter((p) => p.stage === "CONTACTADO").length || 0;
+          const replied = event.participants?.filter((p) => p.stage === "RESPONDIDO" || p.stage === "REUNION_PROGRAMADA").length || 0;
+          const confirmed = event.participants?.filter((p) => p.stage === "CONFIRMADO").length || 0;
           return (
             <div
               className="glass-card animate-fade-in"
@@ -1890,14 +1823,15 @@ export default function EventDetailPage() {
                   marginBottom: "var(--space-6)",
                 }}
               >
-                Incidencias — {event.name}
+                Participantes / Instituciones — {event.name}
               </h2>
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: "var(--space-4)",
+                  gridTemplateColumns: "repeat(4, 1fr)",
+                  gap: "var(--space-3)",
                   textAlign: "center",
+                  marginBottom: "var(--space-6)"
                 }}
               >
                 <div
@@ -1905,89 +1839,48 @@ export default function EventDetailPage() {
                     background: "var(--color-bg-card)",
                     border: "1px solid var(--color-border)",
                     borderRadius: "var(--radius-xl)",
-                    padding: "var(--space-5)",
+                    padding: "var(--space-4)",
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: "var(--text-xs)",
-                      color: "var(--color-text-muted)",
-                      textTransform: "uppercase",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Total
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: "var(--text-4xl)",
-                      fontWeight: 800,
-                    }}
-                  >
-                    {event.incidents?.length || 0}
-                  </div>
+                  <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontWeight: 600 }}>Total</div>
+                  <div style={{ fontSize: "var(--text-2xl)", fontWeight: 800 }}>{event.participants?.length || 0}</div>
                 </div>
                 <div
                   style={{
                     background: "var(--color-bg-card)",
                     border: "1px solid var(--color-border)",
                     borderRadius: "var(--radius-xl)",
-                    padding: "var(--space-5)",
+                    padding: "var(--space-4)",
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: "var(--text-xs)",
-                      color: "var(--color-text-muted)",
-                      textTransform: "uppercase",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Resueltas
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: "var(--text-4xl)",
-                      fontWeight: 800,
-                      color: "var(--color-success)",
-                    }}
-                  >
-                    {resolvedIncidents}
-                  </div>
+                  <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-secondary)", fontWeight: 600 }}>Contactados</div>
+                  <div style={{ fontSize: "var(--text-2xl)", fontWeight: 800 }}>{contacted}</div>
                 </div>
                 <div
                   style={{
                     background: "var(--color-bg-card)",
                     border: "1px solid var(--color-border)",
                     borderRadius: "var(--radius-xl)",
-                    padding: "var(--space-5)",
+                    padding: "var(--space-4)",
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: "var(--text-xs)",
-                      color: "var(--color-text-muted)",
-                      textTransform: "uppercase",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Pendientes
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: "var(--text-4xl)",
-                      fontWeight: 800,
-                      color: "var(--color-error)",
-                    }}
-                  >
-                    {pendingIncidents}
-                  </div>
+                  <div style={{ fontSize: "var(--text-xs)", color: "var(--color-info)", fontWeight: 600 }}>Respondieron</div>
+                  <div style={{ fontSize: "var(--text-2xl)", fontWeight: 800, color: "var(--color-info)" }}>{replied}</div>
+                </div>
+                <div
+                  style={{
+                    background: "var(--color-bg-card)",
+                    border: "1px solid var(--color-border)",
+                    borderRadius: "var(--radius-xl)",
+                    padding: "var(--space-4)",
+                  }}
+                >
+                  <div style={{ fontSize: "var(--text-xs)", color: "var(--color-success)", fontWeight: 600 }}>Confirmados</div>
+                  <div style={{ fontSize: "var(--text-2xl)", fontWeight: 800, color: "var(--color-success)" }}>{confirmed}</div>
                 </div>
               </div>
-              {!event.incidents || event.incidents.length === 0 ? (
+
+              {!event.participants || event.participants.length === 0 ? (
                 <p
                   style={{
                     color: "var(--color-text-muted)",
@@ -1996,68 +1889,42 @@ export default function EventDetailPage() {
                     marginTop: "var(--space-4)",
                   }}
                 >
-                  No hay incidencias reportadas — ¡excelente!
+                  No has registrado participantes o instituciones.
                 </p>
               ) : (
-                <div style={{ marginTop: "var(--space-6)" }}>
-                  <h3
-                    style={{
-                      fontSize: "var(--text-sm)",
-                      color: "var(--color-text-muted)",
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      marginBottom: "var(--space-3)",
-                    }}
-                  >
-                    Listado de Incidencias
-                  </h3>
-                  <div className="task-list">
-                    {event.incidents.map((inc) => (
-                      <div key={inc.id} className="task-item">
-                        <div style={{ flex: 1 }}>
-                          <span
-                            style={{
-                              fontWeight: 600,
-                              fontSize: "var(--text-sm)",
-                              textDecoration: inc.resolved
-                                ? "line-through"
-                                : "none",
-                            }}
-                          >
-                            {inc.title}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: "var(--text-xs)",
-                              color: "var(--color-text-muted)",
-                              marginLeft: "var(--space-2)",
-                              padding: "2px 6px",
-                              border: "1px solid var(--color-border)",
-                              borderRadius: "var(--radius-sm)",
-                            }}
-                          >
-                            {inc.severity}
-                          </span>
+                <div className="task-list">
+                  {event.participants.map((p) => (
+                    <div key={p.id} className="task-item">
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>
+                          {p.name}
                         </div>
-                        <span
-                          style={{
-                            fontSize: "var(--text-xs)",
-                            padding: "2px 8px",
-                            borderRadius: "var(--radius-full)",
-                            background: inc.resolved
-                              ? "rgba(34,197,94,0.1)"
-                              : "rgba(239,68,68,0.1)",
-                            color: inc.resolved
-                              ? "var(--color-success)"
-                              : "var(--color-error)",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {inc.resolved ? "Resuelta" : "Pendiente"}
-                        </span>
+                        <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
+                          {p.type || "Participante"} {p.contactName ? `• Contacto: ${p.contactName}` : ""}
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                      <span
+                        style={{
+                          fontSize: "var(--text-xs)",
+                          padding: "2px 8px",
+                          borderRadius: "var(--radius-full)",
+                          background: p.stage === "CONFIRMADO"
+                            ? "rgba(34,197,94,0.1)"
+                            : p.stage === "CANCELADO"
+                              ? "rgba(239,68,68,0.1)"
+                              : p.stage === "CONTACTADO" ? "rgba(113, 113, 122, 0.2)" : "rgba(14, 165, 233, 0.1)",
+                          color: p.stage === "CONFIRMADO"
+                            ? "var(--color-success)"
+                            : p.stage === "CANCELADO"
+                              ? "var(--color-error)"
+                              : p.stage === "CONTACTADO" ? "var(--color-text-secondary)" : "var(--color-info)",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {p.stage}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

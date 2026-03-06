@@ -64,6 +64,7 @@ model Event {
   supplierOrders SupplierOrder[]
   tasks          Task[]
   tickets        Ticket[]
+  participants   Participant[]
   contractedUsers User[]       @relation("UserContractEvent")
   // Finance relations
   budgetLines    BudgetLine[]
@@ -432,6 +433,31 @@ enum IncidentSeverity {
   MEDIA
   ALTA
   CRITICA
+}
+
+enum ParticipantStage {
+  CONTACTADO
+  RESPONDIDO
+  REUNION_PROGRAMADA
+  CONFIRMADO
+  CANCELADO
+}
+
+model Participant {
+  id            String           @id @default(uuid())
+  name          String
+  type          String?          // INSTITUCION, EMPRESA, PERSONA
+  contactName   String?
+  contactEmail  String?
+  contactPhone  String?
+  stage         ParticipantStage @default(CONTACTADO)
+  notes         String?
+  eventId       String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  event         Event            @relation(fields: [eventId], references: [id])
+
+  @@map("participants")
 }
 
 // ═══════════════════════════════════════════════════════════

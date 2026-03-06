@@ -268,22 +268,20 @@ cd apps/dashboard && npx next dev --port 3001
 
 ## 🔄 Punto de Continuidad (Cross-Account & Backup)
 
-**Ultimo Punto de Restablecimiento:** 5 de marzo de 2026 (19:10 local)
+**Ultimo Punto de Restablecimiento:** 5 de marzo de 2026 (19:25 local)
 **Estatus Actual:**
-- **Esquema de Datos Reestructurado:** Se eliminó la dependencia visual de "Checklists" e "Incidencias" en las tarjetas principales del Detalle de Evento (`/eventos/[id]`). 
-- **Nuevos Módulos Core por Evento:**
-  - Se implementó la vista de **Proveedores** nutriéndose directamente de `SupplierOrders`.
-  - Se creó el nuevo modelo en Prisma `Participant` con 5 etapas tipo embudo comercial: `CONTACTADO → RESPONDIDO → REUNION_PROGRAMADA → CONFIRMADO → CANCELADO`.
-- **API y Despliegue:** API Routes completas (`/api/participants`) construidas y desplegadas en la base de datos de producción (Supabase AWS us-east-2) y VPS hostinger (`eventosprimeai.com`). Todo funcional.
+- **Manejo de Transacciones Obligatorio:** Se auditó y corrigió el Módulo Financiero. Las transacciones (Ingreso/Gasto) requieren estrictamente asignación de **Evento** (`eventId`) en frontend y backend, evitando transacciones huérfanas en el reporte financiero del proyecto.
+- **Participantes Kanban Independiente:** Desarrollé una página completa (`/participantes`) que utiliza el diseño *Glow/Glassmorphism* para gestionar el CRM Institucional en formato Pipeline.
+- **Hotfix (Supabase Schema Sync):** Se corrigió un error 500 y redirección indeseada (`router.push`) al visualizar los *detalles del evento* forzando sincronización entre el modelo `Participant` recién creado en Prisma y la máquina en la nube Supabase usando `npx prisma db push` y reiniciando el binario Next.js en el Host.
 
-**Logros Alcanzados (Sesión 5 de marzo 2026 - Tarde):**
-  - **Aislamiento de Datos por Evento:** Auditoría profunda confirmó que Tareas, Sponsors, Tickets, Proveedores, Presupuesto e Incidencias se vinculan nativa y obligatoriamente mediante `eventId`.
-  - **Reestructuración de UI Premium:** Las tarjetas superiores de Eventos ahora usan "Glow Cards" con variantes semánticas según su estado numérico e importancia.
-  - **Despliegue Full-Stack Exitoso:** Seedeo en Prisma y reestructuración completa del binario de Next.js en el VPS Hostinger.
+**Logros Alcanzados (Sesión 5 de marzo 2026 - Tarde/Noche):**
+  - **Reestructuración de UI Premium:** Página completa Kanban y Lista de Instituciones y Personas VIP vinculada a la DB real.
+  - **Aislamiento de Datos por Evento:** Auditoría profunda de Módulo Financiero asegurando blindaje del presupuesto mediante dependencias obligatorias de Evento.
 
 **Proceso de Despliegue (para futuras actualizaciones):**
 ```bash
-# En local: push a GitHub
+# En local: push a GitHub (asegura correr db push local si hay cambios de base de datos)
+npx prisma db push
 git push origin main
 
 # En el servidor (ssh root@168.231.74.200):
@@ -291,7 +289,7 @@ cd /opt/eventos-prime-ai && npm ci && cd packages/db && npx prisma generate && c
 ```
 
 **Siguiente Acción Pendiente:**
-1. Crear la página completa e independiente de **Participantes** (`/participantes`) usando el formato visual Kanban de arrastrar y soltar, similar al de Sponsors.
-2. Auditar y corregir el Módulo Financiero, específicamente las transacciones que están globales y deberían filtrarse/forzarse por **Evento** (`eventId`).
-3. Probar escáner financiero (OCR facturas) usando tu motor Vertex AI conectado en el Módulo de Finanzas.
+1. Probar el "Escáner Inteligente" (Integración OCR con Vertex AI) creando un Gasto subiendo la foto de una factura y analizando el reconocimiento.
+2. Explorar y vincular módulos complementarios de Notificaciones Push (PWA Service Workers) o bots (Telegram).
+3. Confirmar que en los KPIs de Estadísticas Generales en `Dashboard` y `Finanzas`, todo converja perfectamente por Evento.
 

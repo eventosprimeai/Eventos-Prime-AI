@@ -42,3 +42,9 @@ coverage/
 # Misc
 *.log
 npm-debug.log*
+
+# Custom Ignore (Scripts, Tests, Temporary Configs)
+*.sh
+*.js
+tmp*.conf
+!packages/**/src/**/*.js
